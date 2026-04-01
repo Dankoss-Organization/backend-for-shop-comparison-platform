@@ -15,3 +15,17 @@ model User {
   createdAt   DateTime @default(now())
   photo       String?
 }
+
+model Cart {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  isFinished   Boolean  @default(false)
+  isActive     Boolean  @default(true)
+
+  sum          Float
+  discountSum  Float?
+
+  paidTime     DateTime?
+}
