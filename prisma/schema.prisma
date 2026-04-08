@@ -81,3 +81,36 @@ model CartItem {
   @@index([cartId])
 }
 
+// Product cluster
+
+model Product {
+  id               String   @id @default(uuid())
+  productId        String   @unique
+  canonicalName    String   @map("canonical_name")
+  brand            String?
+  categoryId       String?  @map("category_id")
+  country          String?
+
+  media            Json     
+
+  measurements     Json  
+
+  pricingLogic     Json     @map("pricing_logic")
+  
+  description      String?  @db.Text
+  calories         Float?
+  proteins         Float?   @map("proteins_g")
+  fats             Float?   @map("fats_g")
+  carbohydrates    Float?   @map("carbohydrates_g")
+  alcoholPercentage Float?  @map("alcohol_percentage")
+  
+  isTobacco        Boolean  @default(false) @map("is_tobacco")
+  is18Plus         Boolean  @default(false) @map("is_18_plus")
+  isNationalCashbackEligible Boolean @default(false) @map("is_national_cashback_eligible")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([brand])
+}
