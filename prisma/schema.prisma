@@ -24,8 +24,8 @@ model UserFavourites {
   userId   String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  storeId  String?
-  store     FavouriteStore? @relation("StoreFavourites", fields: [storeId], references: [id])
+  storeId String?
+  store   FavouriteStore? @relation("StoreFavourites", fields: [storeId], references: [id])
 
   prId     String?
   pr        FavouritePr?    @relation("PrFavourites", fields: [prId], references: [id])
@@ -40,9 +40,12 @@ model UserFavourites {
 }
 
 model FavouriteStore {
-  id String @id @default(uuid())
+  id           String @id @default(uuid())
 
-  favourites  UserFavourites[] @relation("StoreFavourites")
+  localStoreId String @unique
+  localStore   LocalStore @relation(fields: [localStoreId], references: [id], onDelete: Cascade)
+
+  favourites   UserFavourites[] @relation("StoreFavourites")
 }
 
 model FavouritePr {
@@ -88,7 +91,6 @@ model Product {
   productId        String   @unique
   canonicalName    String   @map("canonical_name")
   brand            String?
-  categoryId       String?  @map("category_id")
   country          String?
 
   media            Json     
@@ -111,6 +113,56 @@ model Product {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  categoryId String?     @map("category_id")
+  category   PrCategory? @relation(fields: [categoryId], references: [id])
+
+  @@map("product")
+
   @@index([categoryId])
   @@index([brand])
 }
+
+model PrCategory {
+  id        String   @id @default(uuid())
+  name      String
+
+  parentId  String?  @map("parent_id")
+  
+  parent    PrCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  
+  subcategories PrCategory[] @relation("CategoryHierarchy")
+
+  products Product[]
+
+  @@index([parentId])
+  @@map("pr_categories")
+}
+
+model StoreBrand {
+  id        String   @id @default(uuid())
+  name      String
+  website   String?
+  logo      String?
+
+  localStores LocalStore[]
+
+  @@map("store_brand")
+}
+
+model LocalStore {
+  id           String   @id @default(uuid())
+  longitude    Float
+  latitude     Float
+  address      String
+  openingHour  String   @map("opening_hour")
+  closingHour  String   @map("closing_hour")
+  city         String
+
+  brandId      String   @map("brand_id")
+  brand        StoreBrand @relation(fields: [brandId], references: [id])
+
+  favouriteDetails FavouriteStore?
+
+  @@map("local_store")
+}
+
