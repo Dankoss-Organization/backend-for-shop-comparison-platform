@@ -14,6 +14,47 @@ model User {
   password    String
   createdAt   DateTime @default(now())
   photo       String?
+
+  favourites UserFavourites[]
+}
+
+model UserFavourites {
+  id       String @id @default(uuid())
+
+  userId   String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  storeId  String?
+  store     FavouriteStore? @relation("StoreFavourites", fields: [storeId], references: [id])
+
+  prId     String?
+  pr        FavouritePr?    @relation("PrFavourites", fields: [prId], references: [id])
+
+  repId    String?
+  rep       FavouriteRep?   @relation("RepFavourites", fields: [repId], references: [id])
+
+  @@index([userId])
+  @@index([storeId])
+  @@index([prId])
+  @@index([repId])
+}
+
+model FavouriteStore {
+  id String @id @default(uuid())
+
+  favourites  UserFavourites[] @relation("StoreFavourites")
+}
+
+model FavouritePr {
+  id String @id @default(uuid())
+
+  favourites  UserFavourites[] @relation("PrFavourites")
+}
+
+model FavouriteRep {
+  id String @id @default(uuid())
+
+  favourites  UserFavourites[] @relation("RepFavourites")
 }
 
 model Cart {
