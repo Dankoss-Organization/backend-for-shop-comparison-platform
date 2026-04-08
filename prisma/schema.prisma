@@ -58,15 +58,26 @@ model FavouriteRep {
 }
 
 model Cart {
-  id           String   @id @default(uuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  isFinished   Boolean  @default(false)
-  isActive     Boolean  @default(true)
-
-  sum          Float
-  discountSum  Float?
-
+  id           String     @id @default(uuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  isFinished   Boolean    @default(false)
+  sum          Float      @default(0)
+  discountSum  Float      @default(0)
   paidTime     DateTime?
+  isActive     Boolean    @default(true)
+
+  items        CartItem[] @relation("CartItems")
 }
+
+model CartItem {
+  id        String   @id @default(uuid())
+  quantity  Int      @default(1)
+  price     Float
+
+  cartId    String
+  cart      Cart @relation("CartItems", fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@index([cartId])
+}
+
