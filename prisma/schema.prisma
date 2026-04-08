@@ -166,3 +166,95 @@ model LocalStore {
   @@map("local_store")
 }
 
+// Recipe cluster
+
+model Recipe {
+  id           String   @id @default(uuid())
+  name         String
+  instructions String   @db.Text
+  difficulty   String
+  prepTime     Int      // Time in minutes
+  servings     Int
+  imageUrl     String?  @map("image_url")
+
+  // Зв'язки
+  categoryId   String
+  category     RecCategory @relation(fields: [categoryId], references: [id])
+  
+  reviews      Reviews[]
+  ingredients  RecipeIngredients[]
+  equipment    RecipeEquipment[]
+
+  @@index([categoryId])
+}
+
+model RecCategory {
+  id        String   @id @default(uuid())
+  name      String
+
+  parentId  String?
+  parent    RecCategory?  @relation("CategoryToSub", fields: [parentId], references: [id])
+  children  RecCategory[] @relation("CategoryToSub")
+
+  recipes   Recipe[]
+
+  @@index([parentId])
+}
+
+model Reviews {
+  id        String   @id @default(uuid())
+  rate      Int      // From 1 to 5
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+}
+
+model Ingredients {
+  id       String   @id @default(uuid())
+  name     String
+  imageUrl String?  @map("image_url")
+
+  recipes  RecipeIngredients[]
+}
+
+model RecipeIngredients {
+  id           String      @id @default(uuid())
+  quantity     Float
+  unit         String   
+
+  recipeId     String
+  recipe       Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  
+  ingredientId String
+  ingredient   Ingredients @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([ingredientId])
+}
+
+model Equipment {
+  id       String   @id @default(uuid())
+  name     String
+  imageUrl String?  @map("image_url")
+
+  recipes  RecipeEquipment[]
+}
+
+model RecipeEquipment {
+  id          String    @id @default(uuid())
+  quantity    Int       @default(1)
+
+  recipeId    String
+  recipe      Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([equipmentId])
+}
+
