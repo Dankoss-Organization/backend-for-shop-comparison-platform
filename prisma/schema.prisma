@@ -16,6 +16,8 @@ model User {
   photo       String?
 
   favourites UserFavourites[]
+  diets     Diet[]
+  allergens Allergen[]
 }
 
 model UserFavourites {
@@ -176,6 +178,9 @@ model PrCategory {
 
   @@index([parentId])
   @@map("pr_categories")
+
+  diets     Diet[]
+  allergens Allergen[]
 }
 
 model StoreBrand {
@@ -205,6 +210,38 @@ model LocalStore {
   favouriteDetails FavouriteStore?
 
   @@map("local_store")
+}
+
+// DIET & ALLERGEN CLUSTER
+model Diet {
+  id        String   @id @default(uuid())
+  name      String   @unique
+
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Зв'язок з PrCategory (Дієта стосується категорій)
+  categoryId String? @map("category_id")
+  category   PrCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@map("diets")
+}
+
+model Allergen {
+  id        String   @id @default(uuid())
+  name      String   @unique
+
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String? @map("category_id")
+  category   PrCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@map("allergens")
 }
 
 // Recipe cluster
