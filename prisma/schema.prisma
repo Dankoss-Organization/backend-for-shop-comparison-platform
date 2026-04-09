@@ -81,7 +81,11 @@ model CartItem {
   cartId    String
   cart      Cart @relation("CartItems", fields: [cartId], references: [id], onDelete: Cascade)
 
+  offerId   String
+  offer     Offer    @relation("OfferToCartItem", fields: [offerId], references: [id])
+
   @@index([cartId])
+  @@index([offerId])
 }
 
 // Product cluster
@@ -116,10 +120,46 @@ model Product {
   categoryId String?     @map("category_id")
   category   PrCategory? @relation(fields: [categoryId], references: [id])
 
+  offers     Offer[] @relation("ProductToOffer")
+
   @@map("product")
 
   @@index([categoryId])
   @@index([brand])
+}
+
+model Offer {
+  id        String   @id @default(uuid())
+  
+  storeId   String   @map("store_id")
+  store     LocalStore @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
+
+  productId String   @map("product_id")
+  product   Product  @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
+
+  currentPrice Float    @map("current_price")
+  
+  priceHistory PriceHistory[] @relation("OfferToPriceHistory")
+  cartItems    CartItem[]     @relation("OfferToCartItem")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storeId, productId])
+  @@map("offers")
+}
+
+model PriceHistory {
+  id           String   @id @default(uuid())
+  offerId      String   @map("offer_id")
+  offer        Offer    @relation("OfferToPriceHistory", fields: [offerId], references: [id], onDelete: Cascade)
+
+  date         DateTime @default(now())
+  price        Float
+  regularPrice Float    @map("regular_price")
+
+  @@index([offerId])
+  @@map("price_history")
 }
 
 model PrCategory {
@@ -161,6 +201,7 @@ model LocalStore {
   brandId      String   @map("brand_id")
   brand        StoreBrand @relation(fields: [brandId], references: [id])
 
+  offers           Offer[] @relation("StoreToOffer")
   favouriteDetails FavouriteStore?
 
   @@map("local_store")
