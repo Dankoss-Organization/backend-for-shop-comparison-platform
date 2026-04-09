@@ -15,6 +15,8 @@ model User {
   createdAt   DateTime @default(now())
   photo       String?
 
+  carts        Cart[]   @relation("UserToCart")
+
   favourites UserFavourites[]
   diets     Diet[]
   allergens Allergen[]
@@ -35,10 +37,14 @@ model UserFavourites {
   repId    String?
   rep       FavouriteRep?   @relation("RepFavourites", fields: [repId], references: [id])
 
+  recipeId String?        @map("recipe_id")
+  recipe   Recipe?  @relation("RecipeFavourites", fields: [recipeId], references: [id])
+
   @@index([userId])
   @@index([storeId])
   @@index([prId])
   @@index([repId])
+  @@index([recipeId])
 }
 
 model FavouriteStore {
@@ -59,6 +65,9 @@ model FavouritePr {
 model FavouriteRep {
   id String @id @default(uuid())
 
+  recipeId  String @unique @map("recipe_id")
+  recipe    Recipe @relation("RecipeToFavourite", fields: [recipeId], references: [id], onDelete: Cascade)
+
   favourites  UserFavourites[] @relation("RepFavourites")
 }
 
@@ -72,7 +81,12 @@ model Cart {
   paidTime     DateTime?
   isActive     Boolean    @default(true)
 
+  userId       String     @map("user_id")
+  user         User       @relation("UserToCart", fields: [userId], references: [id], onDelete: Cascade)
+
   items        CartItem[] @relation("CartItems")
+
+  @@index([userId])
 }
 
 model CartItem {
@@ -176,6 +190,8 @@ model PrCategory {
 
   products Product[]
 
+  ingredients Ingredients[] @relation("CategoryToIngredients")
+
   @@index([parentId])
   @@map("pr_categories")
 
@@ -263,6 +279,10 @@ model Recipe {
   ingredients  RecipeIngredients[]
   equipment    RecipeEquipment[]
 
+  favouritedBy FavouriteRep? @relation("RecipeToFavourite")
+
+  favourites  UserFavourites[] @relation("RecipeFavourites")
+
   @@index([categoryId])
 }
 
@@ -295,6 +315,9 @@ model Ingredients {
   id       String   @id @default(uuid())
   name     String
   imageUrl String?  @map("image_url")
+
+  categoryId String @map("category_id")
+  category   PrCategory @relation("CategoryToIngredients", fields: [categoryId], references: [id], onDelete: Cascade)
 
   recipes  RecipeIngredients[]
 }
