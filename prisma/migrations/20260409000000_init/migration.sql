@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
