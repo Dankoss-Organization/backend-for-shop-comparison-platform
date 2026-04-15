@@ -144,7 +144,7 @@ model Product {
   pricingLogic Json @map("pricing_logic")
 
   description       String? @db.Text
-  calories          Float?
+  calories          String?
   proteins          Float?  @map("proteins_g")
   fats              Float?  @map("fats_g")
   carbohydrates     Float?  @map("carbohydrates_g")
@@ -179,6 +179,8 @@ model Offer {
 
   currentPrice  Decimal  @map("current_price") @db.Decimal(12, 2)
   discountPrice Decimal? @map("discount_price") @db.Decimal(12, 2)
+
+  storeSku String? @map("store_sku")
 
   priceHistory PriceHistory[] @relation("OfferToPriceHistory")
   cartItems    CartItem[]     @relation("OfferToCartItem")
