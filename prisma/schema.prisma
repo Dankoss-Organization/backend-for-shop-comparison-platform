@@ -134,7 +134,7 @@ model Product {
   pricingLogic Json @map("pricing_logic")
 
   description       String? @db.Text
-  calories          Float?
+  calories          String?
   proteins          Float?  @map("proteins_g")
   fats              Float?  @map("fats_g")
   carbohydrates     Float?  @map("carbohydrates_g")
