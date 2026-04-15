@@ -170,6 +170,8 @@ model Offer {
   currentPrice  Decimal  @map("current_price") @db.Decimal(12, 2)
   discountPrice Decimal? @map("discount_price") @db.Decimal(12, 2)
 
+  storeSku String? @map("store_sku")
+
   priceHistory PriceHistory[] @relation("OfferToPriceHistory")
   cartItems    CartItem[]     @relation("OfferToCartItem")
 

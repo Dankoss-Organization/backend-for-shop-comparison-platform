@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE "offers" DROP COLUMN "store_sku";
+--ALTER TABLE "offers" DROP COLUMN "store_sku";
