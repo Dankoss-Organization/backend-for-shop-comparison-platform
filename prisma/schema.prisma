@@ -15,32 +15,32 @@ model User {
   createdAt   DateTime @default(now())
   photo       String?
 
-  carts        Cart[]   @relation("UserToCart")
+  carts Cart[] @relation("UserToCart")
 
   favourites UserFavourites[]
-  diets     Diet[]
-  allergens Allergen[]
+  diets      Diet[]
+  allergens  Allergen[]
 
   @@map("users")
 }
 
 model UserFavourites {
-  id       String @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId   String
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   storeId String?
   store   FavouriteStore? @relation("StoreFavourites", fields: [storeId], references: [id])
 
-  prId     String?
-  pr        FavouritePr?    @relation("PrFavourites", fields: [prId], references: [id])
+  prId String?
+  pr   FavouritePr? @relation("PrFavourites", fields: [prId], references: [id])
 
-  repId    String?
-  rep       FavouriteRep?   @relation("RepFavourites", fields: [repId], references: [id])
+  repId String?
+  rep   FavouriteRep? @relation("RepFavourites", fields: [repId], references: [id])
 
-  recipeId String?        @map("recipe_id")
-  recipe   Recipe?  @relation("RecipeFavourites", fields: [recipeId], references: [id])
+  recipeId String? @map("recipe_id")
+  recipe   Recipe? @relation("RecipeFavourites", fields: [recipeId], references: [id])
 
   @@index([userId])
   @@index([storeId])
@@ -51,12 +51,12 @@ model UserFavourites {
 }
 
 model FavouriteStore {
-  id           String @id @default(uuid())
+  id String @id @default(uuid())
 
-  localStoreId String @unique
+  localStoreId String     @unique
   localStore   LocalStore @relation(fields: [localStoreId], references: [id], onDelete: Cascade)
 
-  favourites   UserFavourites[] @relation("StoreFavourites")
+  favourites UserFavourites[] @relation("StoreFavourites")
 
   @@map("favourite_stores")
 }
@@ -64,10 +64,10 @@ model FavouriteStore {
 model FavouritePr {
   id String @id @default(uuid())
 
-  productId String @unique @map("product_id")
+  productId String  @unique @map("product_id")
   product   Product @relation("ProductToFavourite", fields: [productId], references: [id], onDelete: Cascade)
 
-  favourites  UserFavourites[] @relation("PrFavourites")
+  favourites UserFavourites[] @relation("PrFavourites")
 
   @@map("favourite_products")
 }
@@ -75,43 +75,43 @@ model FavouritePr {
 model FavouriteRep {
   id String @id @default(uuid())
 
-  recipeId  String @unique @map("recipe_id")
-  recipe    Recipe @relation("RecipeToFavourite", fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String @unique @map("recipe_id")
+  recipe   Recipe @relation("RecipeToFavourite", fields: [recipeId], references: [id], onDelete: Cascade)
 
-  favourites  UserFavourites[] @relation("RepFavourites")
+  favourites UserFavourites[] @relation("RepFavourites")
 
   @@map("favourite_recipes")
 }
 
 model Cart {
-  id           String     @id @default(uuid())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  isFinished   Boolean    @default(false)
-  sum          Decimal    @default(0) @db.Decimal(12, 2)
-  discountSum  Decimal    @default(0) @db.Decimal(12, 2)
-  paidTime     DateTime?
-  isActive     Boolean    @default(true)
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isFinished  Boolean   @default(false)
+  sum         Decimal   @default(0) @db.Decimal(12, 2)
+  discountSum Decimal   @default(0) @db.Decimal(12, 2)
+  paidTime    DateTime?
+  isActive    Boolean   @default(true)
 
-  userId       String     @map("user_id")
-  user         User       @relation("UserToCart", fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation("UserToCart", fields: [userId], references: [id], onDelete: Cascade)
 
-  items        CartItem[] @relation("CartItems")
+  items CartItem[] @relation("CartItems")
 
   @@index([userId])
   @@map("carts")
 }
 
 model CartItem {
-  id        String   @id @default(uuid())
-  quantity  Int      @default(1)
-  price     Decimal  @db.Decimal(12, 2)
+  id       String  @id @default(uuid())
+  quantity Int     @default(1)
+  price    Decimal @db.Decimal(12, 2)
 
-  cartId    String
-  cart      Cart @relation("CartItems", fields: [cartId], references: [id], onDelete: Cascade)
+  cartId String
+  cart   Cart   @relation("CartItems", fields: [cartId], references: [id], onDelete: Cascade)
 
-  offerId   String
-  offer     Offer    @relation("OfferToCartItem", fields: [offerId], references: [id], onDelete: Cascade)
+  offerId String
+  offer   Offer  @relation("OfferToCartItem", fields: [offerId], references: [id], onDelete: Cascade)
 
   @@index([cartId])
   @@index([offerId])
@@ -121,55 +121,56 @@ model CartItem {
 // Product cluster
 
 model Product {
-  id               String   @id @default(uuid())
-  productId        String   @unique
-  canonicalName    String   @map("canonical_name")
-  brand            String?
-  country          String?
+  id            String  @id @default(uuid())
+  productId     String  @unique
+  canonicalName String  @map("canonical_name")
+  brand         String?
+  country       String?
 
-  media            Json     
+  media Json
 
-  measurements     Json  
+  measurements Json
 
-  pricingLogic     Json     @map("pricing_logic")
-  
-  description      String?  @db.Text
-  calories         Float?
-  proteins         Float?   @map("proteins_g")
-  fats             Float?   @map("fats_g")
-  carbohydrates    Float?   @map("carbohydrates_g")
+  pricingLogic Json @map("pricing_logic")
+
+  description       String? @db.Text
+  calories          Float?
+  proteins          Float?  @map("proteins_g")
+  fats              Float?  @map("fats_g")
+  carbohydrates     Float?  @map("carbohydrates_g")
   alcoholPercentage Float?  @map("alcohol_percentage")
-  
-  isTobacco        Boolean  @default(false) @map("is_tobacco")
-  is18Plus         Boolean  @default(false) @map("is_18_plus")
+
+  isTobacco                  Boolean @default(false) @map("is_tobacco")
+  is18Plus                   Boolean @default(false) @map("is_18_plus")
   isNationalCashbackEligible Boolean @default(false) @map("is_national_cashback_eligible")
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   categoryId String?     @map("category_id")
   category   PrCategory? @relation(fields: [categoryId], references: [id])
 
-  offers     Offer[] @relation("ProductToOffer")
+  offers           Offer[]      @relation("ProductToOffer")
   favouriteDetails FavouritePr? @relation("ProductToFavourite")
-
-  @@map("product")
 
   @@index([categoryId])
   @@index([brand])
+  @@map("product")
 }
 
 model Offer {
-  id        String   @id @default(uuid())
-  
-  storeId   String   @map("store_id")
-  store     LocalStore @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
+  id String @id @default(uuid())
 
-  productId String   @map("product_id")
-  product   Product  @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
+  storeId String     @map("store_id")
+  store   LocalStore @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
 
-  currentPrice Decimal  @map("current_price") @db.Decimal(12, 2)
-  
+  productId String  @map("product_id")
+  product   Product @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
+
+  currentPrice Decimal @map("current_price") @db.Decimal(12, 2)
+
+  storeSku String @map("store_sku")
+
   priceHistory PriceHistory[] @relation("OfferToPriceHistory")
   cartItems    CartItem[]     @relation("OfferToCartItem")
 
@@ -181,9 +182,9 @@ model Offer {
 }
 
 model PriceHistory {
-  id           String   @id @default(uuid())
-  offerId      String   @map("offer_id")
-  offer        Offer    @relation("OfferToPriceHistory", fields: [offerId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  offerId String @map("offer_id")
+  offer   Offer  @relation("OfferToPriceHistory", fields: [offerId], references: [id], onDelete: Cascade)
 
   date         DateTime @default(now())
   price        Decimal  @db.Decimal(12, 2)
@@ -194,31 +195,31 @@ model PriceHistory {
 }
 
 model PrCategory {
-  id        String   @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
-  parentId  String?  @map("parent_id")
-  
-  parent    PrCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  
+  parentId String? @map("parent_id")
+
+  parent PrCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+
   subcategories PrCategory[] @relation("CategoryHierarchy")
 
   products Product[]
 
   ingredients Ingredients[] @relation("CategoryToIngredients")
 
-  @@index([parentId])
-  @@map("pr_categories")
-
   diets     Diet[]
   allergens Allergen[]
+
+  @@index([parentId])
+  @@map("pr_categories")
 }
 
 model StoreBrand {
-  id        String   @id @default(uuid())
-  name      String
-  website   String?
-  logo      String?
+  id      String  @id @default(uuid())
+  name    String
+  website String?
+  logo    String?
 
   localStores LocalStore[]
 
@@ -226,18 +227,18 @@ model StoreBrand {
 }
 
 model LocalStore {
-  id           String   @id @default(uuid())
-  longitude    Float
-  latitude     Float
-  address      String
-  openingHour  String   @map("opening_hour")
-  closingHour  String   @map("closing_hour")
-  city         String
+  id          String @id @default(uuid())
+  longitude   Float
+  latitude    Float
+  address     String
+  openingHour String @map("opening_hour")
+  closingHour String @map("closing_hour")
+  city        String
 
-  brandId      String   @map("brand_id")
-  brand        StoreBrand @relation(fields: [brandId], references: [id])
+  brandId String     @map("brand_id")
+  brand   StoreBrand @relation(fields: [brandId], references: [id])
 
-  offers           Offer[] @relation("StoreToOffer")
+  offers           Offer[]         @relation("StoreToOffer")
   favouriteDetails FavouriteStore?
 
   @@map("local_store")
@@ -245,14 +246,14 @@ model LocalStore {
 
 // DIET & ALLERGEN CLUSTER
 model Diet {
-  id        String   @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
-  userId    String   @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Зв'язок з PrCategory (Дієта стосується категорій)
-  categoryId String? @map("category_id")
+  categoryId String?     @map("category_id")
   category   PrCategory? @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, name])
@@ -262,13 +263,13 @@ model Diet {
 }
 
 model Allergen {
-  id        String   @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
-  userId    String   @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  categoryId String? @map("category_id")
+  categoryId String?     @map("category_id")
   category   PrCategory? @relation(fields: [categoryId], references: [id])
 
   @@unique([userId, name])
@@ -280,39 +281,39 @@ model Allergen {
 // Recipe cluster
 
 model Recipe {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
-  instructions String   @db.Text
+  instructions String  @db.Text
   difficulty   String
-  prepTime     Int      // Time in minutes
+  prepTime     Int // Time in minutes
   servings     Int
-  imageUrl     String?  @map("image_url")
+  imageUrl     String? @map("image_url")
 
   // Зв'язки
-  categoryId   String
-  category     RecCategory @relation(fields: [categoryId], references: [id])
-  
-  reviews      Reviews[]
-  ingredients  RecipeIngredients[]
-  equipment    RecipeEquipment[]
+  categoryId String
+  category   RecCategory @relation(fields: [categoryId], references: [id])
+
+  reviews     Reviews[]
+  ingredients RecipeIngredients[]
+  equipment   RecipeEquipment[]
 
   favouritedBy FavouriteRep? @relation("RecipeToFavourite")
 
-  favourites  UserFavourites[] @relation("RecipeFavourites")
+  favourites UserFavourites[] @relation("RecipeFavourites")
 
   @@index([categoryId])
   @@map("recipes")
 }
 
 model RecCategory {
-  id        String   @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
-  parentId  String?
-  parent    RecCategory?  @relation("CategoryToSub", fields: [parentId], references: [id])
-  children  RecCategory[] @relation("CategoryToSub")
+  parentId String?
+  parent   RecCategory?  @relation("CategoryToSub", fields: [parentId], references: [id])
+  children RecCategory[] @relation("CategoryToSub")
 
-  recipes   Recipe[]
+  recipes Recipe[]
 
   @@index([parentId])
   @@map("rec_categories")
@@ -320,38 +321,38 @@ model RecCategory {
 
 model Reviews {
   id        String   @id @default(uuid())
-  rate      Int      // From 1 to 5
+  rate      Int // From 1 to 5
   comment   String?  @db.Text
   createdAt DateTime @default(now())
 
-  recipeId  String
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@index([recipeId])
   @@map("reviews")
 }
 
 model Ingredients {
-  id       String   @id @default(uuid())
+  id       String  @id @default(uuid())
   name     String
-  imageUrl String?  @map("image_url")
+  imageUrl String? @map("image_url")
 
-  categoryId String @map("category_id")
+  categoryId String     @map("category_id")
   category   PrCategory @relation("CategoryToIngredients", fields: [categoryId], references: [id], onDelete: Cascade)
 
-  recipes  RecipeIngredients[]
+  recipes RecipeIngredients[]
 
   @@map("ingredients")
 }
 
 model RecipeIngredients {
-  id           String      @id @default(uuid())
-  quantity     Float
-  unit         String   
+  id       String @id @default(uuid())
+  quantity Float
+  unit     String
 
-  recipeId     String
-  recipe       Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
   ingredientId String
   ingredient   Ingredients @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
@@ -361,22 +362,22 @@ model RecipeIngredients {
 }
 
 model Equipment {
-  id       String   @id @default(uuid())
+  id       String  @id @default(uuid())
   name     String
-  imageUrl String?  @map("image_url")
+  imageUrl String? @map("image_url")
 
-  recipes  RecipeEquipment[]
+  recipes RecipeEquipment[]
 
   @@map("equipment")
 }
 
 model RecipeEquipment {
-  id          String    @id @default(uuid())
-  quantity    Int       @default(1)
+  id       String @id @default(uuid())
+  quantity Int    @default(1)
 
-  recipeId    String
-  recipe      Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
   equipmentId String
   equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 
@@ -384,4 +385,3 @@ model RecipeEquipment {
   @@index([equipmentId])
   @@map("recipe_equipment")
 }
-
