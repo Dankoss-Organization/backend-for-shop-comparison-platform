@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { ShopComparisonPlatformBackendController } from "./app.controller";
-import { ShopComparisonPlatformBackendService } from "./app.service";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
 @Module({
   imports: [],
-  controllers: [ShopComparisonPlatformBackendController],
-  providers: [ShopComparisonPlatformBackendService],
+  controllers: [AppController],
+  providers: [AppService],
 })
-export class ShopComparisonPlatformBackendModule {}
+export class AppModule {}

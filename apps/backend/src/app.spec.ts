@@ -1,27 +1,22 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ShopComparisonPlatformBackendController } from "./app.controller";
-import { ShopComparisonPlatformBackendService } from "./app.service";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
-describe("ShopComparisonPlatformBackendController", () => {
-  let shopComparisonPlatformBackendController: ShopComparisonPlatformBackendController;
+describe("AppController", () => {
+  let appController: AppController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      controllers: [ShopComparisonPlatformBackendController],
-      providers: [ShopComparisonPlatformBackendService],
+      controllers: [AppController],
+      providers: [AppService],
     }).compile();
 
-    shopComparisonPlatformBackendController =
-      app.get<ShopComparisonPlatformBackendController>(
-        ShopComparisonPlatformBackendController,
-      );
+    appController = app.get<AppController>(AppController);
   });
 
   describe("root", () => {
     it('should return "Hello World!"', () => {
-      expect(shopComparisonPlatformBackendController.getHello()).toBe(
-        "Hello World!",
-      );
+      expect(appController.getHello()).toBe("Hello World!");
     });
   });
 });

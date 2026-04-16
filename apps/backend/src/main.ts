@@ -1,8 +1,8 @@
 import { NestFactory } from "@nestjs/core";
-import { ShopComparisonPlatformBackendModule } from "./app.module";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create(ShopComparisonPlatformBackendModule);
+  const app = await NestFactory.create(AppModule);
   await app.listen(process.env.port ?? 3000);
 }
 bootstrap();

@@ -1,14 +1,12 @@
 import { Controller, Get } from "@nestjs/common";
-import { ShopComparisonPlatformBackendService } from "./app.service";
+import { AppService } from "./app.service";
 
 @Controller()
-export class ShopComparisonPlatformBackendController {
-  constructor(
-    private readonly shopComparisonPlatformBackendService: ShopComparisonPlatformBackendService,
-  ) {}
+export class AppController {
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getHello(): string {
-    return this.shopComparisonPlatformBackendService.getHello();
+    return this.appService.getHello();
   }
 }
