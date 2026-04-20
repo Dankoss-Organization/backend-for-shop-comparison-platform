@@ -182,4 +182,32 @@ describe('Prisma Database Unit Tests (Local Test DB)', () => {
     });
   });
 
+  describe('Diet and Allergen cluster', () => {
+    it('enforces unique diet name per user', async () => {
+      const user = await prisma.user.create({
+        data: {
+          name: 'Diet User',
+          email: 'diet@test.local',
+          password: 'secret',
+        },
+      });
+
+      await prisma.diet.create({
+        data: {
+          userId: user.id,
+          name: 'Keto',
+        },
+      });
+
+      await expect(
+        prisma.diet.create({
+          data: {
+            userId: user.id,
+            name: 'Keto',
+          },
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
 });
