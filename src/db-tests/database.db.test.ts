@@ -210,4 +210,71 @@ describe('Prisma Database Unit Tests (Local Test DB)', () => {
     });
   });
 
+  describe('Recipe cluster', () => {
+    it('creates recipe with ingredients, equipment and reviews', async () => {
+      const productCategory = await prisma.productCategory.create({ data: { name: 'Vegetables' } });
+      const recipeCategory = await prisma.recipeCategory.create({ data: { name: 'Dinner' } });
+      const ingredient = await prisma.ingredient.create({
+        data: {
+          name: 'Tomato',
+          categoryId: productCategory.id,
+        },
+      });
+      const equipment = await prisma.equipment.create({
+        data: {
+          name: 'Pan',
+        },
+      });
+
+      const recipe = await prisma.recipe.create({
+        data: {
+          name: 'Tomato Pasta',
+          instructions: 'Cook pasta and add tomato sauce',
+          difficulty: 'Easy',
+          prepTime: 20,
+          servings: 2,
+          categoryId: recipeCategory.id,
+        },
+      });
+
+      await prisma.recipeIngredient.create({
+        data: {
+          recipeId: recipe.id,
+          ingredientId: ingredient.id,
+          quantity: 2,
+          unit: 'pcs',
+        },
+      });
+
+      await prisma.recipeEquipment.create({
+        data: {
+          recipeId: recipe.id,
+          equipmentId: equipment.id,
+          quantity: 1,
+        },
+      });
+
+      await prisma.review.create({
+        data: {
+          recipeId: recipe.id,
+          rate: 5,
+          comment: 'Excellent',
+        },
+      });
+
+      const fullRecipe = await prisma.recipe.findUnique({
+        where: { id: recipe.id },
+        include: {
+          ingredients: true,
+          equipment: true,
+          reviews: true,
+        },
+      });
+
+      expect(fullRecipe?.ingredients.length).toBe(1);
+      expect(fullRecipe?.equipment.length).toBe(1);
+      expect(fullRecipe?.reviews.length).toBe(1);
+    });
+  });
+
 });
