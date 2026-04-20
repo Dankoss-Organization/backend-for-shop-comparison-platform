@@ -4,7 +4,22 @@
   "description": "This repository contains the server-side logic, database management, and business orchestration layer for the Shop Comparison Platform. It serves as the central hub that processes data from various scrapers, manages the product catalog, and provides a high-performance API for the frontend.",
   "main": "index.js",
   "scripts": {
+<<<<<<< HEAD
     "test": "prisma validate"
+=======
+    "start": "nest start backend",
+    "start:dev": "nest start backend --watch",
+    "start:debug": "nest start backend --debug --watch",
+    "build": "nest build backend",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:db": "jest --config ./src/db-tests/jest.db.config.js",
+    "test:db:watch": "jest --config ./src/db-tests/jest.db.config.js --watch",
+    "test:e2e": "jest --config ./apps/backend/test/jest-e2e.json",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "prisma:migrate": "prisma migrate dev"
+>>>>>>> b508ebf (chore: set up database test environment)
   },
   "keywords": [],
   "author": "",
