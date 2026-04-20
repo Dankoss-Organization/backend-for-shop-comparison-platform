@@ -92,4 +92,94 @@ describe('Prisma Database Unit Tests (Local Test DB)', () => {
     });
   });
 
+  describe('Store, Offer and Price History cluster', () => {
+    it('enforces unique storeId + productId in offers', async () => {
+      const category = await prisma.productCategory.create({ data: { name: 'Snacks' } });
+      const product = await prisma.product.create({
+        data: {
+          productId: 'SNACK-001',
+          canonicalName: 'Chips',
+          media: 'https://example.com/chips.jpg',
+          measurements: { weight: '150g' },
+          pricingLogic: { unit: 'pack' },
+          categoryId: category.id,
+        },
+      });
+      const brand = await prisma.storeBrand.create({ data: { name: 'LocalMart' } });
+      const store = await prisma.localStore.create({
+        data: {
+          longitude: 30.5,
+          latitude: 50.4,
+          address: 'Main st 1',
+          openingHour: '08:00',
+          closingHour: '22:00',
+          city: 'Kyiv',
+          brandId: brand.id,
+        },
+      });
+
+      await prisma.offer.create({
+        data: {
+          storeId: store.id,
+          productId: product.id,
+          currentPrice: new Prisma.Decimal('55.50'),
+        },
+      });
+
+      await expect(
+        prisma.offer.create({
+          data: {
+            storeId: store.id,
+            productId: product.id,
+            currentPrice: new Prisma.Decimal('60.00'),
+          },
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('stores price history for an offer', async () => {
+      const category = await prisma.productCategory.create({ data: { name: 'Drinks' } });
+      const product = await prisma.product.create({
+        data: {
+          productId: 'DRINK-001',
+          canonicalName: 'Juice',
+          media: 'https://example.com/juice.jpg',
+          measurements: { volume: '1L' },
+          pricingLogic: { unit: 'item' },
+          categoryId: category.id,
+        },
+      });
+      const brand = await prisma.storeBrand.create({ data: { name: 'SuperStore' } });
+      const store = await prisma.localStore.create({
+        data: {
+          longitude: 30.6,
+          latitude: 50.45,
+          address: 'Main st 2',
+          openingHour: '08:00',
+          closingHour: '22:00',
+          city: 'Kyiv',
+          brandId: brand.id,
+        },
+      });
+      const offer = await prisma.offer.create({
+        data: {
+          storeId: store.id,
+          productId: product.id,
+          currentPrice: new Prisma.Decimal('49.99'),
+        },
+      });
+
+      await prisma.priceHistory.create({
+        data: {
+          offerId: offer.id,
+          price: new Prisma.Decimal('45.99'),
+          regularPrice: new Prisma.Decimal('49.99'),
+        },
+      });
+
+      const history = await prisma.priceHistory.findMany({ where: { offerId: offer.id } });
+      expect(history.length).toBe(1);
+    });
+  });
+
 });
