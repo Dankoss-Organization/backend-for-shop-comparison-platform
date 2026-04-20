@@ -61,4 +61,35 @@ describe('Prisma Database Unit Tests (Local Test DB)', () => {
     });
   });
 
+  describe('Category and Product cluster', () => {
+    it('creates category hierarchy and product', async () => {
+      const rootCategory = await prisma.productCategory.create({
+        data: { name: 'Food' },
+      });
+
+      const childCategory = await prisma.productCategory.create({
+        data: {
+          name: 'Dairy',
+          parentId: rootCategory.id,
+        },
+      });
+
+      const product = await prisma.product.create({
+        data: {
+          productId: 'MILK-001',
+          canonicalName: 'Milk',
+          brand: 'Local Farm',
+          media: 'https://example.com/milk.jpg',
+          measurements: { volume: '1L' },
+          pricingLogic: { unit: 'item' },
+          calories: 61,
+          categoryId: childCategory.id,
+        },
+      });
+
+      expect(product.id).toBeDefined();
+      expect(product.categoryId).toBe(childCategory.id);
+    });
+  });
+
 });
