@@ -10,6 +10,8 @@
     "build": "nest build backend",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:db": "jest --config ./src/db-tests/jest.db.config.js",
+    "test:db:watch": "jest --config ./src/db-tests/jest.db.config.js --watch",
     "test:e2e": "jest --config ./apps/backend/test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
