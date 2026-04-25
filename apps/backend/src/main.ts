@@ -1,16 +1,12 @@
-import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { ApiDocumentationService } from "./shared/api-documentation.service";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
-  await app.listen(process.env.port ?? 3000);
+
+  ApiDocumentationService.configure(app);
+
+  await app.listen(process.env.PORT ?? process.env.port ?? 3000);
 }
 bootstrap();

@@ -4,12 +4,12 @@ generator client {
 
 generator docs {
   provider = "node node_modules/prisma-docs-generator"
-  output   = "../docs"
+  output   = "../docs/db/reference"
 }
 
 generator erd {
   provider = "prisma-erd-generator"
-  output   = "../docs/erd.svg"
+  output   = "../docs/db/erd.svg"
 }
 
 datasource db {

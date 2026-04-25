@@ -1,18 +1,46 @@
 import { Controller, Get, Param, Query } from "@nestjs/common";
+import {
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import { GetProductOffersQueryDto } from "./dto/get-product-offers-query.dto";
 import { GetProductPriceHistoryQueryDto } from "./dto/get-product-price-history-query.dto";
 import { GetRelatedProductsQueryDto } from "./dto/get-related-products-query.dto";
 import { ProductsService } from "./products.service";
 
+@ApiTags("products")
 @Controller("api/v1/products")
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @ApiOperation({ summary: "Get a product card with top offers and summary stats" })
+  @ApiOkResponse({ description: "Product card returned successfully." })
+  @ApiNotFoundResponse({ description: "Product was not found." })
   @Get(":id/card")
   getProductCard(@Param("id") id: string) {
     return this.productsService.getProductCard(id);
   }
 
+  @ApiOperation({ summary: "Get product offers with sorting and stock filtering" })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    enum: ["price", "discount", "updated"],
+    description: "Sort field for offers",
+  })
+  @ApiQuery({
+    name: "inStock",
+    required: false,
+    type: Boolean,
+    description: "When true, return only in-stock offers",
+  })
+  @ApiOkResponse({ description: "Product offers returned successfully." })
+  @ApiNotFoundResponse({ description: "Product was not found." })
+  @ApiBadRequestResponse({ description: "Invalid query parameters." })
   @Get(":id/offers")
   getProductOffers(
     @Param("id") id: string,
@@ -24,6 +52,20 @@ export class ProductsController {
     });
   }
 
+  @ApiOperation({ summary: "Get product price history for a given period" })
+  @ApiQuery({
+    name: "period",
+    required: false,
+    schema: {
+      type: "string",
+      pattern: "^(\\d+)(d|w|m)$",
+      default: "30d",
+    },
+    description: "Time period, e.g. 30d, 2w, 3m",
+  })
+  @ApiOkResponse({ description: "Product price history returned successfully." })
+  @ApiNotFoundResponse({ description: "Product was not found." })
+  @ApiBadRequestResponse({ description: "Invalid period format." })
   @Get(":id/price-history")
   getProductPriceHistory(
     @Param("id") id: string,
@@ -32,6 +74,18 @@ export class ProductsController {
     return this.productsService.getProductPriceHistory(id, query.period ?? "30d");
   }
 
+  @ApiOperation({ summary: "Get related products" })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 20,
+    description: "Maximum related products count",
+  })
+  @ApiOkResponse({ description: "Related products returned successfully." })
+  @ApiNotFoundResponse({ description: "Product was not found." })
+  @ApiBadRequestResponse({ description: "Invalid limit value." })
   @Get(":id/related")
   getRelatedProducts(
     @Param("id") id: string,
