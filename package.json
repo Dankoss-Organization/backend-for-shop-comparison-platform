@@ -13,6 +13,9 @@
     "test:db": "jest --config ./src/db-tests/jest.db.config.js",
     "test:db:watch": "jest --config ./src/db-tests/jest.db.config.js --watch",
     "test:e2e": "jest --config ./apps/backend/test/jest-e2e.json",
+    "docs:api": "ts-node apps/backend/src/scripts/generate-api-docs.ts",
+    "docs:db": "prisma generate && ts-node apps/backend/src/scripts/generate-db-docs-index.ts",
+    "docs:build": "npm run docs:api && npm run docs:db",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:migrate": "prisma migrate dev"
@@ -41,13 +44,18 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
     "@nestjs/platform-express": "^11.1.19",
+    "@nestjs/swagger": "^11.4.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "swagger-ui-express": "^5.0.1"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
