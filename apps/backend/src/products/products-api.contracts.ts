@@ -21,6 +21,41 @@ export interface GetRelatedProductsQuery {
   limit?: number;
 }
 
+export interface EnqueueProductSyncRequest {
+  source?: string;
+}
+
+export interface EnqueueProductSyncResponse {
+  queue: string;
+  jobName: string;
+  jobId: string;
+  status: "queued";
+  createdAt: string;
+}
+
+export interface ProductSyncJobStatusResponse {
+  queue?: string;
+  jobId: string;
+  name?: string;
+  status: string;
+  attemptsMade?: number;
+  data?: {
+    productId: string;
+    source: string;
+    requestedAt: string;
+  };
+  result?: {
+    productId: string;
+    offersCount: number;
+    bestPrice: number | null;
+    processedAt: string;
+  } | null;
+  failedReason?: string | null;
+  createdAt?: string | null;
+  processedAt?: string | null;
+  finishedAt?: string | null;
+}
+
 export interface ProductOfferItem {
   id: string;
   store: {

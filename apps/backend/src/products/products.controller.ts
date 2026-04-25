@@ -1,21 +1,64 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
+  ApiBody,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
+  ApiCreatedResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { IsOptional, IsString, MaxLength } from "class-validator";
+import { ProductSyncQueueService } from "../queue/product-sync-queue.service";
 import { GetProductOffersQueryDto } from "./dto/get-product-offers-query.dto";
 import { GetProductPriceHistoryQueryDto } from "./dto/get-product-price-history-query.dto";
 import { GetRelatedProductsQueryDto } from "./dto/get-related-products-query.dto";
 import { ProductsService } from "./products.service";
 
+class EnqueueProductSyncDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  source?: string;
+}
+
 @ApiTags("products")
 @Controller("api/v1/products")
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly productSyncQueueService: ProductSyncQueueService,
+  ) {}
+
+  @ApiOperation({ summary: "Enqueue product sync job for background processing" })
+  @ApiBody({
+    required: false,
+    schema: {
+      type: "object",
+      properties: {
+        source: {
+          type: "string",
+          example: "manual-refresh",
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: "Product sync job enqueued successfully." })
+  @Post(":id/sync")
+  enqueueProductSync(
+    @Param("id") id: string,
+    @Body() body: EnqueueProductSyncDto,
+  ) {
+    return this.productSyncQueueService.enqueueProductSync(id, body?.source);
+  }
+
+  @ApiOperation({ summary: "Get status of a previously enqueued product sync job" })
+  @ApiOkResponse({ description: "Sync job status returned successfully." })
+  @Get("sync-jobs/:jobId")
+  getSyncJobStatus(@Param("jobId") jobId: string) {
+    return this.productSyncQueueService.getSyncJobStatus(jobId);
+  }
 
   @ApiOperation({ summary: "Get a product card with top offers and summary stats" })
   @ApiOkResponse({ description: "Product card returned successfully." })
