@@ -1,4 +1,7 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
+import { GetProductOffersQueryDto } from "./dto/get-product-offers-query.dto";
+import { GetProductPriceHistoryQueryDto } from "./dto/get-product-price-history-query.dto";
+import { GetRelatedProductsQueryDto } from "./dto/get-related-products-query.dto";
 import { ProductsService } from "./products.service";
 
 @Controller("api/v1/products")
@@ -13,28 +16,27 @@ export class ProductsController {
   @Get(":id/offers")
   getProductOffers(
     @Param("id") id: string,
-    @Query("sort") sort: "price" | "discount" | "updated" = "price",
-    @Query("inStock") inStock?: string,
+    @Query() query: GetProductOffersQueryDto,
   ) {
     return this.productsService.getProductOffers(id, {
-      sort,
-      inStock: inStock === "true",
+      sort: query.sort ?? "price",
+      inStock: query.inStock ?? false,
     });
   }
 
   @Get(":id/price-history")
   getProductPriceHistory(
     @Param("id") id: string,
-    @Query("period") period = "30d",
+    @Query() query: GetProductPriceHistoryQueryDto,
   ) {
-    return this.productsService.getProductPriceHistory(id, period);
+    return this.productsService.getProductPriceHistory(id, query.period ?? "30d");
   }
 
   @Get(":id/related")
   getRelatedProducts(
     @Param("id") id: string,
-    @Query("limit", new ParseIntPipe({ optional: true })) limit?: number,
+    @Query() query: GetRelatedProductsQueryDto,
   ) {
-    return this.productsService.getRelatedProducts(id, limit ?? 8);
+    return this.productsService.getRelatedProducts(id, query.limit ?? 8);
   }
 }
