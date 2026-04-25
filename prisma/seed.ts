@@ -1,12 +1,15 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-const databaseUrl = process.env.DATABASE_URL;
+const envFile = process.env.ENV_FILE ?? '.env';
+config({ path: envFile });
+
+const databaseUrl = process.env.DATABASE_URL ?? process.env.DATABASE_TEST_URL;
 
 if (!databaseUrl) {
-  throw new Error('DATABASE_URL is not defined in environment variables.');
+  throw new Error('DATABASE_URL (or DATABASE_TEST_URL) is not defined in environment variables.');
 }
 
 const pool = new Pool({ connectionString: databaseUrl });
