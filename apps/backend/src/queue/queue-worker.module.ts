@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ProductsModule } from "../products/products.module";
 import { ProductSyncProcessor } from "./product-sync.processor";
+import { WorkerThreadsService } from "./worker-threads.service";
 
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 const envFilePath =
@@ -17,6 +18,6 @@ const envFilePath =
     }),
     ProductsModule,
   ],
-  providers: [ProductSyncProcessor],
+  providers: [ProductSyncProcessor, WorkerThreadsService],
 })
 export class QueueWorkerModule {}

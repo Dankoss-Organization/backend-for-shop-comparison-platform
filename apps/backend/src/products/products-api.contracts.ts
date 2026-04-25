@@ -48,6 +48,13 @@ export interface ProductSyncJobStatusResponse {
     productId: string;
     offersCount: number;
     bestPrice: number | null;
+    cpuMetrics: {
+      checksum: number;
+      durationMs: number;
+      usedWorkerThread: boolean;
+      threadId: number | null;
+      iterations: number;
+    };
     processedAt: string;
   } | null;
   failedReason?: string | null;

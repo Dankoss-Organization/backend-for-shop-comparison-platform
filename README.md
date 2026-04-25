@@ -14,6 +14,9 @@ Set these environment variables (optional defaults are shown):
 - `REDIS_DB=0`
 - `REDIS_PASSWORD=`
 - `WORKER_CONCURRENCY=4`
+- `ENABLE_WORKER_THREADS=true`
+- `CPU_SIGNAL_ITERATIONS=20000`
+- `WORKER_THREAD_POOL_SIZE=2`
 
 ### Run API and workers
 
