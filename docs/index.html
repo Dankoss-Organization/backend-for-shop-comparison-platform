@@ -208,7 +208,7 @@
                   <div class="mt-1 ml-2">
                     <div class="mb-1 font-medium text-gray-600"><a href="#model-Offer-fields">Fields</a></div>
                       <ul class="pl-3 ml-1 border-l-2 border-gray-400">
-                      <li><a href="#model-Offer-id">id</a></li><li><a href="#model-Offer-storeId">storeId</a></li><li><a href="#model-Offer-store">store</a></li><li><a href="#model-Offer-productId">productId</a></li><li><a href="#model-Offer-product">product</a></li><li><a href="#model-Offer-currentPrice">currentPrice</a></li><li><a href="#model-Offer-discountPrice">discountPrice</a></li><li><a href="#model-Offer-priceHistory">priceHistory</a></li><li><a href="#model-Offer-cartItems">cartItems</a></li><li><a href="#model-Offer-createdAt">createdAt</a></li><li><a href="#model-Offer-updatedAt">updatedAt</a></li>
+                      <li><a href="#model-Offer-id">id</a></li><li><a href="#model-Offer-storeId">storeId</a></li><li><a href="#model-Offer-store">store</a></li><li><a href="#model-Offer-productId">productId</a></li><li><a href="#model-Offer-product">product</a></li><li><a href="#model-Offer-currentPrice">currentPrice</a></li><li><a href="#model-Offer-discountPrice">discountPrice</a></li><li><a href="#model-Offer-storeSku">storeSku</a></li><li><a href="#model-Offer-priceHistory">priceHistory</a></li><li><a href="#model-Offer-cartItems">cartItems</a></li><li><a href="#model-Offer-createdAt">createdAt</a></li><li><a href="#model-Offer-updatedAt">updatedAt</a></li>
                       </ul>
                   </div>
                   <div class="mt-2 ml-2">
@@ -503,9 +503,7 @@
     
       </div>
       <div class="w-full p-4 bg-white overflow-x-hidden">
-        <div style="text-align: center; padding: 20px;">
-      <img src="erd.svg" alt="Database ER Diagram" style="max-width: 100%; height: auto;">
-    </div>
+        
         <div class="mb-8">
           <h1 class="text-3xl text-gray-800" id="models">Models</h1>
             
@@ -6324,7 +6322,7 @@
        calories 
       </td>
       <td class="px-4 py-2 border">
-       Float?
+       String?
       </td>
       <td class="px-4 py-2 border">
         <ul>
@@ -7412,6 +7410,26 @@
       </td>
       <td class="px-4 py-2 border">
        <a href="#type-outputType-Decimal">Decimal?</a>
+      </td>
+      <td class="px-4 py-2 border">
+        <ul>
+          <li> - </li>
+        </ul>
+      </td>
+      <td class="px-4 py-2 border">
+        No
+      </td>
+      <td class="px-4 py-2 border">
+        -
+      </td>
+    </tr>
+    
+    <tr id="model-Offer-storeSku">
+      <td class="px-4 py-2 border">
+       storeSku 
+      </td>
+      <td class="px-4 py-2 border">
+       String?
       </td>
       <td class="px-4 py-2 border">
         <ul>
@@ -23006,7 +23024,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        <a href="#type-inputType-FloatNullableFilter">FloatNullableFilter</a> | Float | Null
+        <a href="#type-inputType-StringNullableFilter">StringNullableFilter</a> | String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -23626,7 +23644,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        <a href="#type-inputType-FloatNullableFilter">FloatNullableFilter</a> | Float | Null
+        <a href="#type-inputType-StringNullableFilter">StringNullableFilter</a> | String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -24270,7 +24288,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        <a href="#type-inputType-FloatNullableWithAggregatesFilter">FloatNullableWithAggregatesFilter</a> | Float | Null
+        <a href="#type-inputType-StringNullableWithAggregatesFilter">StringNullableWithAggregatesFilter</a> | String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -24512,6 +24530,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-StringNullableFilter">StringNullableFilter</a> | String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-DateTimeFilter">DateTimeFilter</a> | DateTime
@@ -24649,6 +24679,18 @@
     <tr>
       <td class="px-4 py-2 border">
         discountPrice </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-SortOrder">SortOrder</a> | <a href="#type-inputType-SortOrderInput">SortOrderInput</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-SortOrder">SortOrder</a> | <a href="#type-inputType-SortOrderInput">SortOrderInput</a>
       </td>
@@ -24856,6 +24898,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-StringNullableFilter">StringNullableFilter</a> | String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-DateTimeFilter">DateTimeFilter</a> | DateTime
@@ -24993,6 +25047,18 @@
     <tr>
       <td class="px-4 py-2 border">
         discountPrice </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-SortOrder">SortOrder</a> | <a href="#type-inputType-SortOrderInput">SortOrderInput</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-SortOrder">SortOrder</a> | <a href="#type-inputType-SortOrderInput">SortOrderInput</a>
       </td>
@@ -25191,6 +25257,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-DecimalNullableWithAggregatesFilter">DecimalNullableWithAggregatesFilter</a> | <a href="#type-inputType-Decimal">Decimal</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-StringNullableWithAggregatesFilter">StringNullableWithAggregatesFilter</a> | String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -37050,7 +37128,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -37330,7 +37408,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -37610,7 +37688,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -37890,7 +37968,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -38170,7 +38248,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -38426,7 +38504,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -38670,7 +38748,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -38852,6 +38930,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -39000,6 +39090,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -39091,6 +39193,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -39248,6 +39362,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime | <a href="#type-inputType-DateTimeFieldUpdateOperationsInput">DateTimeFieldUpdateOperationsInput</a>
@@ -39372,6 +39498,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -39439,6 +39577,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -39539,6 +39689,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -51916,18 +52078,6 @@
           
     <tr>
       <td class="px-4 py-2 border">
-        calories </td>
-      <td class="px-4 py-2 border">
-        <a href="#type-inputType-SortOrder">SortOrder</a>
-      </td>
-
-      <td class="px-4 py-2 border">
-        No
-      </td>
-    </tr>
-    
-    <tr>
-      <td class="px-4 py-2 border">
         proteins </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-SortOrder">SortOrder</a>
@@ -52454,18 +52604,6 @@
           </thead>
           <tbody>
           
-    <tr>
-      <td class="px-4 py-2 border">
-        calories </td>
-      <td class="px-4 py-2 border">
-        <a href="#type-inputType-SortOrder">SortOrder</a>
-      </td>
-
-      <td class="px-4 py-2 border">
-        No
-      </td>
-    </tr>
-    
     <tr>
       <td class="px-4 py-2 border">
         proteins </td>
@@ -53216,6 +53354,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-SortOrder">SortOrder</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-SortOrder">SortOrder</a>
@@ -53356,6 +53506,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-SortOrder">SortOrder</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-SortOrder">SortOrder</a>
@@ -53445,6 +53607,18 @@
     <tr>
       <td class="px-4 py-2 border">
         discountPrice </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-SortOrder">SortOrder</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-SortOrder">SortOrder</a>
       </td>
@@ -83026,7 +83200,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -83294,7 +83468,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -83926,7 +84100,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -84194,7 +84368,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -87072,6 +87246,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -87199,6 +87385,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -87768,6 +87966,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime | <a href="#type-inputType-DateTimeFieldUpdateOperationsInput">DateTimeFieldUpdateOperationsInput</a>
@@ -87895,6 +88105,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -88232,6 +88454,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -88347,6 +88581,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -89140,6 +89386,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        <a href="#type-inputType-StringNullableFilter">StringNullableFilter</a> | String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-DateTimeFilter">DateTimeFilter</a> | DateTime
@@ -89750,7 +90008,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -90018,7 +90276,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -91198,7 +91456,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -91466,7 +91724,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -92048,6 +92306,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -92175,6 +92445,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -92404,6 +92686,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime | <a href="#type-inputType-DateTimeFieldUpdateOperationsInput">DateTimeFieldUpdateOperationsInput</a>
@@ -92531,6 +92825,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -93222,7 +93528,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -93490,7 +93796,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -95094,7 +95400,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        <a href="#type-inputType-FloatNullableFilter">FloatNullableFilter</a> | Float | Null
+        <a href="#type-inputType-StringNullableFilter">StringNullableFilter</a> | String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -96548,6 +96854,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -96663,6 +96981,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -110376,6 +110706,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -110443,6 +110785,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -110576,6 +110930,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime | <a href="#type-inputType-DateTimeFieldUpdateOperationsInput">DateTimeFieldUpdateOperationsInput</a>
@@ -110679,6 +111045,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -111438,7 +111816,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | Null
+        String | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -112078,7 +112456,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -112346,7 +112724,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -112614,7 +112992,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float | <a href="#type-inputType-NullableFloatFieldUpdateOperationsInput">NullableFloatFieldUpdateOperationsInput</a> | Null
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -113736,6 +114114,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -113803,6 +114193,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -113936,6 +114338,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime | <a href="#type-inputType-DateTimeFieldUpdateOperationsInput">DateTimeFieldUpdateOperationsInput</a>
@@ -114039,6 +114453,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-inputType-Decimal">Decimal</a> | <a href="#type-inputType-NullableDecimalFieldUpdateOperationsInput">NullableDecimalFieldUpdateOperationsInput</a> | Null
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String | <a href="#type-inputType-NullableStringFieldUpdateOperationsInput">NullableStringFieldUpdateOperationsInput</a> | Null
       </td>
 
       <td class="px-4 py-2 border">
@@ -117216,7 +117642,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -117461,6 +117887,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-outputType-Decimal">Decimal</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -120368,7 +120806,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -120636,7 +121074,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -120854,6 +121292,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -120969,6 +121419,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-outputType-Decimal">Decimal</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -124688,7 +125150,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -125021,6 +125483,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-outputType-Decimal">Decimal</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -129770,18 +130244,6 @@
           
     <tr>
       <td class="px-4 py-2 border">
-        calories </td>
-      <td class="px-4 py-2 border">
-        Float
-      </td>
-
-      <td class="px-4 py-2 border">
-        No
-      </td>
-    </tr>
-    
-    <tr>
-      <td class="px-4 py-2 border">
         proteins </td>
       <td class="px-4 py-2 border">
         Float
@@ -129844,18 +130306,6 @@
           </thead>
           <tbody>
           
-    <tr>
-      <td class="px-4 py-2 border">
-        calories </td>
-      <td class="px-4 py-2 border">
-        Float
-      </td>
-
-      <td class="px-4 py-2 border">
-        No
-      </td>
-    </tr>
-    
     <tr>
       <td class="px-4 py-2 border">
         proteins </td>
@@ -130008,7 +130458,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -130240,7 +130690,7 @@
       <td class="px-4 py-2 border">
         calories </td>
       <td class="px-4 py-2 border">
-        Float
+        String
       </td>
 
       <td class="px-4 py-2 border">
@@ -130486,6 +130936,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        Int
+      </td>
+
+      <td class="px-4 py-2 border">
+        <strong>Yes</strong>
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         Int
@@ -130678,6 +131140,18 @@
     
     <tr>
       <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
         createdAt </td>
       <td class="px-4 py-2 border">
         DateTime
@@ -130769,6 +131243,18 @@
         discountPrice </td>
       <td class="px-4 py-2 border">
         <a href="#type-outputType-Decimal">Decimal</a>
+      </td>
+
+      <td class="px-4 py-2 border">
+        No
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="px-4 py-2 border">
+        storeSku </td>
+      <td class="px-4 py-2 border">
+        String
       </td>
 
       <td class="px-4 py-2 border">
