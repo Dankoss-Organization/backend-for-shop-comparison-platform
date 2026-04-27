@@ -4,6 +4,14 @@ import { PrismaService } from "../prisma/prisma.service";
 
 type OffersSort = "price" | "discount" | "updated";
 
+interface HistoryAggregateRow {
+  min_price: number | null;
+  max_price: number | null;
+  avg_price: number | null;
+  first_price: number | null;
+  last_price: number | null;
+}
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -297,31 +305,53 @@ export class ProductsService {
     includePoints = false,
   ) {
     const from = this.parsePeriod(period);
-    const offers = await this.prisma.offer.findMany({
-      where: { productId },
-      select: { id: true },
-    });
+    const aggregateRows = await this.prisma.$queryRaw<HistoryAggregateRow[]>(Prisma.sql`
+      SELECT
+        MIN(ph.price)::float8 AS min_price,
+        MAX(ph.price)::float8 AS max_price,
+        AVG(ph.price)::float8 AS avg_price,
+        (ARRAY_AGG(ph.price::float8 ORDER BY ph.start_date ASC))[1] AS first_price,
+        (ARRAY_AGG(ph.price::float8 ORDER BY ph.start_date DESC))[1] AS last_price
+      FROM price_history ph
+      INNER JOIN offers o ON o.id = ph.offer_id
+      WHERE o.product_id = ${productId}
+        AND ph.start_date >= ${from}
+    `);
 
-    if (!offers.length) {
-      return {
-        points: [],
-        minPrice: null,
-        maxPrice: null,
-        avgPrice: null,
-        trend: "stable",
-      };
+    const aggregate = aggregateRows[0] ?? {
+      min_price: null,
+      max_price: null,
+      avg_price: null,
+      first_price: null,
+      last_price: null,
+    };
+
+    const minPrice = aggregate.min_price === null ? null : Number(aggregate.min_price);
+    const maxPrice = aggregate.max_price === null ? null : Number(aggregate.max_price);
+    const avgPrice =
+      aggregate.avg_price === null ? null : Number(aggregate.avg_price.toFixed(2));
+
+    let trend = "stable";
+    if (aggregate.first_price !== null && aggregate.last_price !== null) {
+      if (aggregate.last_price > aggregate.first_price) {
+        trend = "up";
+      } else if (aggregate.last_price < aggregate.first_price) {
+        trend = "down";
+      }
     }
 
-    const history = await this.prisma.priceHistory.findMany({
-      where: {
-        offerId: { in: offers.map((offer) => offer.id) },
-        startDate: { gte: from },
-      },
-      orderBy: {
-        startDate: "asc",
-      },
-      include: includePoints
-        ? {
+    const history = includePoints
+      ? await this.prisma.priceHistory.findMany({
+          where: {
+            offer: {
+              productId,
+            },
+            startDate: { gte: from },
+          },
+          orderBy: {
+            startDate: "asc",
+          },
+          include: {
             offer: {
               include: {
                 store: {
@@ -331,27 +361,9 @@ export class ProductsService {
                 },
               },
             },
-          }
-        : undefined,
-    });
-
-    const prices = history.map((point) => Number(point.price));
-    const minPrice = prices.length ? Math.min(...prices) : null;
-    const maxPrice = prices.length ? Math.max(...prices) : null;
-    const avgPrice = prices.length
-      ? Number((prices.reduce((sum, value) => sum + value, 0) / prices.length).toFixed(2))
-      : null;
-
-    let trend = "stable";
-    if (prices.length >= 2) {
-      const first = prices[0];
-      const last = prices[prices.length - 1];
-      if (last > first) {
-        trend = "up";
-      } else if (last < first) {
-        trend = "down";
-      }
-    }
+          },
+        })
+      : [];
 
     return {
       points: includePoints

@@ -1,4 +1,4 @@
-export type OffersSort = "price" | "discount" | "updated";
+﻿export type OffersSort = "price" | "discount" | "updated";
 export type AvailabilityStatus = "in_stock" | "out_of_stock";
 export type PriceTrend = "up" | "down" | "stable";
 
@@ -56,6 +56,64 @@ export interface ProductSyncJobStatusResponse {
       iterations: number;
     };
     processedAt: string;
+  } | null;
+  failedReason?: string | null;
+  createdAt?: string | null;
+  processedAt?: string | null;
+  finishedAt?: string | null;
+}
+
+export interface EnqueueProductAnalyticsRequest {
+  source?: string;
+  period?: string;
+}
+
+export interface EnqueueProductAnalyticsResponse {
+  queue: string;
+  jobName: string;
+  jobId: string;
+  status: "queued";
+  createdAt: string;
+}
+
+export interface ProductAnalyticsJobStatusResponse {
+  queue?: string;
+  jobId: string;
+  name?: string;
+  status: string;
+  attemptsMade?: number;
+  data?: {
+    productId: string;
+    period: string;
+    source: string;
+    requestedAt: string;
+  };
+  result?: {
+    product: {
+      id: string;
+      productId: string;
+    };
+    period: string;
+    summary: {
+      historyPoints: number;
+      minPrice: number | null;
+      maxPrice: number | null;
+      avgPrice: number | null;
+      trend: PriceTrend;
+      storesCount: number;
+      cheapestStore:
+        | {
+            id: string;
+            brand: string;
+            city: string;
+            effectivePrice: number;
+          }
+        | null;
+    };
+    performance: {
+      queryDurationMs: number;
+    };
+    computedAt: string;
   } | null;
   failedReason?: string | null;
   createdAt?: string | null;

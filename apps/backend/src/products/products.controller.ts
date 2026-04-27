@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+﻿import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -10,6 +10,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { IsOptional, IsString, MaxLength } from "class-validator";
+import { ProductAnalyticsQueueService } from "../queue/product-analytics-queue.service";
 import { ProductSyncQueueService } from "../queue/product-sync-queue.service";
 import { GetProductOffersQueryDto } from "./dto/get-product-offers-query.dto";
 import { GetProductPriceHistoryQueryDto } from "./dto/get-product-price-history-query.dto";
@@ -23,12 +24,25 @@ class EnqueueProductSyncDto {
   source?: string;
 }
 
+class EnqueueProductAnalyticsDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  source?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  period?: string;
+}
+
 @ApiTags("products")
 @Controller("api/v1/products")
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly productSyncQueueService: ProductSyncQueueService,
+    private readonly productAnalyticsQueueService: ProductAnalyticsQueueService,
   ) {}
 
   @ApiOperation({ summary: "Enqueue product sync job for background processing" })
@@ -58,6 +72,43 @@ export class ProductsController {
   @Get("sync-jobs/:jobId")
   getSyncJobStatus(@Param("jobId") jobId: string) {
     return this.productSyncQueueService.getSyncJobStatus(jobId);
+  }
+
+  @ApiOperation({ summary: "Enqueue heavy product analytics rebuild job" })
+  @ApiBody({
+    required: false,
+    schema: {
+      type: "object",
+      properties: {
+        source: {
+          type: "string",
+          example: "manual-analytics",
+        },
+        period: {
+          type: "string",
+          example: "30d",
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: "Product analytics rebuild job enqueued successfully." })
+  @Post(":id/analytics/rebuild")
+  enqueueProductAnalyticsRebuild(
+    @Param("id") id: string,
+    @Body() body: EnqueueProductAnalyticsDto,
+  ) {
+    return this.productAnalyticsQueueService.enqueueProductAnalytics(
+      id,
+      body?.period?.trim() || "30d",
+      body?.source,
+    );
+  }
+
+  @ApiOperation({ summary: "Get status of a previously enqueued analytics rebuild job" })
+  @ApiOkResponse({ description: "Analytics job status returned successfully." })
+  @Get("analytics-jobs/:jobId")
+  getAnalyticsJobStatus(@Param("jobId") jobId: string) {
+    return this.productAnalyticsQueueService.getAnalyticsJobStatus(jobId);
   }
 
   @ApiOperation({ summary: "Get a product card with top offers and summary stats" })
