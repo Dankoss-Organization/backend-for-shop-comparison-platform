@@ -6,6 +6,8 @@
   "scripts": {
     "start": "nest start backend",
     "start:dev": "nest start backend --watch",
+    "start:worker": "ts-node -P apps/backend/tsconfig.app.json apps/backend/src/worker.ts",
+    "start:worker:dev": "ts-node-dev --project apps/backend/tsconfig.app.json --respawn --transpile-only apps/backend/src/worker.ts",
     "start:debug": "nest start backend --debug --watch",
     "build": "nest build backend",
     "test": "jest",
@@ -43,6 +45,7 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
@@ -50,8 +53,10 @@
     "@nestjs/swagger": "^11.4.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "bullmq": "^5.76.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "ioredis": "^5.10.1",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
