@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -36,6 +40,9 @@ export class ProductsService {
         description: product.description,
         measurements: product.measurements,
         calories: product.calories,
+        proteins_g: product.proteins ?? null,
+        fats_g: product.fats ?? null,
+        carbohydrates_g: product.carbohydrates ?? null,
       },
       pricingSummary: {
         bestPrice: bestOffer?.effectivePrice ?? null,
@@ -94,7 +101,11 @@ export class ProductsService {
 
   async getProductPriceHistory(id: string, period: string) {
     const product = await this.getProductOrThrow(id);
-    const historyData = await this.collectHistoryStats(product.id, period, true);
+    const historyData = await this.collectHistoryStats(
+      product.id,
+      period,
+      true,
+    );
 
     return {
       productId: product.id,
@@ -228,7 +239,9 @@ export class ProductsService {
   ) {
     return offers.map((offer) => {
       const currentPrice = Number(offer.currentPrice);
-      const discountPrice = offer.discountPrice ? Number(offer.discountPrice) : null;
+      const discountPrice = offer.discountPrice
+        ? Number(offer.discountPrice)
+        : null;
       const effectivePrice = discountPrice ?? currentPrice;
       const oldPrice = offer.priceHistory[0]
         ? Number(offer.priceHistory[0].regularPrice)
@@ -258,11 +271,9 @@ export class ProductsService {
   }
 
   private buildBadges(
-    bestOffer:
-      | {
-          discountPercent: number | null;
-        }
-      | null,
+    bestOffer: {
+      discountPercent: number | null;
+    } | null,
   ) {
     const badges: string[] = [];
 
@@ -305,7 +316,9 @@ export class ProductsService {
     includePoints = false,
   ) {
     const from = this.parsePeriod(period);
-    const aggregateRows = await this.prisma.$queryRaw<HistoryAggregateRow[]>(Prisma.sql`
+    const aggregateRows = await this.prisma.$queryRaw<
+      HistoryAggregateRow[]
+    >(Prisma.sql`
       SELECT
         MIN(ph.price)::float8 AS min_price,
         MAX(ph.price)::float8 AS max_price,
@@ -326,10 +339,14 @@ export class ProductsService {
       last_price: null,
     };
 
-    const minPrice = aggregate.min_price === null ? null : Number(aggregate.min_price);
-    const maxPrice = aggregate.max_price === null ? null : Number(aggregate.max_price);
+    const minPrice =
+      aggregate.min_price === null ? null : Number(aggregate.min_price);
+    const maxPrice =
+      aggregate.max_price === null ? null : Number(aggregate.max_price);
     const avgPrice =
-      aggregate.avg_price === null ? null : Number(aggregate.avg_price.toFixed(2));
+      aggregate.avg_price === null
+        ? null
+        : Number(aggregate.avg_price.toFixed(2));
 
     let trend = "stable";
     if (aggregate.first_price !== null && aggregate.last_price !== null) {
