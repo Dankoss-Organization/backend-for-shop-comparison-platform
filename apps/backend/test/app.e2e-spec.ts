@@ -292,6 +292,88 @@ describe("ProductsController (e2e)", () => {
     });
   });
 
+  describe("GET /api/v1/products", () => {
+    it("returns 200 with a product catalog page", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/products")
+        .query({ page: 1, limit: 10, categoryId: fixture.categoryId })
+        .expect(200);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          total: expect.any(Number),
+          page: 1,
+          limit: 10,
+          totalPages: expect.any(Number),
+        }),
+      );
+      expect(Array.isArray(response.body.items)).toBe(true);
+      expect(response.body.items.length).toBeGreaterThan(0);
+      expect(response.body.items[0]).toEqual(
+        expect.objectContaining({
+          id: expect.any(String),
+          productId: expect.any(String),
+          canonicalName: expect.any(String),
+          brand: expect.anything(),
+          category: expect.objectContaining({
+            id: fixture.categoryId,
+            name: expect.any(String),
+          }),
+          media: expect.any(String),
+          description: expect.anything(),
+          bestPrice: expect.anything(),
+          oldPrice: expect.anything(),
+          discountPercent: expect.anything(),
+          currency: "UAH",
+          offersCount: expect.any(Number),
+          availabilityStatus: expect.any(String),
+          updatedAt: expect.any(String),
+        }),
+      );
+    });
+
+    it("returns 400 for invalid paging query", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/products")
+        .query({ page: 0 })
+        .expect(400);
+
+      const message = Array.isArray(response.body.message)
+        ? response.body.message.join(" ")
+        : String(response.body.message);
+      expect(message).toContain("page");
+    });
+  });
+
+  describe("GET /api/v1/products/categories", () => {
+    it("returns 200 with category tree", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/products/categories")
+        .expect(200);
+
+      expect(Array.isArray(response.body.categories)).toBe(true);
+      expect(response.body.categories.length).toBeGreaterThan(0);
+      expect(response.body.categories[0]).toEqual(
+        expect.objectContaining({
+          id: fixture.categoryId,
+          name: expect.any(String),
+          parentId: null,
+          productCount: expect.any(Number),
+          children: expect.any(Array),
+        }),
+      );
+    });
+
+    it("returns 404 for unknown parent category", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/products/categories")
+        .query({ parentId: "missing-category" })
+        .expect(404);
+
+      expect(String(response.body.message)).toContain("not found");
+    });
+  });
+
   describe("GET /api/v1/products/:id/offers", () => {
     it("returns 200 with sorted offers", async () => {
       const response = await request(app.getHttpServer())
@@ -503,6 +585,8 @@ describe("ProductsController (e2e)", () => {
 
       expect(response.body.paths).toEqual(
         expect.objectContaining({
+          "/api/v1/products": expect.any(Object),
+          "/api/v1/products/categories": expect.any(Object),
           "/api/v1/products/{id}/card": expect.any(Object),
           "/api/v1/products/{id}/offers": expect.any(Object),
           "/api/v1/products/{id}/price-history": expect.any(Object),
@@ -515,6 +599,26 @@ describe("ProductsController (e2e)", () => {
       const response = await request(app.getHttpServer())
         .get("/api/docs-json")
         .expect(200);
+
+      const productsParams = response.body.paths["/api/v1/products"].get.parameters;
+      expect(productsParams).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "page", in: "query" }),
+          expect.objectContaining({ name: "limit", in: "query" }),
+          expect.objectContaining({ name: "search", in: "query" }),
+          expect.objectContaining({ name: "brand", in: "query" }),
+          expect.objectContaining({ name: "categoryId", in: "query" }),
+          expect.objectContaining({ name: "inStock", in: "query" }),
+          expect.objectContaining({ name: "sort", in: "query" }),
+        ]),
+      );
+
+      const categoriesParams = response.body.paths["/api/v1/products/categories"].get.parameters;
+      expect(categoriesParams).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "parentId", in: "query" }),
+        ]),
+      );
 
       const offersParams = response.body.paths["/api/v1/products/{id}/offers"].get.parameters;
       expect(offersParams).toEqual(

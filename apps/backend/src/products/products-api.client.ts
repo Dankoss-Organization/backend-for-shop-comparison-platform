@@ -1,8 +1,12 @@
 import {
   ApiErrorResponse,
+  CategoriesResponse,
+  GetCategoriesQuery,
   GetProductOffersQuery,
   GetProductPriceHistoryQuery,
+  GetProductsQuery,
   GetRelatedProductsQuery,
+  ProductCatalogResponse,
   ProductCardResponse,
   ProductOffersResponse,
   ProductPriceHistoryResponse,
@@ -26,6 +30,14 @@ export class ProductsApiClient {
 
   getProductCard(id: string): Promise<ProductCardResponse> {
     return this.request<ProductCardResponse>(`/api/v1/products/${encodeURIComponent(id)}/card`);
+  }
+
+  getProducts(query: GetProductsQuery = {}): Promise<ProductCatalogResponse> {
+    return this.request<ProductCatalogResponse>(`/api/v1/products${toQueryString(query)}`);
+  }
+
+  getCategories(query: GetCategoriesQuery = {}): Promise<CategoriesResponse> {
+    return this.request<CategoriesResponse>(`/api/v1/products/categories${toQueryString(query)}`);
   }
 
   getProductOffers(
