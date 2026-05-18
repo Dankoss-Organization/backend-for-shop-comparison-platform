@@ -87,6 +87,8 @@ If Docker Desktop is not running, `docker compose build` will fail with a Docker
 
 ### New endpoints
 
+- `GET /api/v1/products` to browse the catalog with filters like `page`, `limit`, `search`, `brand`, `categoryId`, `inStock`, and `sort`.
+- `GET /api/v1/products/categories` to fetch the category tree, optionally rooted at `parentId`.
 - `POST /api/v1/products/:id/sync` to enqueue a sync job.
 - `GET /api/v1/products/sync-jobs/:jobId` to check job status.
 - `POST /api/v1/products/:id/analytics/rebuild` to enqueue heavy analytics rebuild.

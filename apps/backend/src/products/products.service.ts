@@ -7,6 +7,58 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 type OffersSort = "price" | "discount" | "updated";
+type ProductsSort = "updated" | "name";
+
+const productRelationsInclude = {
+  category: true,
+  offers: {
+    include: {
+      store: {
+        include: {
+          brand: true,
+        },
+      },
+      priceHistory: {
+        orderBy: {
+          startDate: "desc",
+        },
+        take: 1,
+      },
+    },
+  },
+} as const;
+
+type ProductWithRelations = Prisma.ProductGetPayload<{
+  include: typeof productRelationsInclude;
+}>;
+
+type ProductCatalogItem = {
+  id: string;
+  productId: string;
+  canonicalName: string;
+  brand: string | null;
+  category: {
+    id: string;
+    name: string;
+  } | null;
+  media: string;
+  description: string | null;
+  bestPrice: number | null;
+  oldPrice: number | null;
+  discountPercent: number | null;
+  currency: "UAH";
+  offersCount: number;
+  availabilityStatus: "in_stock" | "out_of_stock";
+  updatedAt: string;
+};
+
+type CategoryTreeNode = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  productCount: number;
+  children: CategoryTreeNode[];
+};
 
 interface HistoryAggregateRow {
   min_price: number | null;
@@ -19,6 +71,155 @@ interface HistoryAggregateRow {
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getProducts(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    brand?: string;
+    categoryId?: string;
+    inStock?: boolean;
+    sort: ProductsSort;
+  }) {
+    const where: Prisma.ProductWhereInput = {
+      ...(options.categoryId ? { categoryId: options.categoryId } : {}),
+      ...(options.brand
+        ? {
+            brand: {
+              contains: options.brand,
+              mode: "insensitive",
+            },
+          }
+        : {}),
+      ...(options.search
+        ? {
+            OR: [
+              {
+                canonicalName: {
+                  contains: options.search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                productId: {
+                  contains: options.search,
+                  mode: "insensitive",
+                },
+              },
+              options.brand
+                ? undefined
+                : {
+                    brand: {
+                      contains: options.search,
+                      mode: "insensitive",
+                    },
+                  },
+            ].filter(Boolean) as Prisma.ProductWhereInput[],
+          }
+        : {}),
+      ...(options.inStock
+        ? {
+            offers: {
+              some: {
+                currentPrice: {
+                  gt: 0,
+                },
+              },
+            },
+          }
+        : {}),
+    };
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput =
+      options.sort === "name"
+        ? { canonicalName: "asc" }
+        : { updatedAt: "desc" };
+
+    const [total, products] = await this.prisma.$transaction([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        include: productRelationsInclude,
+        orderBy,
+        skip: (options.page - 1) * options.limit,
+        take: options.limit,
+      }),
+    ]);
+
+    return {
+      items: products.map((product) => this.mapCatalogItem(product)),
+      total,
+      page: options.page,
+      limit: options.limit,
+      totalPages: Math.max(1, Math.ceil(total / options.limit)),
+    };
+  }
+
+  async getCategories(parentId?: string) {
+    const [categories, productCounts] = await this.prisma.$transaction([
+      this.prisma.productCategory.findMany({
+        orderBy: {
+          name: "asc",
+        },
+      }),
+      this.prisma.product.groupBy({
+        by: ["categoryId"],
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
+
+    const countsByCategoryId = new Map<string, number>();
+    for (const row of productCounts) {
+      if (row.categoryId) {
+        countsByCategoryId.set(row.categoryId, row._count._all);
+      }
+    }
+
+    const nodesById = new Map<string, CategoryTreeNode>();
+    for (const category of categories) {
+      nodesById.set(category.id, {
+        id: category.id,
+        name: category.name,
+        parentId: category.parentId,
+        productCount: countsByCategoryId.get(category.id) ?? 0,
+        children: [],
+      });
+    }
+
+    for (const category of categories) {
+      if (!category.parentId) {
+        continue;
+      }
+
+      const parent = nodesById.get(category.parentId);
+      const child = nodesById.get(category.id);
+      if (parent && child) {
+        parent.children.push(child);
+      }
+    }
+
+    if (parentId) {
+      const selectedRoot = nodesById.get(parentId);
+      if (!selectedRoot) {
+        throw new NotFoundException(`Category '${parentId}' not found`);
+      }
+
+      return {
+        categories: [this.sortCategoryTree(selectedRoot)],
+      };
+    }
+
+    const roots = categories
+      .filter((category) => category.parentId === null)
+      .map((category) => nodesById.get(category.id))
+      .filter(Boolean) as CategoryTreeNode[];
+
+    return {
+      categories: roots.map((node) => this.sortCategoryTree(node)),
+    };
+  }
 
   async getProductCard(id: string) {
     const product = await this.getProductWithRelationsOrThrow(id);
@@ -195,24 +396,7 @@ export class ProductsService {
       where: {
         OR: [{ id }, { productId: id }],
       },
-      include: {
-        category: true,
-        offers: {
-          include: {
-            store: {
-              include: {
-                brand: true,
-              },
-            },
-            priceHistory: {
-              orderBy: {
-                startDate: "desc",
-              },
-              take: 1,
-            },
-          },
-        },
-      },
+      include: productRelationsInclude,
     });
 
     if (!product) {
@@ -220,6 +404,47 @@ export class ProductsService {
     }
 
     return product;
+  }
+
+  private mapCatalogItem(product: ProductWithRelations): ProductCatalogItem {
+    const offers = this.mapOffers(product.offers);
+    const bestOffer = offers.length
+      ? offers.reduce((lowest, offer) =>
+          offer.effectivePrice < lowest.effectivePrice ? offer : lowest,
+        offers[0],
+      )
+      : null;
+
+    return {
+      id: product.id,
+      productId: product.productId,
+      canonicalName: product.canonicalName,
+      brand: product.brand,
+      category: product.category
+        ? {
+            id: product.category.id,
+            name: product.category.name,
+          }
+        : null,
+      media: product.media,
+      description: product.description,
+      bestPrice: bestOffer?.effectivePrice ?? null,
+      oldPrice: bestOffer?.oldPrice ?? null,
+      discountPercent: bestOffer?.discountPercent ?? null,
+      currency: "UAH",
+      offersCount: offers.length,
+      availabilityStatus: offers.length > 0 ? "in_stock" : "out_of_stock",
+      updatedAt: product.updatedAt.toISOString(),
+    };
+  }
+
+  private sortCategoryTree(node: CategoryTreeNode): CategoryTreeNode {
+    return {
+      ...node,
+      children: node.children
+        .map((child) => this.sortCategoryTree(child))
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    };
   }
 
   private mapOffers(

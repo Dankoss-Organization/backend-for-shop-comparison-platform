@@ -2,18 +2,20 @@
 import {
   ApiBadRequestResponse,
   ApiBody,
-  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiTags,
 } from "@nestjs/swagger";
 import { IsOptional, IsString, MaxLength } from "class-validator";
 import { ProductAnalyticsQueueService } from "../queue/product-analytics-queue.service";
 import { ProductSyncQueueService } from "../queue/product-sync-queue.service";
+import { GetCategoriesQueryDto } from "./dto/get-categories-query.dto";
 import { GetProductOffersQueryDto } from "./dto/get-product-offers-query.dto";
 import { GetProductPriceHistoryQueryDto } from "./dto/get-product-price-history-query.dto";
+import { GetProductsQueryDto } from "./dto/get-products-query.dto";
 import { GetRelatedProductsQueryDto } from "./dto/get-related-products-query.dto";
 import { ProductsService } from "./products.service";
 
@@ -44,6 +46,58 @@ export class ProductsController {
     private readonly productSyncQueueService: ProductSyncQueueService,
     private readonly productAnalyticsQueueService: ProductAnalyticsQueueService,
   ) {}
+
+  @ApiOperation({ summary: "Get product catalog" })
+  @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
+  @ApiQuery({ name: "limit", required: false, type: Number, minimum: 1, maximum: 100 })
+  @ApiQuery({
+    name: "search",
+    required: false,
+    type: String,
+    description: "Search by product name, productId or brand",
+  })
+  @ApiQuery({ name: "brand", required: false, type: String, description: "Filter by brand name" })
+  @ApiQuery({
+    name: "categoryId",
+    required: false,
+    type: String,
+    description: "Filter by category id",
+  })
+  @ApiQuery({
+    name: "inStock",
+    required: false,
+    type: Boolean,
+    description: "When true, return only products with active offers",
+  })
+  @ApiQuery({ name: "sort", required: false, enum: ["updated", "name"], description: "Sort field" })
+  @ApiOkResponse({ description: "Product catalog returned successfully." })
+  @ApiBadRequestResponse({ description: "Invalid query parameters." })
+  @Get()
+  getProducts(@Query() query: GetProductsQueryDto) {
+    return this.productsService.getProducts({
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+      search: query.search?.trim() || undefined,
+      brand: query.brand?.trim() || undefined,
+      categoryId: query.categoryId?.trim() || undefined,
+      inStock: query.inStock ?? false,
+      sort: query.sort ?? "updated",
+    });
+  }
+
+  @ApiOperation({ summary: "Get product categories" })
+  @ApiQuery({
+    name: "parentId",
+    required: false,
+    type: String,
+    description: "Return a subtree rooted at the selected category",
+  })
+  @ApiOkResponse({ description: "Categories returned successfully." })
+  @ApiNotFoundResponse({ description: "Category was not found." })
+  @Get("categories")
+  getCategories(@Query() query: GetCategoriesQueryDto) {
+    return this.productsService.getCategories(query.parentId?.trim() || undefined);
+  }
 
   @ApiOperation({ summary: "Enqueue product sync job for background processing" })
   @ApiBody({
