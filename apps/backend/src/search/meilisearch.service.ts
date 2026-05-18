@@ -279,6 +279,105 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   /**
+   * Advanced search with facets and statistics
+   */
+  async advancedSearch(
+    query: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+      filter?: string;
+      sort?: string[];
+      facets?: string[];
+    }
+  ): Promise<{
+    results: MeilisearchProduct[];
+    totalHits: number;
+    query: string;
+    processingTimeMs: number;
+    facets?: any[];
+    priceStats?: {
+      min: number;
+      max: number;
+      avg: number;
+    };
+  }> {
+    try {
+      const index = this.client.index(this.indexName);
+
+      const searchParams: MeilisearchSDK.SearchParams = {
+        limit: options?.limit || 20,
+        offset: options?.offset || 0,
+      };
+
+      if (options?.filter) {
+        searchParams.filter = options.filter;
+      }
+
+      if (options?.sort) {
+        searchParams.sort = options.sort;
+      }
+
+      if (options?.facets && options.facets.length > 0) {
+        searchParams.facets = options.facets;
+      }
+
+      const result = await index.search<MeilisearchProduct>(query, searchParams);
+
+      // Extract facet data
+      const facetsArray: any[] = [];
+      const facetDistribution = (result as any).facetDistribution;
+
+      if (facetDistribution && options?.facets) {
+        for (const facetName of options.facets) {
+          if (facetDistribution[facetName]) {
+            const facetValues = facetDistribution[facetName];
+            const values = Object.entries(facetValues).map(([key, count]) => ({
+              value: key,
+              count: count as number,
+            }));
+
+            facetsArray.push({
+              name: facetName,
+              values,
+            });
+          }
+        }
+      }
+
+      // Calculate price statistics from results
+      let priceStats;
+      if (result.hits.length > 0) {
+        const prices = result.hits
+          .map((p) => p.bestPrice)
+          .filter((p): p is number => p !== null && p !== undefined);
+
+        if (prices.length > 0) {
+          const min = Math.min(...prices);
+          const max = Math.max(...prices);
+          const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+
+          priceStats = { min, max, avg };
+        }
+      }
+
+      return {
+        results: result.hits,
+        totalHits: result.estimatedTotalHits,
+        query: result.query,
+        processingTimeMs: result.processingTimeMs,
+        facets: facetsArray.length > 0 ? facetsArray : undefined,
+        priceStats,
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to perform advanced search: ${errorMsg}`, errorStack);
+      throw error;
+    }
+  }
+
+  /**
    * Get task status by ID
    */
   async getTaskStatus(taskId: number): Promise<IndexationTask> {

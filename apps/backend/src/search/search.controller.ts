@@ -14,6 +14,12 @@ import {
   HealthCheckResponseDto,
   IndexStatsResponseDto,
 } from "./dto/search-result.dto";
+import {
+  SearchAdvancedQueryDto,
+  SearchFilterDto,
+  SearchSortDto,
+} from "./dto/search-filter.dto";
+import { SearchAdvancedResultsDto } from "./dto/search-facets.dto";
 
 @ApiTags("search")
 @Controller("api/v1/search")
@@ -74,6 +80,128 @@ export class SearchController {
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
       throw new BadRequestException(`Search failed: ${errorMsg}`);
+    }
+  }
+
+  @Get("advanced")
+  @HttpCode(200)
+  @ApiOperation({
+    summary: "Advanced product search",
+    description:
+      "Full-text search with advanced filtering, sorting, and faceted results",
+  })
+  @ApiOkResponse({
+    description: "Advanced search results with facets",
+    type: SearchAdvancedResultsDto,
+  })
+  @ApiBadRequestResponse({
+    description: "Invalid search parameters",
+  })
+  @ApiInternalServerErrorResponse({
+    description: "Search service error",
+  })
+  async advancedSearch(
+    @Query() query: SearchAdvancedQueryDto,
+  ): Promise<SearchAdvancedResultsDto> {
+    try {
+      if (!query.q || query.q.trim().length === 0) {
+        throw new BadRequestException("Search query (q) is required and cannot be empty");
+      }
+
+      const page = query.page || 1;
+      const limit = query.limit || 20;
+      const offset = (page - 1) * limit;
+
+      // Build filter string from filter object
+      let filterString = "";
+      if (query.filters) {
+        const conditions: string[] = [];
+
+        if (query.filters.categoryId) {
+          conditions.push(`categoryId = "${query.filters.categoryId}"`);
+        }
+
+        if (query.filters.brand) {
+          conditions.push(`brand = "${query.filters.brand}"`);
+        }
+
+        if (query.filters.minPrice !== undefined) {
+          conditions.push(`bestPrice >= ${query.filters.minPrice}`);
+        }
+
+        if (query.filters.maxPrice !== undefined) {
+          conditions.push(`bestPrice <= ${query.filters.maxPrice}`);
+        }
+
+        if (query.filters.minDiscount !== undefined) {
+          conditions.push(`discountPercent >= ${query.filters.minDiscount}`);
+        }
+
+        if (query.filters.stores) {
+          const stores = query.filters.stores.split(",").map((s) => `"${s.trim()}"`);
+          conditions.push(`storeNames IN [${stores.join(", ")}]`);
+        }
+
+        if (conditions.length > 0) {
+          filterString = conditions.join(" AND ");
+        }
+      }
+
+      // Build sort array
+      const sortArray: string[] = [];
+      if (query.sort?.field) {
+        const direction = query.sort.direction || "asc";
+        sortArray.push(`${query.sort.field}:${direction}`);
+      }
+
+      // Parse facets
+      const facetsToRetrieve = query.facets
+        ? query.facets.split(",").map((f) => f.trim())
+        : ["category", "brand", "storeNames"];
+
+      // Perform search
+      const result = await this.meilisearchService.advancedSearch(query.q, {
+        limit,
+        offset,
+        filter: filterString,
+        sort: sortArray.length > 0 ? sortArray : undefined,
+        facets: facetsToRetrieve,
+      });
+
+      const totalPages = Math.ceil(result.totalHits / limit);
+
+      // Prepare response
+      const response: SearchAdvancedResultsDto = {
+        results: result.results,
+        totalHits: result.totalHits,
+        query: result.query,
+        processingTimeMs: result.processingTimeMs,
+        count: result.results.length,
+        offset,
+        limit,
+        totalPages,
+        page,
+        facets: result.facets,
+        priceStats: result.priceStats,
+        appliedFilters: {
+          ...(query.filters?.categoryId && { category: query.filters.categoryId }),
+          ...(query.filters?.brand && { brand: query.filters.brand }),
+          ...(query.filters?.minPrice !== undefined && { minPrice: query.filters.minPrice }),
+          ...(query.filters?.maxPrice !== undefined && { maxPrice: query.filters.maxPrice }),
+          ...(query.filters?.minDiscount !== undefined && {
+            minDiscount: query.filters.minDiscount,
+          }),
+          ...(query.filters?.stores && { stores: query.filters.stores }),
+        },
+      };
+
+      return response;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(`Advanced search failed: ${errorMsg}`);
     }
   }
 
