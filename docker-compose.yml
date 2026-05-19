@@ -20,3 +20,21 @@ services:
     command: npm run start:worker:prod
     env_file:
       - .env
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.10.2
+    environment:
+      MEILI_ENV: development
+      MEILI_API_KEY: ${MEILISEARCH_API_KEY:-development-key-change-in-prod}
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  meilisearch_data:
