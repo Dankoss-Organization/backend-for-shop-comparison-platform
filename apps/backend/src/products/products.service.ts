@@ -532,6 +532,21 @@ export class ProductsService {
 
     const amount = Number(match[1]);
     const unit = match[2].toLowerCase();
+
+    if (amount <= 0) {
+      throw new BadRequestException("Period amount must be greater than 0.");
+    }
+
+    if (
+      (unit === "d" && amount > 3650) ||
+      (unit === "w" && amount > 520) ||
+      (unit === "m" && amount > 120)
+    ) {
+      throw new BadRequestException(
+        "Period is too large. Maximum allowed range is 10 years.",
+      );
+    }
+
     const from = new Date();
 
     if (unit === "d") {
