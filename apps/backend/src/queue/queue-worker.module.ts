@@ -5,6 +5,7 @@ import { MeilisearchModule } from "../search/meilisearch.module";
 import { ProductAnalyticsProcessor } from "./product-analytics.processor";
 import { ProductSyncProcessor } from "./product-sync.processor";
 import { WorkerThreadsService } from "./worker-threads.service";
+import { LoggerModule } from "../logger/logger.module";
 
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 const envFilePath =
@@ -19,8 +20,14 @@ const envFilePath =
       envFilePath,
     }),
     ProductsModule,
+    LoggerModule,
     MeilisearchModule,
   ],
-  providers: [ProductSyncProcessor, ProductAnalyticsProcessor, WorkerThreadsService],
+  providers: [
+    ProductSyncProcessor,
+    ProductAnalyticsProcessor,
+    WorkerThreadsService,
+    MeilisearchModule,
+  ],
 })
 export class QueueWorkerModule {}
