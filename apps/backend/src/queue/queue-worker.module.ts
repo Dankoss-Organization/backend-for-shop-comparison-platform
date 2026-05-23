@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ProductsModule } from "../products/products.module";
+import { MeilisearchModule } from "../search/meilisearch.module";
 import { ProductAnalyticsProcessor } from "./product-analytics.processor";
 import { ProductSyncProcessor } from "./product-sync.processor";
 import { WorkerThreadsService } from "./worker-threads.service";
@@ -25,6 +26,7 @@ const envFilePath =
     ProductSyncProcessor,
     ProductAnalyticsProcessor,
     WorkerThreadsService,
+    MeilisearchModule,
   ],
 })
 export class QueueWorkerModule {}
