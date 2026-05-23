@@ -325,13 +325,22 @@ export class ProductsService {
     const cappedLimit = Math.max(1, Math.min(limit, 20));
     const product = await this.getProductOrThrow(id);
 
+    const orConditions: Prisma.ProductWhereInput[] = [];
+    if (product.categoryId) {
+      orConditions.push({ categoryId: product.categoryId });
+    }
+    if (product.brand) {
+      orConditions.push({ brand: product.brand });
+    }
+
+    if (orConditions.length === 0) {
+      return { productId: product.id, related: [] };
+    }
+
     const related = await this.prisma.product.findMany({
       where: {
         id: { not: product.id },
-        OR: [
-          product.categoryId ? { categoryId: product.categoryId } : undefined,
-          product.brand ? { brand: product.brand } : undefined,
-        ].filter(Boolean) as Prisma.ProductWhereInput[],
+        OR: orConditions,
       },
       include: {
         offers: {
@@ -409,10 +418,11 @@ export class ProductsService {
   private mapCatalogItem(product: ProductWithRelations): ProductCatalogItem {
     const offers = this.mapOffers(product.offers);
     const bestOffer = offers.length
-      ? offers.reduce((lowest, offer) =>
-          offer.effectivePrice < lowest.effectivePrice ? offer : lowest,
-        offers[0],
-      )
+      ? offers.reduce(
+          (lowest, offer) =>
+            offer.effectivePrice < lowest.effectivePrice ? offer : lowest,
+          offers[0],
+        )
       : null;
 
     return {
@@ -522,6 +532,21 @@ export class ProductsService {
 
     const amount = Number(match[1]);
     const unit = match[2].toLowerCase();
+
+    if (amount <= 0) {
+      throw new BadRequestException("Period amount must be greater than 0.");
+    }
+
+    if (
+      (unit === "d" && amount > 3650) ||
+      (unit === "w" && amount > 520) ||
+      (unit === "m" && amount > 120)
+    ) {
+      throw new BadRequestException(
+        "Period is too large. Maximum allowed range is 10 years.",
+      );
+    }
+
     const from = new Date();
 
     if (unit === "d") {
