@@ -21,6 +21,7 @@ const envFilePath =
     }),
     ProductsModule,
     LoggerModule,
+    MeilisearchModule,
   ],
   providers: [
     ProductSyncProcessor,
