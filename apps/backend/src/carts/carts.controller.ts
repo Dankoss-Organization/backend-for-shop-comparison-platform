@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Request,
   UseGuards,
@@ -16,6 +18,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AddCartItemRequestDto } from "./dto/add-cart-item-request.dto";
 import { AddCartItemResponseDto } from "./dto/add-cart-item-response.dto";
 import { GetCartResponseDto } from "./dto/get-cart-response.dto";
+import { UpdateCartItemRequestDto } from "./dto/update-cart-item-request.dto";
 
 @Controller("api/v1/cart")
 @UseGuards(JwtAuthGuard)
@@ -43,5 +46,18 @@ export class CartsController {
     @Body() body: AddCartItemRequestDto,
   ) {
     return this.cartsService.addCartItem(req.user.id, body);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Cart item quantity updated successfully",
+  })
+  @Patch("items/:itemId")
+  updateCartItemQuantity(
+    @Request() req: { user: { id: string } },
+    @Param("itemId") itemId: string,
+    @Body() body: UpdateCartItemRequestDto,
+  ) {
+    return this.cartsService.updateCartItemQuantity(req.user.id, itemId, body);
   }
 }

@@ -12,6 +12,7 @@ describe("CartsController (e2e)", () => {
   const userId = "dev_user";
   const suffix = Date.now();
   let offerId = "";
+  let cartItemId = "";
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -97,6 +98,8 @@ describe("CartsController (e2e)", () => {
         },
       },
     });
+
+    cartItemId = `ci_item_${suffix}`;
   });
 
   afterAll(async () => {
@@ -243,6 +246,36 @@ describe("CartsController (e2e)", () => {
       }),
     );
     expect(cartResponse.body.sum).toBe(137.97);
+    expect(cartResponse.body.discountSum).toBe(0);
+  });
+
+  it("updates the quantity of an existing cart item", async () => {
+    const patchResponse = await request(app.getHttpServer())
+      .patch(`/api/v1/cart/items/${cartItemId}`)
+      .set("Authorization", `Bearer ${userId}`)
+      .send({
+        quantity: 5,
+      })
+      .expect(200);
+
+    expect(patchResponse.body).toEqual({
+      success: true,
+      cartItemId,
+    });
+
+    const cartResponse = await request(app.getHttpServer())
+      .get("/api/v1/cart")
+      .set("Authorization", `Bearer ${userId}`)
+      .expect(200);
+
+    expect(cartResponse.body.items[0]).toEqual(
+      expect.objectContaining({
+        id: cartItemId,
+        quantity: 5,
+        price: 45.99,
+      }),
+    );
+    expect(cartResponse.body.sum).toBe(229.95);
     expect(cartResponse.body.discountSum).toBe(0);
   });
 

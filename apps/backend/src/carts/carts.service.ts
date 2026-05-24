@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AddCartItemRequestDto } from "./dto/add-cart-item-request.dto";
+import { UpdateCartItemRequestDto } from "./dto/update-cart-item-request.dto";
 
 @Injectable()
 export class CartsService {
@@ -209,6 +210,80 @@ export class CartsService {
     return {
       success: true,
       cartItemId,
+    };
+  }
+
+  async updateCartItemQuantity(
+    userId: string,
+    itemId: string,
+    dto: UpdateCartItemRequestDto,
+  ) {
+    const item = await this.prisma.cartItem.findFirst({
+      where: {
+        id: itemId,
+        cart: {
+          userId,
+          isActive: true,
+        },
+      },
+      include: {
+        offer: true,
+        cart: true,
+      },
+    });
+
+    if (!item) {
+      this.logger.warn("Cart item not found for quantity update", {
+        service: "CartsService",
+        method: "updateCartItemQuantity",
+        userId,
+        itemId,
+      });
+      throw new NotFoundException(`Cart item '${itemId}' not found`);
+    }
+
+    const oldQuantity = item.quantity;
+    const effectivePrice = item.offer.discountPrice ?? item.offer.currentPrice;
+    const discountAmount = item.offer.discountPrice
+      ? Number(item.offer.currentPrice) - Number(item.offer.discountPrice)
+      : 0;
+
+    const quantityDelta = dto.quantity - oldQuantity;
+
+    const updatedItem = await this.prisma.$transaction(async (tx) => {
+      const nextItem = await tx.cartItem.update({
+        where: { id: itemId },
+        data: {
+          quantity: dto.quantity,
+          price: effectivePrice,
+        },
+      });
+
+      if (quantityDelta !== 0) {
+        await tx.cart.update({
+          where: { id: item.cartId },
+          data: {
+            sum: Number(item.cart.sum) + Number(effectivePrice) * quantityDelta,
+            discountSum:
+              Number(item.cart.discountSum) + discountAmount * quantityDelta,
+          },
+        });
+      }
+
+      return nextItem;
+    });
+
+    this.logger.info("Cart item quantity updated", {
+      service: "CartsService",
+      method: "updateCartItemQuantity",
+      userId,
+      itemId,
+      quantity: updatedItem.quantity,
+    });
+
+    return {
+      success: true,
+      cartItemId: updatedItem.id,
     };
   }
 }
