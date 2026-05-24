@@ -2,6 +2,8 @@ import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Injectable, Logger } from "@nestjs/common";
 import { Job } from "bullmq";
 import { ProductsService } from "../products/products.service";
+import { MeilisearchService } from "../search/meilisearch.service";
+import { MeilisearchProduct } from "../search/types/meilisearch.types";
 import { PRODUCT_SYNC_QUEUE } from "./product-sync.constants";
 import { ProductSyncJobData, ProductSyncJobResult } from "./product-sync.types";
 import { WorkerThreadsService } from "./worker-threads.service";
@@ -21,6 +23,7 @@ export class ProductSyncProcessor extends WorkerHost {
 
   constructor(
     private readonly productsService: ProductsService,
+    private readonly meilisearchService: MeilisearchService,
     private readonly workerThreadsService: WorkerThreadsService,
   ) {
     super();
@@ -61,12 +64,54 @@ export class ProductSyncProcessor extends WorkerHost {
       };
     }
 
-    return {
+    const result = {
       productId: productCard.product.id,
       offersCount: productCard.topOffers.length,
       bestPrice: productCard.pricingSummary.bestPrice,
       cpuMetrics,
       processedAt: new Date().toISOString(),
     };
+
+    // Index product in Meilisearch (async, non-blocking)
+    try {
+      const storeNames = [...new Set(productCard.topOffers.map((o) => o.store.brand))];
+      const categoryId = (productCard.product as any).categoryId || "";
+
+      const meilisearchDoc: MeilisearchProduct = {
+        id: productCard.product.id,
+        productId: productCard.product.productId,
+        canonicalName: productCard.product.canonicalName,
+        brand: productCard.product.brand,
+        category: productCard.product.category || "",
+        categoryId,
+        media: productCard.product.media,
+        description: productCard.product.description,
+        bestPrice: productCard.pricingSummary.bestPrice,
+        oldPrice: productCard.pricingSummary.oldPrice,
+        discountPercent: productCard.pricingSummary.discountPercent,
+        currency: "UAH",
+        offersCount: productCard.topOffers.length,
+        storeNames,
+        updatedAt: new Date().getTime(),
+      };
+
+      await this.meilisearchService.indexProducts({
+        documents: [meilisearchDoc],
+        primaryKey: "id",
+      });
+
+      this.logger.debug(
+        `Successfully indexed product ${productCard.product.id} in Meilisearch`,
+      );
+    } catch (indexError) {
+      // Log indexing error but don't fail the sync job
+      this.logger.warn(
+        `Failed to index product ${productCard.product.id} in Meilisearch: ${
+          indexError instanceof Error ? indexError.message : String(indexError)
+        }`,
+      );
+    }
+
+    return result;
   }
 }

@@ -2,9 +2,12 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 type OffersSort = "price" | "discount" | "updated";
 type ProductsSort =
@@ -77,7 +80,11 @@ interface HistoryAggregateRow {
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger,
+  ) {}
 
   async getProducts(options: {
     page: number;
@@ -197,6 +204,13 @@ export class ProductsService {
       .slice(start, start + options.limit)
       .map(({ updatedAt, bestPrice, bestDiscount, ...item }) => item);
 
+    this.logger.info("Products fetched", {
+      service: "ProductsService",
+      method: "getProducts",
+      total,
+      page: options.page,
+    });
+
     return {
       items: pageItems,
       total,
@@ -207,6 +221,12 @@ export class ProductsService {
   }
 
   async getCategories(parentId?: string) {
+    this.logger.info("Fetching categories", {
+      service: "ProductsService",
+      method: "getCategories",
+      parentId,
+    });
+
     const [categories, productCounts] = await this.prisma.$transaction([
       this.prisma.productCategory.findMany({
         orderBy: {
@@ -254,6 +274,11 @@ export class ProductsService {
     if (parentId) {
       const selectedRoot = nodesById.get(parentId);
       if (!selectedRoot) {
+        this.logger.warn("Category not found", {
+          service: "ProductsService",
+          method: "getCategories",
+          parentId,
+        });
         throw new NotFoundException(`Category '${parentId}' not found`);
       }
 
@@ -273,6 +298,12 @@ export class ProductsService {
   }
 
   async getProductCard(id: string) {
+    this.logger.info("Fetching product card", {
+      service: "ProductsService",
+      method: "getProductCard",
+      productId: id,
+    });
+
     const product = await this.getProductWithRelationsOrThrow(id);
     const topOffers = this.mapOffers(product.offers)
       .sort((a, b) => a.effectivePrice - b.effectivePrice)
@@ -327,6 +358,13 @@ export class ProductsService {
     id: string,
     options: { sort: OffersSort; inStock: boolean },
   ) {
+    this.logger.info("Fetching product offers", {
+      service: "ProductsService",
+      method: "getProductOffers",
+      productId: id,
+      ...options,
+    });
+
     const product = await this.getProductWithRelationsOrThrow(id);
 
     let offers = this.mapOffers(product.offers);
@@ -352,6 +390,13 @@ export class ProductsService {
   }
 
   async getProductPriceHistory(id: string, period: string) {
+    this.logger.info("Fetching price history", {
+      service: "ProductsService",
+      method: "getProductPriceHistory",
+      productId: id,
+      period,
+    });
+
     const product = await this.getProductOrThrow(id);
     const historyData = await this.collectHistoryStats(
       product.id,
@@ -373,6 +418,13 @@ export class ProductsService {
   }
 
   async getRelatedProducts(id: string, limit: number) {
+    this.logger.info("Fetching related products", {
+      service: "ProductsService",
+      method: "getRelatedProducts",
+      productId: id,
+      limit,
+    });
+
     const cappedLimit = Math.max(1, Math.min(limit, 20));
     const product = await this.getProductOrThrow(id);
 
@@ -445,6 +497,11 @@ export class ProductsService {
     });
 
     if (!product) {
+      this.logger.warn("Product not found", {
+        service: "ProductsService",
+        method: "getProductOrThrow",
+        productId: id,
+      });
       throw new NotFoundException(`Product '${id}' not found`);
     }
 
@@ -460,6 +517,11 @@ export class ProductsService {
     });
 
     if (!product) {
+      this.logger.warn("Product not found", {
+        service: "ProductsService",
+        method: "getProductWithRelationsOrThrow",
+        productId: id,
+      });
       throw new NotFoundException(`Product '${id}' not found`);
     }
 
@@ -640,6 +702,11 @@ export class ProductsService {
   private parsePeriod(period: string) {
     const match = /^(\d+)(d|w|m)$/i.exec(period.trim());
     if (!match) {
+      this.logger.warn("Invalid period format", {
+        service: "ProductsService",
+        method: "parsePeriod",
+        period,
+      });
       throw new BadRequestException(
         "Invalid period format. Use values like 30d, 2w or 3m.",
       );
@@ -680,6 +747,14 @@ export class ProductsService {
     period: string,
     includePoints = false,
   ) {
+    this.logger.info("Collecting history stats", {
+      service: "ProductsService",
+      method: "collectHistoryStats",
+      productId,
+      period,
+      includePoints,
+    });
+
     const from = this.parsePeriod(period);
     const aggregateRows = await this.prisma.$queryRaw<
       HistoryAggregateRow[]

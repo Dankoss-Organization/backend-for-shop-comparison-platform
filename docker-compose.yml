@@ -11,6 +11,9 @@ services:
       PORT: 3000
     ports:
       - "3000:3000"
+    labels:
+      - "app=shop-comparison"
+      - "service=api"
 
   worker:
     image: shop-comparison-backend:latest
@@ -20,3 +23,37 @@ services:
     command: npm run start:worker:prod
     env_file:
       - .env
+    labels:
+      - "app=shop-comparison"
+      - "service=worker"
+
+  alloy:
+    image: grafana/alloy:latest
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: run /etc/alloy/config.alloy
+    env_file:
+      - .env
+    depends_on:
+      - api
+      - worker
+    restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.10.2
+    environment:
+      MEILI_ENV: development
+      MEILI_API_KEY: ${MEILISEARCH_API_KEY:-development-key-change-in-prod}
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  meilisearch_data:
