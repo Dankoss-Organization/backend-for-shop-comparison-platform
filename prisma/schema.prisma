@@ -137,7 +137,8 @@ model Product {
   brand         String?
   country       String?
 
-  media String
+  raw_main_image String
+  main_image String
 
   measurements Json
 
