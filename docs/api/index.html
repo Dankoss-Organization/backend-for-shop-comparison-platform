@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop Comparison Platform API Docs</title>
+    <style>
+      body { margin: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+      .topbar {
+        padding: 12px 16px;
+        background: #0f172a;
+        color: #f8fafc;
+        font-size: 14px;
+      }
+      .topbar a { color: #93c5fd; text-decoration: none; }
+      .status {
+        margin: 16px;
+        padding: 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .status a { color: #1d4ed8; }
+      .basic-docs {
+        margin: 16px;
+        padding: 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+      .endpoint {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #e2e8f0;
+      }
+      .endpoint:first-child {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+      }
+      .method {
+        display: inline-block;
+        min-width: 64px;
+        text-align: center;
+        font-weight: 700;
+        color: #fff;
+        background: #1d4ed8;
+        border-radius: 6px;
+        padding: 2px 8px;
+        margin-right: 8px;
+        text-transform: uppercase;
+      }
+      .path {
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 14px;
+      }
+      .summary {
+        margin: 6px 0 0;
+        color: #334155;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">API docs · <a href="../">Back to docs home</a></div>
+    <div id="status" class="status">Loading API documentation...</div>
+    <div id="basic-docs" class="basic-docs"></div>
+    <div id="redoc-container"></div>
+    <script>
+      const spec = {"openapi":"3.0.0","paths":{"/":{"get":{"operationId":"AppController_getHello","parameters":[],"responses":{"200":{"description":""}},"tags":["App"]}},"/api/v1/products/{id}/card":{"get":{"operationId":"ProductsController_getProductCard","parameters":[{"name":"id","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Product card returned successfully."},"404":{"description":"Product was not found."}},"summary":"Get a product card with top offers and summary stats","tags":["products"]}},"/api/v1/products/{id}/offers":{"get":{"operationId":"ProductsController_getProductOffers","parameters":[{"name":"id","required":true,"in":"path","schema":{"type":"string"}},{"name":"inStock","required":false,"in":"query","description":"When true, return only in-stock offers","schema":{"type":"boolean"}},{"name":"sort","required":false,"in":"query","description":"Sort field for offers","schema":{"enum":["price","discount","updated"],"type":"string"}}],"responses":{"200":{"description":"Product offers returned successfully."},"400":{"description":"Invalid query parameters."},"404":{"description":"Product was not found."}},"summary":"Get product offers with sorting and stock filtering","tags":["products"]}},"/api/v1/products/{id}/price-history":{"get":{"operationId":"ProductsController_getProductPriceHistory","parameters":[{"name":"id","required":true,"in":"path","schema":{"type":"string"}},{"name":"period","required":false,"in":"query","schema":{"type":"string","pattern":"^(\\d+)(d|w|m)$","default":"30d"},"description":"Time period, e.g. 30d, 2w, 3m"}],"responses":{"200":{"description":"Product price history returned successfully."},"400":{"description":"Invalid period format."},"404":{"description":"Product was not found."}},"summary":"Get product price history for a given period","tags":["products"]}},"/api/v1/products/{id}/related":{"get":{"operationId":"ProductsController_getRelatedProducts","parameters":[{"name":"id","required":true,"in":"path","schema":{"type":"string"}},{"name":"limit","required":false,"in":"query","description":"Maximum related products count","schema":{"minimum":1,"maximum":20,"type":"number"}}],"responses":{"200":{"description":"Related products returned successfully."},"400":{"description":"Invalid limit value."},"404":{"description":"Product was not found."}},"summary":"Get related products","tags":["products"]}}},"info":{"title":"Shop Comparison Platform API","description":"Backend API for product cards, offers, price history, and related products.","version":"1.0","contact":{}},"tags":[{"name":"products","description":""}],"servers":[],"components":{"schemas":{}}};
+
+      const statusNode = document.getElementById("status");
+      const basicDocsNode = document.getElementById("basic-docs");
+      const container = document.getElementById("redoc-container");
+      let initialized = false;
+
+      const renderBasicDocs = () => {
+        const endpoints = [];
+        for (const [path, operations] of Object.entries(spec.paths || {})) {
+          for (const [method, operation] of Object.entries(operations || {})) {
+            endpoints.push({
+              path,
+              method,
+              summary: operation.summary || "",
+            });
+          }
+        }
+
+        const endpointsHtml = endpoints
+          .map(
+            (item) =>
+              '<div class="endpoint">' +
+              '<div><span class="method">' +
+              item.method +
+              '</span><span class="path">' +
+              item.path +
+              '</span></div>' +
+              '<p class="summary">' +
+              (item.summary || "No summary") +
+              '</p>' +
+              '</div>',
+          )
+          .join("");
+
+        basicDocsNode.innerHTML =
+          '<h2 style="margin: 0 0 8px;">' +
+          (spec.info?.title || "API Documentation") +
+          '</h2>' +
+          '<p style="margin: 0 0 12px; color: #334155;">' +
+          (spec.info?.description || "") +
+          '</p>' +
+          '<p style="margin: 0 0 12px;">OpenAPI file: <a href="./openapi.json">openapi.json</a></p>' +
+          endpointsHtml;
+      };
+
+      const showFallback = (reason) => {
+        statusNode.innerHTML =
+          "Showing basic docs. Redoc UI is unavailable (" +
+          reason +
+          ").";
+      };
+
+      renderBasicDocs();
+      showFallback("loading");
+
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js";
+      script.onload = () => {
+        if (!window.Redoc) {
+          showFallback("Redoc script is unavailable");
+          return;
+        }
+
+        window.Redoc.init(spec, { hideDownloadButton: false }, container);
+        initialized = true;
+        basicDocsNode.style.display = "none";
+        statusNode.style.display = "none";
+      };
+      script.onerror = () => showFallback("CDN is blocked or unavailable");
+
+      document.body.appendChild(script);
+
+      setTimeout(() => {
+        if (!initialized) {
+          showFallback("initialization timeout");
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>
