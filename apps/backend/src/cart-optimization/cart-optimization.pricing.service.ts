@@ -3,18 +3,8 @@ import {
   CART_OPTIMIZATION_DEFAULTS,
   FulfillmentType,
   GeoPoint,
+  CartOptimizationStorePricingInput,
 } from "./cart-optimization.contracts";
-
-export interface CartOptimizationStorePricingInput {
-  storeId: string;
-  storeName?: string;
-  location: GeoPoint;
-  supportsDelivery?: boolean;
-  supportsPickup?: boolean;
-  deliveryBaseFee?: number;
-  deliveryFeePerKm?: number;
-  pickupRadiusKm?: number | null;
-}
 
 export interface CartOptimizationStoreQuote {
   storeId: string;
