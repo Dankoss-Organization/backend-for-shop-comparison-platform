@@ -1,0 +1,735 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  Inject,
+} from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
+
+type OffersSort = "price" | "discount" | "updated";
+type ProductsSort = "updated" | "name";
+
+const productRelationsInclude = {
+  category: true,
+  offers: {
+    include: {
+      store: {
+        include: {
+          brand: true,
+        },
+      },
+      priceHistory: {
+        orderBy: {
+          startDate: "desc",
+        },
+        take: 1,
+      },
+    },
+  },
+} as const;
+
+type ProductWithRelations = Prisma.ProductGetPayload<{
+  include: typeof productRelationsInclude;
+}>;
+
+type ProductCatalogItem = {
+  id: string;
+  productId: string;
+  canonicalName: string;
+  brand: string | null;
+  category: {
+    id: string;
+    name: string;
+  } | null;
+  media: string;
+  description: string | null;
+  bestPrice: number | null;
+  oldPrice: number | null;
+  discountPercent: number | null;
+  currency: "UAH";
+  offersCount: number;
+  availabilityStatus: "in_stock" | "out_of_stock";
+  updatedAt: string;
+};
+
+type CategoryTreeNode = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  productCount: number;
+  children: CategoryTreeNode[];
+};
+
+interface HistoryAggregateRow {
+  min_price: number | null;
+  max_price: number | null;
+  avg_price: number | null;
+  first_price: number | null;
+  last_price: number | null;
+}
+
+@Injectable()
+export class ProductsService {
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger,
+  ) {}
+
+  async getProducts(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    brand?: string;
+    categoryId?: string;
+    inStock?: boolean;
+    sort: ProductsSort;
+  }) {
+    this.logger.info("Fetching products", {
+      service: "ProductsService",
+      method: "getProducts",
+      ...options,
+    });
+
+    const where: Prisma.ProductWhereInput = {
+      ...(options.categoryId ? { categoryId: options.categoryId } : {}),
+      ...(options.brand
+        ? {
+            brand: {
+              contains: options.brand,
+              mode: "insensitive",
+            },
+          }
+        : {}),
+      ...(options.search
+        ? {
+            OR: [
+              {
+                canonicalName: {
+                  contains: options.search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                productId: {
+                  contains: options.search,
+                  mode: "insensitive",
+                },
+              },
+              options.brand
+                ? undefined
+                : {
+                    brand: {
+                      contains: options.search,
+                      mode: "insensitive",
+                    },
+                  },
+            ].filter(Boolean) as Prisma.ProductWhereInput[],
+          }
+        : {}),
+      ...(options.inStock
+        ? {
+            offers: {
+              some: {
+                currentPrice: {
+                  gt: 0,
+                },
+              },
+            },
+          }
+        : {}),
+    };
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput =
+      options.sort === "name"
+        ? { canonicalName: "asc" }
+        : { updatedAt: "desc" };
+
+    const [total, products] = await this.prisma.$transaction([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        include: productRelationsInclude,
+        orderBy,
+        skip: (options.page - 1) * options.limit,
+        take: options.limit,
+      }),
+    ]);
+
+    this.logger.info("Products fetched", {
+      service: "ProductsService",
+      method: "getProducts",
+      total,
+      page: options.page,
+    });
+
+    return {
+      items: products.map((product) => this.mapCatalogItem(product)),
+      total,
+      page: options.page,
+      limit: options.limit,
+      totalPages: Math.max(1, Math.ceil(total / options.limit)),
+    };
+  }
+
+  async getCategories(parentId?: string) {
+    this.logger.info("Fetching categories", {
+      service: "ProductsService",
+      method: "getCategories",
+      parentId,
+    });
+
+    const [categories, productCounts] = await this.prisma.$transaction([
+      this.prisma.productCategory.findMany({
+        orderBy: {
+          name: "asc",
+        },
+      }),
+      this.prisma.product.groupBy({
+        by: ["categoryId"],
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
+
+    const countsByCategoryId = new Map<string, number>();
+    for (const row of productCounts) {
+      if (row.categoryId) {
+        countsByCategoryId.set(row.categoryId, row._count._all);
+      }
+    }
+
+    const nodesById = new Map<string, CategoryTreeNode>();
+    for (const category of categories) {
+      nodesById.set(category.id, {
+        id: category.id,
+        name: category.name,
+        parentId: category.parentId,
+        productCount: countsByCategoryId.get(category.id) ?? 0,
+        children: [],
+      });
+    }
+
+    for (const category of categories) {
+      if (!category.parentId) {
+        continue;
+      }
+
+      const parent = nodesById.get(category.parentId);
+      const child = nodesById.get(category.id);
+      if (parent && child) {
+        parent.children.push(child);
+      }
+    }
+
+    if (parentId) {
+      const selectedRoot = nodesById.get(parentId);
+      if (!selectedRoot) {
+        this.logger.warn("Category not found", {
+          service: "ProductsService",
+          method: "getCategories",
+          parentId,
+        });
+        throw new NotFoundException(`Category '${parentId}' not found`);
+      }
+
+      return {
+        categories: [this.sortCategoryTree(selectedRoot)],
+      };
+    }
+
+    const roots = categories
+      .filter((category) => category.parentId === null)
+      .map((category) => nodesById.get(category.id))
+      .filter(Boolean) as CategoryTreeNode[];
+
+    return {
+      categories: roots.map((node) => this.sortCategoryTree(node)),
+    };
+  }
+
+  async getProductCard(id: string) {
+    this.logger.info("Fetching product card", {
+      service: "ProductsService",
+      method: "getProductCard",
+      productId: id,
+    });
+
+    const product = await this.getProductWithRelationsOrThrow(id);
+    const topOffers = this.mapOffers(product.offers)
+      .sort((a, b) => a.effectivePrice - b.effectivePrice)
+      .slice(0, 5);
+
+    const bestOffer = topOffers[0] ?? null;
+    const historyData = await this.collectHistoryStats(product.id, "30d");
+
+    return {
+      product: {
+        id: product.id,
+        productId: product.productId,
+        canonicalName: product.canonicalName,
+        brand: product.brand,
+        category: product.category?.name ?? null,
+        media: product.media,
+        description: product.description,
+        measurements: product.measurements,
+        calories: product.calories,
+        proteins_g: product.proteins ?? null,
+        fats_g: product.fats ?? null,
+        carbohydrates_g: product.carbohydrates ?? null,
+      },
+      pricingSummary: {
+        bestPrice: bestOffer?.effectivePrice ?? null,
+        oldPrice: bestOffer?.oldPrice ?? null,
+        discountPercent: bestOffer?.discountPercent ?? null,
+        currency: "UAH",
+      },
+      topOffers,
+      stats: {
+        priceTrend: historyData.trend,
+        minPrice30d: historyData.minPrice,
+        maxPrice30d: historyData.maxPrice,
+        avgPrice30d: historyData.avgPrice,
+      },
+      badges: this.buildBadges(bestOffer),
+      availabilityStatus: topOffers.length > 0 ? "in_stock" : "out_of_stock",
+      userContext: {
+        favorite: false,
+        inComparison: false,
+        inCart: false,
+      },
+      meta: {
+        fetchedAt: new Date().toISOString(),
+        cacheTtlSeconds: 60,
+      },
+    };
+  }
+
+  async getProductOffers(
+    id: string,
+    options: { sort: OffersSort; inStock: boolean },
+  ) {
+    this.logger.info("Fetching product offers", {
+      service: "ProductsService",
+      method: "getProductOffers",
+      productId: id,
+      ...options,
+    });
+
+    const product = await this.getProductWithRelationsOrThrow(id);
+
+    let offers = this.mapOffers(product.offers);
+    if (options.inStock) {
+      offers = offers.filter((offer) => offer.currentPrice > 0);
+    }
+
+    offers.sort((a, b) => {
+      if (options.sort === "discount") {
+        return (b.discountPercent ?? 0) - (a.discountPercent ?? 0);
+      }
+      if (options.sort === "updated") {
+        return +new Date(b.updatedAt) - +new Date(a.updatedAt);
+      }
+      return a.effectivePrice - b.effectivePrice;
+    });
+
+    return {
+      productId: product.id,
+      offers,
+      total: offers.length,
+    };
+  }
+
+  async getProductPriceHistory(id: string, period: string) {
+    this.logger.info("Fetching price history", {
+      service: "ProductsService",
+      method: "getProductPriceHistory",
+      productId: id,
+      period,
+    });
+
+    const product = await this.getProductOrThrow(id);
+    const historyData = await this.collectHistoryStats(
+      product.id,
+      period,
+      true,
+    );
+
+    return {
+      productId: product.id,
+      period,
+      points: historyData.points,
+      stats: {
+        minPrice: historyData.minPrice,
+        maxPrice: historyData.maxPrice,
+        avgPrice: historyData.avgPrice,
+        trend: historyData.trend,
+      },
+    };
+  }
+
+  async getRelatedProducts(id: string, limit: number) {
+    this.logger.info("Fetching related products", {
+      service: "ProductsService",
+      method: "getRelatedProducts",
+      productId: id,
+      limit,
+    });
+
+    const cappedLimit = Math.max(1, Math.min(limit, 20));
+    const product = await this.getProductOrThrow(id);
+
+    const orConditions: Prisma.ProductWhereInput[] = [];
+    if (product.categoryId) {
+      orConditions.push({ categoryId: product.categoryId });
+    }
+    if (product.brand) {
+      orConditions.push({ brand: product.brand });
+    }
+
+    if (orConditions.length === 0) {
+      return { productId: product.id, related: [] };
+    }
+
+    const related = await this.prisma.product.findMany({
+      where: {
+        id: { not: product.id },
+        OR: orConditions,
+      },
+      include: {
+        offers: {
+          include: {
+            store: {
+              include: {
+                brand: true,
+              },
+            },
+            priceHistory: {
+              orderBy: {
+                startDate: "desc",
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+      take: cappedLimit,
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return {
+      productId: product.id,
+      related: related.map((item) => {
+        const mappedOffers = this.mapOffers(item.offers);
+        const bestPrice = mappedOffers.length
+          ? Math.min(...mappedOffers.map((offer) => offer.effectivePrice))
+          : null;
+
+        return {
+          id: item.id,
+          productId: item.productId,
+          canonicalName: item.canonicalName,
+          brand: item.brand,
+          media: item.media,
+          bestPrice,
+          offersCount: mappedOffers.length,
+        };
+      }),
+    };
+  }
+
+  private async getProductOrThrow(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: {
+        OR: [{ id }, { productId: id }],
+      },
+    });
+
+    if (!product) {
+      this.logger.warn("Product not found", {
+        service: "ProductsService",
+        method: "getProductOrThrow",
+        productId: id,
+      });
+      throw new NotFoundException(`Product '${id}' not found`);
+    }
+
+    return product;
+  }
+
+  private async getProductWithRelationsOrThrow(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: {
+        OR: [{ id }, { productId: id }],
+      },
+      include: productRelationsInclude,
+    });
+
+    if (!product) {
+      this.logger.warn("Product not found", {
+        service: "ProductsService",
+        method: "getProductWithRelationsOrThrow",
+        productId: id,
+      });
+      throw new NotFoundException(`Product '${id}' not found`);
+    }
+
+    return product;
+  }
+
+  private mapCatalogItem(product: ProductWithRelations): ProductCatalogItem {
+    const offers = this.mapOffers(product.offers);
+    const bestOffer = offers.length
+      ? offers.reduce(
+          (lowest, offer) =>
+            offer.effectivePrice < lowest.effectivePrice ? offer : lowest,
+          offers[0],
+        )
+      : null;
+
+    return {
+      id: product.id,
+      productId: product.productId,
+      canonicalName: product.canonicalName,
+      brand: product.brand,
+      category: product.category
+        ? {
+            id: product.category.id,
+            name: product.category.name,
+          }
+        : null,
+      media: product.media,
+      description: product.description,
+      bestPrice: bestOffer?.effectivePrice ?? null,
+      oldPrice: bestOffer?.oldPrice ?? null,
+      discountPercent: bestOffer?.discountPercent ?? null,
+      currency: "UAH",
+      offersCount: offers.length,
+      availabilityStatus: offers.length > 0 ? "in_stock" : "out_of_stock",
+      updatedAt: product.updatedAt.toISOString(),
+    };
+  }
+
+  private sortCategoryTree(node: CategoryTreeNode): CategoryTreeNode {
+    return {
+      ...node,
+      children: node.children
+        .map((child) => this.sortCategoryTree(child))
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    };
+  }
+
+  private mapOffers(
+    offers: Array<{
+      id: string;
+      currentPrice: Prisma.Decimal;
+      discountPrice: Prisma.Decimal | null;
+      updatedAt: Date;
+      store: {
+        id: string;
+        city: string;
+        address: string;
+        brand: { id: string; name: string };
+      };
+      priceHistory: Array<{ regularPrice: Prisma.Decimal }>;
+    }>,
+  ) {
+    return offers.map((offer) => {
+      const currentPrice = Number(offer.currentPrice);
+      const discountPrice = offer.discountPrice
+        ? Number(offer.discountPrice)
+        : null;
+      const effectivePrice = discountPrice ?? currentPrice;
+      const oldPrice = offer.priceHistory[0]
+        ? Number(offer.priceHistory[0].regularPrice)
+        : currentPrice;
+      const discountPercent =
+        oldPrice > effectivePrice
+          ? Number((((oldPrice - effectivePrice) / oldPrice) * 100).toFixed(1))
+          : null;
+
+      return {
+        id: offer.id,
+        store: {
+          id: offer.store.id,
+          brand: offer.store.brand.name,
+          city: offer.store.city,
+          address: offer.store.address,
+        },
+        currentPrice,
+        discountPrice,
+        effectivePrice,
+        oldPrice,
+        discountPercent,
+        availability: "in_stock",
+        updatedAt: offer.updatedAt.toISOString(),
+      };
+    });
+  }
+
+  private buildBadges(
+    bestOffer: {
+      discountPercent: number | null;
+    } | null,
+  ) {
+    const badges: string[] = [];
+
+    if (bestOffer) {
+      badges.push("Best price");
+      if ((bestOffer.discountPercent ?? 0) >= 20) {
+        badges.push(`-${Math.round(bestOffer.discountPercent ?? 0)}%`);
+      }
+    }
+
+    return badges;
+  }
+
+  private parsePeriod(period: string) {
+    const match = /^(\d+)(d|w|m)$/i.exec(period.trim());
+    if (!match) {
+      this.logger.warn("Invalid period format", {
+        service: "ProductsService",
+        method: "parsePeriod",
+        period,
+      });
+      throw new BadRequestException(
+        "Invalid period format. Use values like 30d, 2w or 3m.",
+      );
+    }
+
+    const amount = Number(match[1]);
+    const unit = match[2].toLowerCase();
+
+    if (amount <= 0) {
+      throw new BadRequestException("Period amount must be greater than 0.");
+    }
+
+    if (
+      (unit === "d" && amount > 3650) ||
+      (unit === "w" && amount > 520) ||
+      (unit === "m" && amount > 120)
+    ) {
+      throw new BadRequestException(
+        "Period is too large. Maximum allowed range is 10 years.",
+      );
+    }
+
+    const from = new Date();
+
+    if (unit === "d") {
+      from.setDate(from.getDate() - amount);
+    } else if (unit === "w") {
+      from.setDate(from.getDate() - amount * 7);
+    } else {
+      from.setMonth(from.getMonth() - amount);
+    }
+
+    return from;
+  }
+
+  private async collectHistoryStats(
+    productId: string,
+    period: string,
+    includePoints = false,
+  ) {
+    this.logger.info("Collecting history stats", {
+      service: "ProductsService",
+      method: "collectHistoryStats",
+      productId,
+      period,
+      includePoints,
+    });
+
+    const from = this.parsePeriod(period);
+    const aggregateRows = await this.prisma.$queryRaw<
+      HistoryAggregateRow[]
+    >(Prisma.sql`
+      SELECT
+        MIN(ph.price)::float8 AS min_price,
+        MAX(ph.price)::float8 AS max_price,
+        AVG(ph.price)::float8 AS avg_price,
+        (ARRAY_AGG(ph.price::float8 ORDER BY ph.start_date ASC))[1] AS first_price,
+        (ARRAY_AGG(ph.price::float8 ORDER BY ph.start_date DESC))[1] AS last_price
+      FROM price_history ph
+      INNER JOIN offers o ON o.id = ph.offer_id
+      WHERE o.product_id = ${productId}
+        AND ph.start_date >= ${from}
+    `);
+
+    const aggregate = aggregateRows[0] ?? {
+      min_price: null,
+      max_price: null,
+      avg_price: null,
+      first_price: null,
+      last_price: null,
+    };
+
+    const minPrice =
+      aggregate.min_price === null ? null : Number(aggregate.min_price);
+    const maxPrice =
+      aggregate.max_price === null ? null : Number(aggregate.max_price);
+    const avgPrice =
+      aggregate.avg_price === null
+        ? null
+        : Number(aggregate.avg_price.toFixed(2));
+
+    let trend = "stable";
+    if (aggregate.first_price !== null && aggregate.last_price !== null) {
+      if (aggregate.last_price > aggregate.first_price) {
+        trend = "up";
+      } else if (aggregate.last_price < aggregate.first_price) {
+        trend = "down";
+      }
+    }
+
+    const history = includePoints
+      ? await this.prisma.priceHistory.findMany({
+          where: {
+            offer: {
+              productId,
+            },
+            startDate: { gte: from },
+          },
+          orderBy: {
+            startDate: "asc",
+          },
+          include: {
+            offer: {
+              include: {
+                store: {
+                  include: {
+                    brand: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+      : [];
+
+    return {
+      points: includePoints
+        ? history.map((point) => ({
+            date: point.startDate.toISOString(),
+            price: Number(point.price),
+            regularPrice: Number(point.regularPrice),
+            store: {
+              id: point.offer.store.id,
+              brand: point.offer.store.brand.name,
+              city: point.offer.store.city,
+            },
+          }))
+        : [],
+      minPrice,
+      maxPrice,
+      avgPrice,
+      trend,
+    };
+  }
+}

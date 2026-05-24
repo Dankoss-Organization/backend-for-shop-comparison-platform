@@ -6,13 +6,21 @@
   "scripts": {
     "start": "nest start backend",
     "start:dev": "nest start backend --watch",
+    "start:worker": "ts-node -P apps/backend/tsconfig.app.json apps/backend/src/worker.ts",
+    "start:worker:dev": "ts-node-dev --project apps/backend/tsconfig.app.json --respawn --transpile-only apps/backend/src/worker.ts",
+    "start:prod": "node dist/apps/backend/src/main.js",
+    "start:worker:prod": "node dist/apps/backend/src/worker.js",
     "start:debug": "nest start backend --debug --watch",
     "build": "nest build backend",
+    "build:docker": "tsc -p apps/backend/tsconfig.app.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:db": "jest --config ./src/db-tests/jest.db.config.js",
     "test:db:watch": "jest --config ./src/db-tests/jest.db.config.js --watch",
     "test:e2e": "jest --config ./apps/backend/test/jest-e2e.json",
+    "docs:api": "ts-node apps/backend/src/scripts/generate-api-docs.ts",
+    "docs:db": "prisma generate && ts-node apps/backend/src/scripts/generate-db-docs-index.ts",
+    "docs:build": "npm run docs:api && npm run docs:db",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:migrate": "prisma migrate dev"
@@ -40,14 +48,25 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
     "@nestjs/platform-express": "^11.1.19",
+    "@nestjs/swagger": "^11.4.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "bullmq": "^5.76.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "ioredis": "^5.10.1",
+    "nest-winston": "^1.10.2",
+    "meilisearch": "^0.42.0",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
