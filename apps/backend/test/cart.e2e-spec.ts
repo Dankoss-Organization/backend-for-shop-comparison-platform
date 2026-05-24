@@ -11,6 +11,7 @@ describe("CartsController (e2e)", () => {
 
   const userId = "dev_user";
   const suffix = Date.now();
+  let offerId = "";
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -76,6 +77,8 @@ describe("CartsController (e2e)", () => {
         discountPrice: null,
       },
     });
+
+    offerId = offer.id;
 
     await prisma.cart.create({
       data: {
@@ -209,6 +212,38 @@ describe("CartsController (e2e)", () => {
         city: "Kyiv",
       }),
     );
+  });
+
+  it("adds an item to the current cart and keeps totals in sync", async () => {
+    const addResponse = await request(app.getHttpServer())
+      .post("/api/v1/cart/items")
+      .set("Authorization", `Bearer ${userId}`)
+      .send({
+        offerId,
+        quantity: 1,
+      })
+      .expect(201);
+
+    expect(addResponse.body).toEqual({
+      success: true,
+      cartItemId: `ci_item_${suffix}`,
+    });
+
+    const cartResponse = await request(app.getHttpServer())
+      .get("/api/v1/cart")
+      .set("Authorization", `Bearer ${userId}`)
+      .expect(200);
+
+    expect(cartResponse.body.items).toHaveLength(1);
+    expect(cartResponse.body.items[0]).toEqual(
+      expect.objectContaining({
+        id: `ci_item_${suffix}`,
+        quantity: 3,
+        price: 45.99,
+      }),
+    );
+    expect(cartResponse.body.sum).toBe(137.97);
+    expect(cartResponse.body.discountSum).toBe(0);
   });
 
   it("returns an empty cart when there is no active cart for the user", async () => {
