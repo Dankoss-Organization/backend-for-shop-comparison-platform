@@ -6,14 +6,18 @@ import {
   CartOptimizationRequest,
 } from './cart-optimization.contracts';
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient | undefined;
+function getPrisma(): PrismaClient {
+  if (!prisma) prisma = new PrismaClient();
+  return prisma;
+}
 
 @Injectable()
 export class CartOptimizationPrismaService {
   async buildEvaluationInput(request: CartOptimizationRequest): Promise<CartOptimizationEvaluationInput> {
     const productIds = request.cartItems.map((c) => c.productId);
 
-    const offers = await prisma.offer.findMany({
+    const offers = await getPrisma().offer.findMany({
       where: { productId: { in: productIds } },
       include: { store: true },
     });
