@@ -23,6 +23,29 @@ export interface CartOptimizationRequest {
   cartItems: CartOptimizationItemInput[];
 }
 
+export interface CartOptimizationStorePricingInput {
+  storeId: string;
+  storeName?: string;
+  location: GeoPoint;
+  supportsDelivery?: boolean;
+  supportsPickup?: boolean;
+  deliveryBaseFee?: number;
+  deliveryFeePerKm?: number;
+  pickupRadiusKm?: number | null;
+}
+
+export interface CartOptimizationOfferCandidate extends CartOptimizationStorePricingInput {
+  itemId: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface CartOptimizationEvaluationInput {
+  request: CartOptimizationRequest;
+  offers: CartOptimizationOfferCandidate[];
+}
+
 export interface CartOptimizationItemAllocation {
   itemId: string;
   productId: string;
