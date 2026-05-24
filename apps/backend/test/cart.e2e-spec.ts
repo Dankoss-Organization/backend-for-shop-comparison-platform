@@ -210,4 +210,20 @@ describe("CartsController (e2e)", () => {
       }),
     );
   });
+
+  it("returns an empty cart when there is no active cart for the user", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/api/v1/cart")
+      .set("Authorization", "Bearer missing-cart-user")
+      .expect(200);
+
+    expect(response.body).toEqual({
+      id: null,
+      isActive: false,
+      items: [],
+      sum: 0,
+      discountSum: 0,
+      currency: "UAH",
+    });
+  });
 });

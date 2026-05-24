@@ -103,8 +103,9 @@ export class GetCartResponseDto {
   @ApiProperty({
     example: "cart_usr_9921",
     description: "Cart identifier",
+    nullable: true,
   })
-  id: string;
+  id: string | null;
 
   @ApiProperty({
     example: true,

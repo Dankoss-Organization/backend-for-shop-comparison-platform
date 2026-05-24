@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -48,12 +48,20 @@ export class CartsService {
     });
 
     if (!cart) {
-      this.logger.warn("Active cart not found", {
+      this.logger.warn("Active cart not found, returning empty cart", {
         service: "CartsService",
         method: "getCart",
         userId,
       });
-      throw new NotFoundException("Active cart not found");
+
+      return {
+        id: null,
+        isActive: false,
+        items: [],
+        sum: 0,
+        discountSum: 0,
+        currency: "UAH",
+      };
     }
 
     this.logger.info("Cart fetched", {
