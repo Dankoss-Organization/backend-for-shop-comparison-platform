@@ -286,4 +286,61 @@ export class CartsService {
       cartItemId: updatedItem.id,
     };
   }
+
+  async deleteCartItem(userId: string, itemId: string) {
+    const item = await this.prisma.cartItem.findFirst({
+      where: {
+        id: itemId,
+        cart: {
+          userId,
+          isActive: true,
+        },
+      },
+      include: {
+        offer: true,
+        cart: true,
+      },
+    });
+
+    if (!item) {
+      this.logger.warn("Cart item not found for deletion", {
+        service: "CartsService",
+        method: "deleteCartItem",
+        userId,
+        itemId,
+      });
+      throw new NotFoundException(`Cart item '${itemId}' not found`);
+    }
+
+    const discountAmount = item.offer.discountPrice
+      ? Number(item.offer.currentPrice) - Number(item.offer.discountPrice)
+      : 0;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.cartItem.delete({
+        where: { id: itemId },
+      });
+
+      await tx.cart.update({
+        where: { id: item.cartId },
+        data: {
+          sum: Number(item.cart.sum) - Number(item.price) * item.quantity,
+          discountSum:
+            Number(item.cart.discountSum) - discountAmount * item.quantity,
+        },
+      });
+    });
+
+    this.logger.info("Cart item deleted", {
+      service: "CartsService",
+      method: "deleteCartItem",
+      userId,
+      itemId,
+    });
+
+    return {
+      success: true,
+      cartItemId: itemId,
+    };
+  }
 }

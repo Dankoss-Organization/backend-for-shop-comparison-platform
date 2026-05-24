@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -59,5 +60,18 @@ export class CartsController {
     @Body() body: UpdateCartItemRequestDto,
   ) {
     return this.cartsService.updateCartItemQuantity(req.user.id, itemId, body);
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: AddCartItemResponseDto,
+    description: "Cart item deleted successfully",
+  })
+  @Delete("items/:itemId")
+  deleteCartItem(
+    @Request() req: { user: { id: string } },
+    @Param("itemId") itemId: string,
+  ) {
+    return this.cartsService.deleteCartItem(req.user.id, itemId);
   }
 }

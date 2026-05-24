@@ -279,6 +279,27 @@ describe("CartsController (e2e)", () => {
     expect(cartResponse.body.discountSum).toBe(0);
   });
 
+  it("deletes an existing cart item and recalculates the cart totals", async () => {
+    const deleteResponse = await request(app.getHttpServer())
+      .delete(`/api/v1/cart/items/${cartItemId}`)
+      .set("Authorization", `Bearer ${userId}`)
+      .expect(200);
+
+    expect(deleteResponse.body).toEqual({
+      success: true,
+      cartItemId,
+    });
+
+    const cartResponse = await request(app.getHttpServer())
+      .get("/api/v1/cart")
+      .set("Authorization", `Bearer ${userId}`)
+      .expect(200);
+
+    expect(cartResponse.body.items).toHaveLength(0);
+    expect(cartResponse.body.sum).toBe(0);
+    expect(cartResponse.body.discountSum).toBe(0);
+  });
+
   it("returns an empty cart when there is no active cart for the user", async () => {
     const response = await request(app.getHttpServer())
       .get("/api/v1/cart")
