@@ -652,6 +652,142 @@ describe("ProductsController (e2e)", () => {
       expect(store).toBeDefined();
       expect(store.locationCount).toBeGreaterThan(0);
     });
+
+    describe("GET /api/v1/stores/:storeId/products", () => {
+      it("returns 200 with store products", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .expect(200);
+
+        expect(response.body).toEqual(
+          expect.objectContaining({
+            storeId: fixture.storeIds[0],
+            storeName: expect.any(String),
+            items: expect.any(Array),
+            total: expect.any(Number),
+            page: expect.any(Number),
+            limit: expect.any(Number),
+            totalPages: expect.any(Number),
+          }),
+        );
+      });
+
+      it("returns products with correct structure", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .expect(200);
+
+        if (response.body.items.length > 0) {
+          const item = response.body.items[0];
+          expect(item).toEqual(
+            expect.objectContaining({
+              id: expect.any(String),
+              productId: expect.any(String),
+              canonicalName: expect.any(String),
+              brand: expect.anything(),
+              media: expect.any(String),
+              currentPrice: expect.any(Number),
+              regularPrice: expect.any(Number),
+              discountPercent: expect.anything(),
+              currency: "UAH",
+              availabilityStatus: "in_stock",
+            }),
+          );
+        }
+      });
+
+      it("returns 404 for unknown store", async () => {
+        const response = await request(app.getHttpServer())
+          .get("/api/v1/stores/unknown-store/products")
+          .expect(404);
+
+        expect(String(response.body.message)).toContain("not found");
+      });
+
+      it("filters by minDiscount", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .query({ minDiscount: 50 })
+          .expect(200);
+
+        if (response.body.items.length > 0) {
+          response.body.items.forEach(
+            (item: { discountPercent: number | null }) => {
+              if (item.discountPercent !== null) {
+                expect(item.discountPercent).toBeGreaterThanOrEqual(50);
+              }
+            },
+          );
+        }
+      });
+
+      it("sorts by price ascending", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .query({ sort: "price_asc" })
+          .expect(200);
+
+        const items = response.body.items;
+        if (items.length > 1) {
+          for (let i = 1; i < items.length; i++) {
+            expect(items[i].currentPrice).toBeGreaterThanOrEqual(
+              items[i - 1].currentPrice,
+            );
+          }
+        }
+      });
+
+      it("sorts by discount descending", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .query({ sort: "discount" })
+          .expect(200);
+
+        const items = response.body.items;
+        if (items.length > 1) {
+          for (let i = 1; i < items.length; i++) {
+            const prevDiscount = items[i - 1].discountPercent ?? 0;
+            const currDiscount = items[i].discountPercent ?? 0;
+            expect(currDiscount).toBeLessThanOrEqual(prevDiscount);
+          }
+        }
+      });
+
+      it("respects page and limit parameters", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .query({ page: 1, limit: 10 })
+          .expect(200);
+
+        expect(response.body.page).toBe(1);
+        expect(response.body.limit).toBe(10);
+        expect(response.body.items.length).toBeLessThanOrEqual(10);
+      });
+
+      it("returns 400 for invalid sort", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .query({ sort: "invalid" })
+          .expect(400);
+
+        const message = Array.isArray(response.body.message)
+          ? response.body.message.join(" ")
+          : String(response.body.message);
+        expect(message).toContain("sort");
+      });
+
+      it("returns 400 for invalid minDiscount", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/api/v1/stores/${fixture.storeIds[0]}/products`)
+          .query({ minDiscount: 150 })
+          .expect(400);
+
+        const message = Array.isArray(response.body.message)
+          ? response.body.message.join(" ")
+          : String(response.body.message);
+        expect(message).toContain("minDiscount");
+      });
+    });
   });
 
   describe("API documentation", () => {
@@ -685,6 +821,7 @@ describe("ProductsController (e2e)", () => {
           "/api/v1/products/{id}/price-history": expect.any(Object),
           "/api/v1/products/{id}/related": expect.any(Object),
           "/api/v1/stores": expect.any(Object),
+          "/api/v1/stores/{storeId}/products": expect.any(Object),
         }),
       );
     });
@@ -757,6 +894,19 @@ describe("ProductsController (e2e)", () => {
           minimum: 1,
           maximum: 20,
         }),
+      );
+
+      const storeProductsParams =
+        response.body.paths["/api/v1/stores/{storeId}/products"].get.parameters;
+      expect(storeProductsParams).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "page", in: "query" }),
+          expect.objectContaining({ name: "limit", in: "query" }),
+          expect.objectContaining({ name: "search", in: "query" }),
+          expect.objectContaining({ name: "categoryId", in: "query" }),
+          expect.objectContaining({ name: "minDiscount", in: "query" }),
+          expect.objectContaining({ name: "sort", in: "query" }),
+        ]),
       );
     });
   });
