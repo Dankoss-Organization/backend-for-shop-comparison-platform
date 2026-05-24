@@ -62,7 +62,7 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
   include: typeof productRelationsInclude;
 }>;
 
-type CategoryTreeNode = {
+export type CategoryTreeNode = {
   id: string;
   name: string;
   parentId: string | null;

@@ -75,37 +75,6 @@ export class ProductsController {
     description: "Filter by category id",
   })
   @ApiQuery({
-    name: "storeId",
-    required: false,
-    type: String,
-    description: "Filter by store id",
-  })
-  @ApiQuery({
-    name: "minPrice",
-    required: false,
-    type: Number,
-    description: "Minimum effective offer price",
-  })
-  @ApiQuery({
-    name: "maxPrice",
-    required: false,
-    type: Number,
-    description: "Maximum effective offer price",
-  })
-  @ApiQuery({
-    name: "minDiscount",
-    required: false,
-    type: Number,
-    description: "Minimum discount percentage",
-  })
-  @ApiQuery({
-    name: "minRating",
-    required: false,
-    type: Number,
-    description:
-      "Minimum rating threshold. Currently accepted for compatibility with the UI contract.",
-  })
-  @ApiQuery({
     name: "inStock",
     required: false,
     type: Boolean,
@@ -114,7 +83,7 @@ export class ProductsController {
   @ApiQuery({
     name: "sort",
     required: false,
-    enum: ["updated", "name", "price_asc", "price_desc", "discount"],
+    enum: ["updated", "name"],
     description: "Sort field",
   })
   @ApiOkResponse({ description: "Product catalog returned successfully." })
@@ -127,11 +96,6 @@ export class ProductsController {
       search: query.search?.trim() || undefined,
       brand: query.brand?.trim() || undefined,
       categoryId: query.categoryId?.trim() || undefined,
-      storeId: query.storeId?.trim() || undefined,
-      minPrice: query.minPrice,
-      maxPrice: query.maxPrice,
-      minDiscount: query.minDiscount,
-      minRating: query.minRating,
       inStock: query.inStock ?? false,
       sort: query.sort ?? "updated",
     });

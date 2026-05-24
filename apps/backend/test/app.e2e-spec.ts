@@ -603,6 +603,57 @@ describe("ProductsController (e2e)", () => {
     });
   });
 
+  describe("GET /api/v1/stores", () => {
+    it("returns 200 with list of stores", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/stores")
+        .expect(200);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          stores: expect.any(Array),
+        }),
+      );
+      expect(response.body.stores.length).toBeGreaterThan(0);
+
+      const store = response.body.stores[0];
+      expect(store).toEqual(
+        expect.objectContaining({
+          id: expect.any(String),
+          brand: expect.any(String),
+          logo: expect.any([String, null]),
+          website: expect.any([String, null]),
+          locationCount: expect.any(Number),
+        }),
+      );
+    });
+
+    it("stores are sorted by brand name", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/stores")
+        .expect(200);
+
+      const stores = response.body.stores;
+      const brandNames = stores.map((store: { brand: string }) => store.brand);
+      const sortedNames = [...brandNames].sort();
+
+      expect(brandNames).toEqual(sortedNames);
+    });
+
+    it("locationCount matches store locations in database", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/stores")
+        .expect(200);
+
+      expect(response.body.stores.length).toBeGreaterThan(0);
+      const store = response.body.stores.find(
+        (s: { id: string }) => s.id === fixture.storeBrandId,
+      );
+      expect(store).toBeDefined();
+      expect(store.locationCount).toBeGreaterThan(0);
+    });
+  });
+
   describe("API documentation", () => {
     it("returns OpenAPI spec json", async () => {
       const response = await request(app.getHttpServer())
@@ -633,6 +684,7 @@ describe("ProductsController (e2e)", () => {
           "/api/v1/products/{id}/offers": expect.any(Object),
           "/api/v1/products/{id}/price-history": expect.any(Object),
           "/api/v1/products/{id}/related": expect.any(Object),
+          "/api/v1/stores": expect.any(Object),
         }),
       );
     });
