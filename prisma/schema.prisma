@@ -112,29 +112,38 @@ model CartItem {
 }
 
 model Product {
-  id                         String            @id @default(uuid())
-  productId                  String            @unique
-  canonicalName              String            @map("canonical_name")
-  brand                      String?
-  country                    String?
-  media                      String
-  measurements               Json
-  pricingLogic               Json              @map("pricing_logic")
-  description                String?
-  calories                   String?
-  proteins                   Float?            @map("proteins_g")
-  fats                       Float?            @map("fats_g")
-  carbohydrates              Float?            @map("carbohydrates_g")
-  alcoholPercentage          Float?            @map("alcohol_percentage")
-  isTobacco                  Boolean           @default(false) @map("is_tobacco")
-  is18Plus                   Boolean           @default(false) @map("is_18_plus")
-  isNationalCashbackEligible Boolean           @default(false) @map("is_national_cashback_eligible")
-  createdAt                  DateTime          @default(now())
-  updatedAt                  DateTime          @updatedAt
-  categoryId                 String?           @map("category_id")
-  favouriteDetails           FavouriteProduct? @relation("ProductToFavourite")
-  offers                     Offer[]           @relation("ProductToOffer")
-  category                   ProductCategory?  @relation(fields: [categoryId], references: [id])
+  id            String  @id @default(uuid())
+  productId     String  @unique
+  canonicalName String  @map("canonical_name")
+  brand         String?
+  country       String?
+
+  rawMaiImage String @map("raw_main_image")
+  mainImage String @map("main_image")
+
+  measurements Json
+
+  pricingLogic Json @map("pricing_logic")
+
+  description       String? @db.Text
+  calories          String?
+  proteins          Float?  @map("proteins_g")
+  fats              Float?  @map("fats_g")
+  carbohydrates     Float?  @map("carbohydrates_g")
+  alcoholPercentage Float?  @map("alcohol_percentage")
+
+  isTobacco                  Boolean @default(false) @map("is_tobacco")
+  is18Plus                   Boolean @default(false) @map("is_18_plus")
+  isNationalCashbackEligible Boolean @default(false) @map("is_national_cashback_eligible")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categoryId String?          @map("category_id")
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  offers           Offer[]           @relation("ProductToOffer")
+  favouriteDetails FavouriteProduct? @relation("ProductToFavourite")
 
   @@index([categoryId])
   @@index([brand])
