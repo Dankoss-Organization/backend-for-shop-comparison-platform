@@ -52,7 +52,9 @@ describe("ProductsController (e2e)", () => {
       }),
     );
     expect(String(store.brand)).toContain(expectedBrandPrefix);
-    expect(offer.effectivePrice).toBeLessThanOrEqual(Number(offer.currentPrice));
+    expect(offer.effectivePrice).toBeLessThanOrEqual(
+      Number(offer.currentPrice),
+    );
     expectIsoDate(offer.updatedAt);
   };
 
@@ -312,22 +314,62 @@ describe("ProductsController (e2e)", () => {
       expect(response.body.items[0]).toEqual(
         expect.objectContaining({
           id: expect.any(String),
-          productId: expect.any(String),
           canonicalName: expect.any(String),
           brand: expect.anything(),
-          category: expect.objectContaining({
-            id: fixture.categoryId,
-            name: expect.any(String),
-          }),
-          media: expect.any(String),
-          description: expect.anything(),
-          bestPrice: expect.anything(),
-          oldPrice: expect.anything(),
-          discountPercent: expect.anything(),
-          currency: "UAH",
-          offersCount: expect.any(Number),
-          availabilityStatus: expect.any(String),
-          updatedAt: expect.any(String),
+          categoryId: fixture.categoryId,
+          offers: expect.arrayContaining([
+            expect.objectContaining({
+              id: expect.any(String),
+              storeId: expect.any(String),
+              price: expect.any(Number),
+              regularPrice: expect.any(Number),
+              discountPercent: expect.anything(),
+            }),
+          ]),
+        }),
+      );
+    });
+
+    it("filters products by store and price range and returns offers for the selected filters", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/products")
+        .query({
+          page: 1,
+          limit: 10,
+          storeId: fixture.storeIds[1],
+          minPrice: 95,
+          maxPrice: 95,
+          sort: "price_asc",
+        })
+        .expect(200);
+
+      expect(response.body.items.length).toBeGreaterThan(0);
+
+      const items = response.body.items as Array<Record<string, unknown>>;
+      items.forEach((item) => {
+        expect(Array.isArray(item.offers)).toBe(true);
+
+        const offers = item.offers as Array<Record<string, unknown>>;
+        expect(offers.length).toBeGreaterThan(0);
+
+        offers.forEach((offer) => {
+          expect(offer.storeId).toBe(fixture.storeIds[1]);
+          expect(offer.price).toBe(95);
+          expect(offer.regularPrice).toBeGreaterThanOrEqual(95);
+        });
+      });
+    });
+
+    it("accepts extended sort values", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/products")
+        .query({ sort: "discount" })
+        .expect(200);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          page: 1,
+          limit: 20,
         }),
       );
     });
@@ -600,7 +642,8 @@ describe("ProductsController (e2e)", () => {
         .get("/api/docs-json")
         .expect(200);
 
-      const productsParams = response.body.paths["/api/v1/products"].get.parameters;
+      const productsParams =
+        response.body.paths["/api/v1/products"].get.parameters;
       expect(productsParams).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ name: "page", in: "query" }),
@@ -613,14 +656,16 @@ describe("ProductsController (e2e)", () => {
         ]),
       );
 
-      const categoriesParams = response.body.paths["/api/v1/products/categories"].get.parameters;
+      const categoriesParams =
+        response.body.paths["/api/v1/products/categories"].get.parameters;
       expect(categoriesParams).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ name: "parentId", in: "query" }),
         ]),
       );
 
-      const offersParams = response.body.paths["/api/v1/products/{id}/offers"].get.parameters;
+      const offersParams =
+        response.body.paths["/api/v1/products/{id}/offers"].get.parameters;
       expect(offersParams).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -634,7 +679,9 @@ describe("ProductsController (e2e)", () => {
         ]),
       );
 
-      const periodParam = response.body.paths["/api/v1/products/{id}/price-history"].get.parameters.find(
+      const periodParam = response.body.paths[
+        "/api/v1/products/{id}/price-history"
+      ].get.parameters.find(
         (param: { name: string }) => param.name === "period",
       );
       expect(periodParam).toBeDefined();
@@ -646,7 +693,9 @@ describe("ProductsController (e2e)", () => {
         }),
       );
 
-      const limitParam = response.body.paths["/api/v1/products/{id}/related"].get.parameters.find(
+      const limitParam = response.body.paths[
+        "/api/v1/products/{id}/related"
+      ].get.parameters.find(
         (param: { name: string }) => param.name === "limit",
       );
       expect(limitParam).toBeDefined();
