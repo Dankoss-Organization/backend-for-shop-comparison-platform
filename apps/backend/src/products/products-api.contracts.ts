@@ -19,8 +19,13 @@ export interface GetProductsQuery {
   search?: string;
   brand?: string;
   categoryId?: string;
+  storeId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minDiscount?: number;
+  minRating?: number;
   inStock?: boolean;
-  sort?: "updated" | "name";
+  sort?: "updated" | "name" | "price_asc" | "price_desc" | "discount";
 }
 
 export interface GetCategoriesQuery {
@@ -115,14 +120,12 @@ export interface ProductAnalyticsJobStatusResponse {
       avgPrice: number | null;
       trend: PriceTrend;
       storesCount: number;
-      cheapestStore:
-        | {
-            id: string;
-            brand: string;
-            city: string;
-            effectivePrice: number;
-          }
-        | null;
+      cheapestStore: {
+        id: string;
+        brand: string;
+        city: string;
+        effectivePrice: number;
+      } | null;
     };
     performance: {
       queryDurationMs: number;

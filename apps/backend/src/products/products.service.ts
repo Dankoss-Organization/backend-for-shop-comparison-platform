@@ -10,7 +10,34 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 
 type OffersSort = "price" | "discount" | "updated";
-type ProductsSort = "updated" | "name";
+type ProductsSort =
+  | "updated"
+  | "name"
+  | "price_asc"
+  | "price_desc"
+  | "discount";
+
+type ProductCatalogOffer = {
+  id: string;
+  storeId: string;
+  price: number;
+  regularPrice: number;
+  discountPercent: number | null;
+};
+
+type ProductCatalogItem = {
+  id: string;
+  canonicalName: string;
+  brand: string | null;
+  categoryId: string | null;
+  offers: ProductCatalogOffer[];
+};
+
+type ProductCatalogItemWithMeta = ProductCatalogItem & {
+  updatedAt: Date;
+  bestPrice: number;
+  bestDiscount: number;
+};
 
 const productRelationsInclude = {
   category: true,
@@ -35,27 +62,7 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
   include: typeof productRelationsInclude;
 }>;
 
-type ProductCatalogItem = {
-  id: string;
-  productId: string;
-  canonicalName: string;
-  brand: string | null;
-  category: {
-    id: string;
-    name: string;
-  } | null;
-  media: string;
-  description: string | null;
-  bestPrice: number | null;
-  oldPrice: number | null;
-  discountPercent: number | null;
-  currency: "UAH";
-  offersCount: number;
-  availabilityStatus: "in_stock" | "out_of_stock";
-  updatedAt: string;
-};
-
-type CategoryTreeNode = {
+export type CategoryTreeNode = {
   id: string;
   name: string;
   parentId: string | null;
@@ -85,6 +92,11 @@ export class ProductsService {
     search?: string;
     brand?: string;
     categoryId?: string;
+    storeId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    minDiscount?: number;
+    minRating?: number;
     inStock?: boolean;
     sort: ProductsSort;
   }) {
@@ -93,6 +105,17 @@ export class ProductsService {
       method: "getProducts",
       ...options,
     });
+
+    if (options.minRating !== undefined) {
+      this.logger.info(
+        "Ignoring minRating filter for catalog queries because product rating data is not available in the current catalog model",
+        {
+          service: "ProductsService",
+          method: "getProducts",
+          minRating: options.minRating,
+        },
+      );
+    }
 
     const where: Prisma.ProductWhereInput = {
       ...(options.categoryId ? { categoryId: options.categoryId } : {}),
@@ -130,34 +153,56 @@ export class ProductsService {
             ].filter(Boolean) as Prisma.ProductWhereInput[],
           }
         : {}),
-      ...(options.inStock
-        ? {
-            offers: {
-              some: {
-                currentPrice: {
-                  gt: 0,
-                },
-              },
-            },
-          }
-        : {}),
     };
 
-    const orderBy: Prisma.ProductOrderByWithRelationInput =
-      options.sort === "name"
-        ? { canonicalName: "asc" }
-        : { updatedAt: "desc" };
+    const offerWhere: Prisma.OfferWhereInput = {};
+    if (options.storeId) {
+      offerWhere.storeId = options.storeId;
+    }
 
-    const [total, products] = await this.prisma.$transaction([
-      this.prisma.product.count({ where }),
-      this.prisma.product.findMany({
-        where,
-        include: productRelationsInclude,
-        orderBy,
-        skip: (options.page - 1) * options.limit,
-        take: options.limit,
-      }),
-    ]);
+    const currentPriceFilter: Prisma.DecimalFilter = {};
+    if (options.inStock) {
+      currentPriceFilter.gt = 0;
+    }
+    if (options.minPrice !== undefined) {
+      currentPriceFilter.gte = options.minPrice;
+    }
+    if (options.maxPrice !== undefined) {
+      currentPriceFilter.lte = options.maxPrice;
+    }
+
+    if (Object.keys(currentPriceFilter).length > 0) {
+      offerWhere.currentPrice = currentPriceFilter;
+    }
+
+    if (
+      options.storeId ||
+      options.inStock ||
+      options.minPrice !== undefined ||
+      options.maxPrice !== undefined
+    ) {
+      where.offers = {
+        some: offerWhere,
+      };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where,
+      include: productRelationsInclude,
+    });
+
+    const items = products
+      .map((product) => this.buildCatalogItem(product, options))
+      .filter((item): item is ProductCatalogItemWithMeta => item !== null)
+      .sort((left, right) =>
+        this.compareCatalogItems(left, right, options.sort),
+      );
+
+    const total = items.length;
+    const start = (options.page - 1) * options.limit;
+    const pageItems = items
+      .slice(start, start + options.limit)
+      .map(({ updatedAt, bestPrice, bestDiscount, ...item }) => item);
 
     this.logger.info("Products fetched", {
       service: "ProductsService",
@@ -167,7 +212,7 @@ export class ProductsService {
     });
 
     return {
-      items: products.map((product) => this.mapCatalogItem(product)),
+      items: pageItems,
       total,
       page: options.page,
       limit: options.limit,
@@ -274,7 +319,7 @@ export class ProductsService {
         canonicalName: product.canonicalName,
         brand: product.brand,
         category: product.category?.name ?? null,
-        media: product.media,
+        media: product.mainImage,
         description: product.description,
         measurements: product.measurements,
         calories: product.calories,
@@ -436,7 +481,7 @@ export class ProductsService {
           productId: item.productId,
           canonicalName: item.canonicalName,
           brand: item.brand,
-          media: item.media,
+          media: item.mainImage,
           bestPrice,
           offersCount: mappedOffers.length,
         };
@@ -483,37 +528,10 @@ export class ProductsService {
     return product;
   }
 
-  private mapCatalogItem(product: ProductWithRelations): ProductCatalogItem {
-    const offers = this.mapOffers(product.offers);
-    const bestOffer = offers.length
-      ? offers.reduce(
-          (lowest, offer) =>
-            offer.effectivePrice < lowest.effectivePrice ? offer : lowest,
-          offers[0],
-        )
-      : null;
-
-    return {
-      id: product.id,
-      productId: product.productId,
-      canonicalName: product.canonicalName,
-      brand: product.brand,
-      category: product.category
-        ? {
-            id: product.category.id,
-            name: product.category.name,
-          }
-        : null,
-      media: product.media,
-      description: product.description,
-      bestPrice: bestOffer?.effectivePrice ?? null,
-      oldPrice: bestOffer?.oldPrice ?? null,
-      discountPercent: bestOffer?.discountPercent ?? null,
-      currency: "UAH",
-      offersCount: offers.length,
-      availabilityStatus: offers.length > 0 ? "in_stock" : "out_of_stock",
-      updatedAt: product.updatedAt.toISOString(),
-    };
+  private mapCatalogItem(
+    product: ProductWithRelations,
+  ): ProductCatalogItemWithMeta | null {
+    return this.buildCatalogItem(product, {});
   }
 
   private sortCategoryTree(node: CategoryTreeNode): CategoryTreeNode {
@@ -523,6 +541,97 @@ export class ProductsService {
         .map((child) => this.sortCategoryTree(child))
         .sort((left, right) => left.name.localeCompare(right.name)),
     };
+  }
+
+  private buildCatalogItem(
+    product: ProductWithRelations,
+    options: {
+      minPrice?: number;
+      maxPrice?: number;
+      minDiscount?: number;
+      storeId?: string;
+      inStock?: boolean;
+    },
+  ): ProductCatalogItemWithMeta | null {
+    const offers = this.mapOffers(product.offers)
+      .filter((offer) => {
+        if (options.storeId && offer.store.id !== options.storeId) {
+          return false;
+        }
+
+        if (options.inStock && offer.currentPrice <= 0) {
+          return false;
+        }
+
+        if (
+          options.minPrice !== undefined &&
+          offer.effectivePrice < options.minPrice
+        ) {
+          return false;
+        }
+
+        if (
+          options.maxPrice !== undefined &&
+          offer.effectivePrice > options.maxPrice
+        ) {
+          return false;
+        }
+
+        if (
+          options.minDiscount !== undefined &&
+          (offer.discountPercent ?? 0) < options.minDiscount
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((left, right) => left.effectivePrice - right.effectivePrice);
+
+    if (offers.length === 0) {
+      return null;
+    }
+
+    const bestDiscount = offers.reduce(
+      (currentBest, offer) => Math.max(currentBest, offer.discountPercent ?? 0),
+      0,
+    );
+
+    return {
+      id: product.id,
+      canonicalName: product.canonicalName,
+      brand: product.brand,
+      categoryId: product.categoryId ?? null,
+      offers: offers.map((offer) => ({
+        id: offer.id,
+        storeId: offer.store.id,
+        price: offer.effectivePrice,
+        regularPrice: offer.oldPrice,
+        discountPercent: offer.discountPercent,
+      })),
+      updatedAt: product.updatedAt,
+      bestPrice: offers[0].effectivePrice,
+      bestDiscount,
+    };
+  }
+
+  private compareCatalogItems(
+    left: ProductCatalogItemWithMeta,
+    right: ProductCatalogItemWithMeta,
+    sort: ProductsSort,
+  ) {
+    switch (sort) {
+      case "name":
+        return left.canonicalName.localeCompare(right.canonicalName);
+      case "price_asc":
+        return left.bestPrice - right.bestPrice;
+      case "price_desc":
+        return right.bestPrice - left.bestPrice;
+      case "discount":
+        return right.bestDiscount - left.bestDiscount;
+      default:
+        return right.updatedAt.getTime() - left.updatedAt.getTime();
+    }
   }
 
   private mapOffers(

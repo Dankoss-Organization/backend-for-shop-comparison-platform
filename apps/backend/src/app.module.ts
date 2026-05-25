@@ -6,6 +6,8 @@ import { ConfigModule } from "@nestjs/config";
 import { ProductsModule } from "./products/products.module";
 import { LoggerModule } from "./logger/logger.module";
 import { MeilisearchModule } from "./search/meilisearch.module";
+import { StoresModule } from "./stores/stores.module";
+import { CartsModule } from "./carts/carts.module";
 
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 const envFilePath =
@@ -23,6 +25,8 @@ const envFilePath =
     MeilisearchModule,
     ProductsModule,
     LoggerModule,
+    StoresModule,
+    CartsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

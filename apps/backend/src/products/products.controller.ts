@@ -49,14 +49,25 @@ export class ProductsController {
 
   @ApiOperation({ summary: "Get product catalog" })
   @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
-  @ApiQuery({ name: "limit", required: false, type: Number, minimum: 1, maximum: 100 })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 100,
+  })
   @ApiQuery({
     name: "search",
     required: false,
     type: String,
     description: "Search by product name, productId or brand",
   })
-  @ApiQuery({ name: "brand", required: false, type: String, description: "Filter by brand name" })
+  @ApiQuery({
+    name: "brand",
+    required: false,
+    type: String,
+    description: "Filter by brand name",
+  })
   @ApiQuery({
     name: "categoryId",
     required: false,
@@ -69,7 +80,12 @@ export class ProductsController {
     type: Boolean,
     description: "When true, return only products with active offers",
   })
-  @ApiQuery({ name: "sort", required: false, enum: ["updated", "name"], description: "Sort field" })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    enum: ["updated", "name"],
+    description: "Sort field",
+  })
   @ApiOkResponse({ description: "Product catalog returned successfully." })
   @ApiBadRequestResponse({ description: "Invalid query parameters." })
   @Get()
@@ -96,10 +112,14 @@ export class ProductsController {
   @ApiNotFoundResponse({ description: "Category was not found." })
   @Get("categories")
   getCategories(@Query() query: GetCategoriesQueryDto) {
-    return this.productsService.getCategories(query.parentId?.trim() || undefined);
+    return this.productsService.getCategories(
+      query.parentId?.trim() || undefined,
+    );
   }
 
-  @ApiOperation({ summary: "Enqueue product sync job for background processing" })
+  @ApiOperation({
+    summary: "Enqueue product sync job for background processing",
+  })
   @ApiBody({
     required: false,
     schema: {
@@ -112,7 +132,9 @@ export class ProductsController {
       },
     },
   })
-  @ApiCreatedResponse({ description: "Product sync job enqueued successfully." })
+  @ApiCreatedResponse({
+    description: "Product sync job enqueued successfully.",
+  })
   @Post(":id/sync")
   enqueueProductSync(
     @Param("id") id: string,
@@ -121,7 +143,9 @@ export class ProductsController {
     return this.productSyncQueueService.enqueueProductSync(id, body?.source);
   }
 
-  @ApiOperation({ summary: "Get status of a previously enqueued product sync job" })
+  @ApiOperation({
+    summary: "Get status of a previously enqueued product sync job",
+  })
   @ApiOkResponse({ description: "Sync job status returned successfully." })
   @Get("sync-jobs/:jobId")
   getSyncJobStatus(@Param("jobId") jobId: string) {
@@ -145,7 +169,9 @@ export class ProductsController {
       },
     },
   })
-  @ApiCreatedResponse({ description: "Product analytics rebuild job enqueued successfully." })
+  @ApiCreatedResponse({
+    description: "Product analytics rebuild job enqueued successfully.",
+  })
   @Post(":id/analytics/rebuild")
   enqueueProductAnalyticsRebuild(
     @Param("id") id: string,
@@ -158,14 +184,18 @@ export class ProductsController {
     );
   }
 
-  @ApiOperation({ summary: "Get status of a previously enqueued analytics rebuild job" })
+  @ApiOperation({
+    summary: "Get status of a previously enqueued analytics rebuild job",
+  })
   @ApiOkResponse({ description: "Analytics job status returned successfully." })
   @Get("analytics-jobs/:jobId")
   getAnalyticsJobStatus(@Param("jobId") jobId: string) {
     return this.productAnalyticsQueueService.getAnalyticsJobStatus(jobId);
   }
 
-  @ApiOperation({ summary: "Get a product card with top offers and summary stats" })
+  @ApiOperation({
+    summary: "Get a product card with top offers and summary stats",
+  })
   @ApiOkResponse({ description: "Product card returned successfully." })
   @ApiNotFoundResponse({ description: "Product was not found." })
   @Get(":id/card")
@@ -173,7 +203,9 @@ export class ProductsController {
     return this.productsService.getProductCard(id);
   }
 
-  @ApiOperation({ summary: "Get product offers with sorting and stock filtering" })
+  @ApiOperation({
+    summary: "Get product offers with sorting and stock filtering",
+  })
   @ApiQuery({
     name: "sort",
     required: false,
@@ -211,7 +243,9 @@ export class ProductsController {
     },
     description: "Time period, e.g. 30d, 2w, 3m",
   })
-  @ApiOkResponse({ description: "Product price history returned successfully." })
+  @ApiOkResponse({
+    description: "Product price history returned successfully.",
+  })
   @ApiNotFoundResponse({ description: "Product was not found." })
   @ApiBadRequestResponse({ description: "Invalid period format." })
   @Get(":id/price-history")
@@ -219,7 +253,10 @@ export class ProductsController {
     @Param("id") id: string,
     @Query() query: GetProductPriceHistoryQueryDto,
   ) {
-    return this.productsService.getProductPriceHistory(id, query.period ?? "30d");
+    return this.productsService.getProductPriceHistory(
+      id,
+      query.period ?? "30d",
+    );
   }
 
   @ApiOperation({ summary: "Get related products" })
