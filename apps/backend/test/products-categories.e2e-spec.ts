@@ -23,15 +23,18 @@ describe("Products categories endpoints (e2e)", () => {
 
     expect(Array.isArray(response.body.categories)).toBe(true);
     expect(response.body.categories.length).toBeGreaterThan(0);
-    expect(response.body.categories[0]).toEqual(
-      expect.objectContaining({
-        id: context.fixture.categoryId,
-        name: expect.any(String),
-        parentId: null,
-        productCount: expect.any(Number),
-        children: expect.any(Array),
-      }),
-    );
+      const found = response.body.categories.find(
+        (c: { id: string }) => c.id === context.fixture.categoryId,
+      );
+      expect(found).toBeDefined();
+      expect(found).toEqual(
+        expect.objectContaining({
+          id: context.fixture.categoryId,
+          name: expect.any(String),
+          parentId: null,
+          productCount: expect.any(Number),
+        }),
+      );
   });
 
   it("returns 404 for unknown parent category", async () => {

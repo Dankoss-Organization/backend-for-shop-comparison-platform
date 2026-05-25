@@ -14,6 +14,7 @@ export class MeilisearchService implements OnModuleInit {
   private readonly logger = new Logger(MeilisearchService.name);
   private client: MeilisearchSDK.MeiliSearch;
   private indexName: string;
+  private disabled = false;
 
   constructor(private configService: ConfigService) {
     let host = this.configService.get<string>("MEILISEARCH_HOST");
@@ -22,6 +23,13 @@ export class MeilisearchService implements OnModuleInit {
       "MEILISEARCH_INDEX_NAME",
       "products"
     );
+    const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
+
+    if (appEnv === "test") {
+      this.logger.warn("Meilisearch disabled in test environment");
+      this.disabled = true;
+      return;
+    }
 
     if (!host) {
       this.logger.warn(
@@ -35,7 +43,13 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    await this.initializeIndex();
+    if (this.disabled) return;
+
+    try {
+      await this.initializeIndex();
+    } catch (err) {
+      this.logger.warn(`Meilisearch initialization failed: ${(err as Error).message}`);
+    }
   }
 
   /**
