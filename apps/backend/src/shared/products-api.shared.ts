@@ -19,8 +19,13 @@ export interface GetProductsQuery {
   search?: string;
   brand?: string;
   categoryId?: string;
+  storeId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minDiscount?: number;
+  minRating?: number;
   inStock?: boolean;
-  sort?: "updated" | "name";
+  sort?: "updated" | "name" | "price_asc" | "price_desc" | "discount";
 }
 
 export interface GetCategoriesQuery {
@@ -174,7 +179,11 @@ export class ApiClientError extends Error {
   readonly statusCode: number;
   readonly payload?: ApiErrorResponse | unknown;
 
-  constructor(statusCode: number, message: string, payload?: ApiErrorResponse | unknown) {
+  constructor(
+    statusCode: number,
+    message: string,
+    payload?: ApiErrorResponse | unknown,
+  ) {
     super(message);
     this.name = "ApiClientError";
     this.statusCode = statusCode;
@@ -195,7 +204,9 @@ export class ProductsApiClient {
   }
 
   getProductCard(id: string): Promise<ProductCardResponse> {
-    return this.request<ProductCardResponse>(`/api/v1/products/${encodeURIComponent(id)}/card`);
+    return this.request<ProductCardResponse>(
+      `/api/v1/products/${encodeURIComponent(id)}/card`,
+    );
   }
 
   getProductOffers(
@@ -226,7 +237,9 @@ export class ProductsApiClient {
   }
 
   private async request<T>(path: string): Promise<T> {
-    const response = await this.fetchImpl(`${stripTrailingSlash(this.options.baseUrl)}${path}`);
+    const response = await this.fetchImpl(
+      `${stripTrailingSlash(this.options.baseUrl)}${path}`,
+    );
     const text = await response.text();
 
     let payload: unknown = undefined;
@@ -260,7 +273,11 @@ function toQueryString<T extends object>(query: T): string {
       continue;
     }
 
-    if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") {
+    if (
+      typeof value !== "string" &&
+      typeof value !== "number" &&
+      typeof value !== "boolean"
+    ) {
       continue;
     }
 

@@ -1,5 +1,15 @@
 import { Transform, Type } from "class-transformer";
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from "class-validator";
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from "class-validator";
 
 export class GetProductsQueryDto {
   @IsOptional()
@@ -31,6 +41,36 @@ export class GetProductsQueryDto {
   categoryId?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  storeId?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  minDiscount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  minRating?: number;
+
+  @IsOptional()
   @Transform(({ value }) => {
     if (value === undefined) {
       return undefined;
@@ -47,6 +87,6 @@ export class GetProductsQueryDto {
   inStock?: boolean;
 
   @IsOptional()
-  @IsIn(["updated", "name"])
-  sort?: "updated" | "name";
+  @IsIn(["updated", "name", "price_asc", "price_desc", "discount"])
+  sort?: "updated" | "name" | "price_asc" | "price_desc" | "discount";
 }
