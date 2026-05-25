@@ -9,6 +9,7 @@ import { LoggerModule } from "./logger/logger.module";
 import { MeilisearchModule } from "./search/meilisearch.module";
 import { StoresModule } from "./stores/stores.module";
 import { CartsModule } from "./carts/carts.module";
+import { UsersModule } from "./users/users.module";
 
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 const envFilePath =
@@ -29,6 +30,7 @@ const envFilePath =
     LoggerModule,
     StoresModule,
     CartsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
