@@ -29,9 +29,81 @@ type RecipeRatingRow = {
   reviewCount: number;
 };
 
+type RecipeCategoryTreeNode = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  recipeCount: number;
+  children: RecipeCategoryTreeNode[];
+};
+
 @Injectable()
 export class RecipesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getRecipeCategories(parentId?: string) {
+    const [categories, recipeCounts] = await this.prisma.$transaction([
+      this.prisma.recipeCategory.findMany({
+        orderBy: {
+          name: "asc",
+        },
+      }),
+      this.prisma.recipe.groupBy({
+        by: ["categoryId"],
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
+
+    const countsByCategoryId = new Map<string, number>();
+    for (const row of recipeCounts) {
+      countsByCategoryId.set(row.categoryId, row._count._all);
+    }
+
+    const nodesById = new Map<string, RecipeCategoryTreeNode>();
+    for (const category of categories) {
+      nodesById.set(category.id, {
+        id: category.id,
+        name: category.name,
+        parentId: category.parentId,
+        recipeCount: countsByCategoryId.get(category.id) ?? 0,
+        children: [],
+      });
+    }
+
+    for (const category of categories) {
+      if (!category.parentId) {
+        continue;
+      }
+
+      const parent = nodesById.get(category.parentId);
+      const child = nodesById.get(category.id);
+      if (parent && child) {
+        parent.children.push(child);
+      }
+    }
+
+    if (parentId) {
+      const selectedRoot = nodesById.get(parentId);
+      if (!selectedRoot) {
+        throw new NotFoundException(`Category '${parentId}' not found`);
+      }
+
+      return {
+        categories: [this.sortRecipeCategoryTree(selectedRoot)],
+      };
+    }
+
+    const roots = categories
+      .filter((category) => category.parentId === null)
+      .map((category) => nodesById.get(category.id))
+      .filter(Boolean) as RecipeCategoryTreeNode[];
+
+    return {
+      categories: roots.map((node) => this.sortRecipeCategoryTree(node)),
+    };
+  }
 
   async getRecipeById(id: string) {
     const [recipe, ratingStats] = await this.prisma.$transaction([
@@ -315,6 +387,17 @@ export class RecipesService {
         reviewCount: recipeStats?.reviewCount ?? 0,
       };
     });
+  }
+
+  private sortRecipeCategoryTree(
+    node: RecipeCategoryTreeNode,
+  ): RecipeCategoryTreeNode {
+    return {
+      ...node,
+      children: node.children
+        .map((child) => this.sortRecipeCategoryTree(child))
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    };
   }
 
   private buildRawWhereClause(where: Prisma.RecipeWhereInput) {

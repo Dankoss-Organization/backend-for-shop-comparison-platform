@@ -7,6 +7,7 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
+import { GetRecipeCategoriesQueryDto } from "./dto/get-recipe-categories-query.dto";
 import { GetRecipesQueryDto } from "./dto/get-recipes-query.dto";
 import { RecipesService } from "./recipes.service";
 
@@ -34,6 +35,20 @@ export class RecipesController {
       difficulty: query.difficulty,
       sort: query.sort ?? "rating",
     });
+  }
+
+  @ApiOperation({ summary: "Get recipe categories tree" })
+  @ApiQuery({
+    name: "parentId",
+    required: false,
+    type: String,
+    description: "Return a subtree rooted at the selected category",
+  })
+  @ApiOkResponse({ description: "Recipe categories returned successfully." })
+  @ApiNotFoundResponse({ description: "Category was not found." })
+  @Get("categories")
+  getRecipeCategories(@Query() query: GetRecipeCategoriesQueryDto) {
+    return this.recipesService.getRecipeCategories(query.parentId?.trim() || undefined);
   }
 
   @ApiOperation({ summary: "Get recipe details" })
