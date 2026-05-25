@@ -180,6 +180,7 @@ model Offer {
 
   currentPrice  Decimal  @map("current_price") @db.Decimal(12, 2)
   discountPrice Decimal? @map("discount_price") @db.Decimal(12, 2)
+  discountCondition String? @map("discount_condition") @db.Text
 
   storeSku String? @map("store_sku")
 
