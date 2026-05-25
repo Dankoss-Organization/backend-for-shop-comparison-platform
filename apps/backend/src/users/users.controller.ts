@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Request, UseGuards } from "@nestjs/common";
+import { Controller, Delete, Get, Param, Post, Request, UseGuards } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -63,5 +63,32 @@ export class UsersController {
     @Param("productId") productId: string,
   ) {
     return this.usersService.addProductToFavorites(req.user.id, productId);
+  }
+
+  @ApiOperation({ summary: "Remove product from current user favorites" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Product removed from favorites successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        success: {
+          type: "boolean",
+          example: true,
+        },
+        productId: {
+          type: "string",
+          example: "BAR-005",
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: "Product was not found." })
+  @Delete("me/favorites/:productId")
+  removeFromFavorites(
+    @Request() req: { user: { id: string } },
+    @Param("productId") productId: string,
+  ) {
+    return this.usersService.removeProductFromFavorites(req.user.id, productId);
   }
 }

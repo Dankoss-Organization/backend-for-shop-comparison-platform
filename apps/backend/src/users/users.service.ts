@@ -5,6 +5,45 @@ import { PrismaService } from "../prisma/prisma.service";
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async removeProductFromFavorites(userId: string, productId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: {
+        productId,
+      },
+      select: {
+        id: true,
+        productId: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product '${productId}' not found`);
+    }
+
+    const favouriteProduct = await this.prisma.favouriteProduct.findUnique({
+      where: {
+        productId: product.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (favouriteProduct) {
+      await this.prisma.userFavourite.deleteMany({
+        where: {
+          userId,
+          favouriteProductId: favouriteProduct.id,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      productId: product.productId,
+    };
+  }
+
   async addProductToFavorites(userId: string, productId: string) {
     const product = await this.prisma.product.findUnique({
       where: {
