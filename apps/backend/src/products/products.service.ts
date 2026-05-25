@@ -319,7 +319,7 @@ export class ProductsService {
         canonicalName: product.canonicalName,
         brand: product.brand,
         category: product.category?.name ?? null,
-        media: product.media,
+        media: product.mainImage,
         description: product.description,
         measurements: product.measurements,
         calories: product.calories,
@@ -481,7 +481,7 @@ export class ProductsService {
           productId: item.productId,
           canonicalName: item.canonicalName,
           brand: item.brand,
-          media: item.media,
+          media: item.mainImage,
           bestPrice,
           offersCount: mappedOffers.length,
         };

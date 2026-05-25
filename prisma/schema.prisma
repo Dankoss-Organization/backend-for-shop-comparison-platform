@@ -119,7 +119,7 @@ model Product {
   country       String?
 
   rawMaiImage String @map("raw_main_image")
-  mainImage String @map("main_image")
+  mainImage   String @map("main_image")
 
   measurements Json
 
@@ -207,28 +207,26 @@ model StoreBrand {
 }
 
 model LocalStore {
-  id          String  @id @default(uuid())
+  id          String @id @default(uuid())
   longitude   Float
   latitude    Float
   address     String
-  openingHour String  @map("opening_hour")
-  closingHour String  @map("closing_hour")
+  openingHour String @map("opening_hour")
+  closingHour String @map("closing_hour")
   city        String
 
   supportsDelivery Boolean @default(true) @map("supports_delivery")
   supportsPickup   Boolean @default(true) @map("supports_pickup")
 
-  deliveryBaseFee   Decimal @default(0) @map("delivery_base_fee") @db.Decimal(12, 2)
-  deliveryFeePerKm  Decimal @default(0) @map("delivery_fee_per_km") @db.Decimal(12, 2)
-  pickupRadiusKm    Float?  @map("pickup_radius_km")
+  deliveryBaseFee  Decimal @default(0) @map("delivery_base_fee") @db.Decimal(12, 2)
+  deliveryFeePerKm Decimal @default(0) @map("delivery_fee_per_km") @db.Decimal(12, 2)
+  pickupRadiusKm   Float?  @map("pickup_radius_km")
 
   brandId String     @map("brand_id")
   brand   StoreBrand @relation(fields: [brandId], references: [id])
 
   offers           Offer[]         @relation("StoreToOffer")
   favouriteDetails FavouriteStore?
-  brand            StoreBrand      @relation(fields: [brandId], references: [id])
-  offers           Offer[]         @relation("StoreToOffer")
 
   @@map("local_store")
 }
