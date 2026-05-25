@@ -1,9 +1,71 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async addProductToFavorites(userId: string, productId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: {
+        productId,
+      },
+      select: {
+        id: true,
+        productId: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product '${productId}' not found`);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      let favouriteProduct = await tx.favouriteProduct.findUnique({
+        where: {
+          productId: product.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!favouriteProduct) {
+        favouriteProduct = await tx.favouriteProduct.create({
+          data: {
+            productId: product.id,
+          },
+          select: {
+            id: true,
+          },
+        });
+      }
+
+      const existingLink = await tx.userFavourite.findFirst({
+        where: {
+          userId,
+          favouriteProductId: favouriteProduct.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!existingLink) {
+        await tx.userFavourite.create({
+          data: {
+            userId,
+            favouriteProductId: favouriteProduct.id,
+          },
+        });
+      }
+    });
+
+    return {
+      success: true,
+      productId: product.productId,
+    };
+  }
 
   async getMyFavoriteProductIds(userId: string) {
     const rows = await this.prisma.userFavourite.findMany({
