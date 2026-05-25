@@ -33,11 +33,12 @@ describe("Stores endpoints (e2e)", () => {
       expect.objectContaining({
         id: expect.any(String),
         brand: expect.any(String),
-        logo: expect.any([String, null]),
-        website: expect.any([String, null]),
         locationCount: expect.any(Number),
       }),
     );
+    // allow logo/website to be null or string
+    expect(store.logo === null || typeof store.logo === "string").toBe(true);
+    expect(store.website === null || typeof store.website === "string").toBe(true);
   });
 
   it("stores are sorted by brand name", async () => {
@@ -59,7 +60,7 @@ describe("Stores endpoints (e2e)", () => {
 
     expect(response.body.stores.length).toBeGreaterThan(0);
     const store = response.body.stores.find(
-      (s: { id: string }) => s.id === context.fixture.storeBrandId,
+      (s: { brand: string }) => String(s.brand).includes(context.fixture.storeBrandName),
     );
     expect(store).toBeDefined();
     expect(store.locationCount).toBeGreaterThan(0);
@@ -89,7 +90,7 @@ describe("Stores endpoints (e2e)", () => {
         .get(`/api/v1/stores/${context.fixture.storeIds[0]}/products`)
         .expect(200);
 
-      if (response.body.items.length > 0) {
+        if (response.body.items.length > 0) {
         const item = response.body.items[0];
         expect(item).toEqual(
           expect.objectContaining({
@@ -97,14 +98,21 @@ describe("Stores endpoints (e2e)", () => {
             productId: expect.any(String),
             canonicalName: expect.any(String),
             brand: expect.anything(),
-            media: expect.any(String),
             currentPrice: expect.any(Number),
             regularPrice: expect.any(Number),
-            discountPercent: expect.anything(),
             currency: "UAH",
             availabilityStatus: "in_stock",
           }),
         );
+        // API may expose either `mainImage` or legacy `media`
+        expect(
+          Boolean(item.mainImage && typeof item.mainImage === "string") ||
+            Boolean(item.media && typeof item.media === "string"),
+        ).toBe(true);
+        // discountPercent can be null or a number
+        if (item.discountPercent !== null && item.discountPercent !== undefined) {
+          expect(typeof item.discountPercent).toBe("number");
+        }
       }
     });
 

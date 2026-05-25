@@ -1,18 +1,37 @@
 import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { AuthService } from "../auth.service";
+import { DEV_USER_ID } from "../core/auth.constants";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  constructor(private readonly authService: AuthService) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
-    // Temporary stub: if Authorization header is "Bearer <id>" use that as user id,
-    // otherwise fallback to a development user id.
     const authHeader = req.headers?.authorization || req.headers?.Authorization;
+    let token: string | undefined;
     if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.slice(7).trim();
-      req.user = { id: token || "dev_user" };
+      token = authHeader.slice(7).trim();
+    }
+
+    // Also support token in cookies (auth_token)
+    if (!token && req.cookies) {
+      token = req.cookies["auth_token"] || req.cookies["token"];
+    }
+
+    // 1) Check local session by token
+    let user = token ? await this.authService.getUserBySessionToken(token) : null;
+
+    // 2) Fall back to validating token with external provider
+    if (!user) {
+      user = await this.authService.validateTokenAndGetUser(token);
+    }
+
+    if (user) {
+      req.user = user;
     } else {
-      req.user = { id: "dev_user" };
+      req.user = { id: DEV_USER_ID };
     }
 
     return true;
