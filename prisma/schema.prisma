@@ -118,8 +118,8 @@ model Product {
   brand         String?
   country       String?
 
-  rawMaiImage String @map("raw_main_image")
-  mainImage String @map("main_image")
+  rawMaiImage String? @map("raw_main_image")
+  mainImage   String? @map("main_image")
 
   measurements Json
 
