@@ -8,6 +8,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { GetRecipeCategoriesQueryDto } from "./dto/get-recipe-categories-query.dto";
+import { GetRelatedRecipesQueryDto } from "./dto/get-related-recipes-query.dto";
 import { GetRecipesQueryDto } from "./dto/get-recipes-query.dto";
 import { RecipesService } from "./recipes.service";
 
@@ -49,6 +50,26 @@ export class RecipesController {
   @Get("categories")
   getRecipeCategories(@Query() query: GetRecipeCategoriesQueryDto) {
     return this.recipesService.getRecipeCategories(query.parentId?.trim() || undefined);
+  }
+
+  @ApiOperation({ summary: "Get related recipes" })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 20,
+    description: "Maximum related recipes count",
+  })
+  @ApiOkResponse({ description: "Related recipes returned successfully." })
+  @ApiNotFoundResponse({ description: "Recipe was not found." })
+  @ApiBadRequestResponse({ description: "Invalid limit value." })
+  @Get(":id/related")
+  getRelatedRecipes(
+    @Param("id") id: string,
+    @Query() query: GetRelatedRecipesQueryDto,
+  ) {
+    return this.recipesService.getRelatedRecipes(id, query.limit ?? 8);
   }
 
   @ApiOperation({ summary: "Get recipe details" })

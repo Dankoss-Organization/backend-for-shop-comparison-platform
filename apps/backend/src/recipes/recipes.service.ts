@@ -41,6 +41,124 @@ type RecipeCategoryTreeNode = {
 export class RecipesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getRelatedRecipes(id: string, limit: number) {
+    const cappedLimit = Math.max(1, Math.min(limit, 20));
+    const sourceRecipe = await this.prisma.recipe.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        categoryId: true,
+        difficulty: true,
+        prepTime: true,
+      },
+    });
+
+    if (!sourceRecipe) {
+      throw new NotFoundException(`Recipe '${id}' not found`);
+    }
+
+    const candidates = await this.prisma.recipe.findMany({
+      where: {
+        id: {
+          not: sourceRecipe.id,
+        },
+        OR: [
+          {
+            categoryId: sourceRecipe.categoryId,
+          },
+          {
+            difficulty: {
+              equals: sourceRecipe.difficulty,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        difficulty: true,
+        prepTime: true,
+        categoryId: true,
+      },
+      take: Math.max(cappedLimit * 4, 20),
+      orderBy: [{ prepTime: "asc" }, { name: "asc" }],
+    });
+
+    if (candidates.length === 0) {
+      return {
+        recipeId: sourceRecipe.id,
+        related: [],
+      };
+    }
+
+    const ratings = await this.prisma.review.groupBy({
+      by: ["recipeId"],
+      where: {
+        recipeId: {
+          in: candidates.map((candidate) => candidate.id),
+        },
+      },
+      _avg: {
+        rate: true,
+      },
+    });
+
+    const ratingByRecipeId = new Map(
+      ratings.map((item) => [item.recipeId, item._avg.rate ?? 0]),
+    );
+
+    const scored = candidates
+      .map((candidate) => {
+        let score = 0;
+
+        if (candidate.categoryId === sourceRecipe.categoryId) {
+          score += 100;
+        }
+
+        if (
+          candidate.difficulty.toLowerCase() ===
+          sourceRecipe.difficulty.toLowerCase()
+        ) {
+          score += 30;
+        }
+
+        const prepDelta = Math.abs(candidate.prepTime - sourceRecipe.prepTime);
+        score += Math.max(0, 20 - prepDelta);
+
+        const avgRating = ratingByRecipeId.get(candidate.id) ?? 0;
+
+        return {
+          id: candidate.id,
+          name: candidate.name,
+          imageUrl: candidate.imageUrl,
+          difficulty: candidate.difficulty,
+          prepTime: candidate.prepTime,
+          avgRating: Number(avgRating.toFixed(1)),
+          score,
+        };
+      })
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        if (right.avgRating !== left.avgRating) {
+          return right.avgRating - left.avgRating;
+        }
+
+        return left.name.localeCompare(right.name);
+      })
+      .slice(0, cappedLimit)
+      .map(({ score, ...item }) => item);
+
+    return {
+      recipeId: sourceRecipe.id,
+      related: scored,
+    };
+  }
+
   async getRecipeCategories(parentId?: string) {
     const [categories, recipeCounts] = await this.prisma.$transaction([
       this.prisma.recipeCategory.findMany({
