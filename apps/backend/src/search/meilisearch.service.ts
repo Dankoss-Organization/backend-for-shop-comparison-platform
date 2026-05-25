@@ -16,7 +16,7 @@ export class MeilisearchService implements OnModuleInit {
   private indexName: string;
 
   constructor(private configService: ConfigService) {
-    const host = this.configService.get<string>("MEILISEARCH_HOST");
+    let host = this.configService.get<string>("MEILISEARCH_HOST");
     const apiKey = this.configService.get<string>("MEILISEARCH_API_KEY");
     this.indexName = this.configService.get<string>(
       "MEILISEARCH_INDEX_NAME",
@@ -24,13 +24,14 @@ export class MeilisearchService implements OnModuleInit {
     );
 
     if (!host) {
-      throw new Error("MEILISEARCH_HOST environment variable is not set");
+      this.logger.warn(
+        "MEILISEARCH_HOST is not set — falling back to http://127.0.0.1:7700 for local testing",
+      );
+      // fallback for local development
+      host = "http://127.0.0.1:7700";
     }
 
-    this.client = new MeilisearchSDK.MeiliSearch({
-      host,
-      apiKey: apiKey || undefined,
-    });
+    this.client = new MeilisearchSDK.MeiliSearch({ host, apiKey: apiKey || undefined });
   }
 
   async onModuleInit(): Promise<void> {

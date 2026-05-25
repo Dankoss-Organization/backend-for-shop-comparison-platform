@@ -5,7 +5,7 @@ function parseNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function buildRedisOptionsFromUrl(redisUrl: string): RedisOptions {
+export function buildRedisOptionsFromUrl(redisUrl: string): RedisOptions {
   const url = new URL(redisUrl);
   const parsedDb = Number(url.pathname.replace(/^\//, ""));
   const useTls = url.protocol === "rediss:";
