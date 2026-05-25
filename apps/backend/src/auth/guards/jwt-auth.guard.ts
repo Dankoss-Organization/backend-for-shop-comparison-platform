@@ -1,9 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
-import { BetterAuthService } from "../better-auth.service";
+import { AuthService } from "../auth.service";
+import { DEV_USER_ID } from "../core/auth.constants";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly betterAuth: BetterAuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -14,12 +15,11 @@ export class JwtAuthGuard implements CanActivate {
       token = authHeader.slice(7).trim();
     }
 
-    const user = await this.betterAuth.validateToken(token);
+    const user = await this.authService.validateTokenAndGetUser(token);
     if (user) {
       req.user = user;
     } else {
-      // Fallback to development user id to keep existing behaviour
-      req.user = { id: process.env.DEV_USER_ID || "dev_user" };
+      req.user = { id: DEV_USER_ID };
     }
 
     return true;
