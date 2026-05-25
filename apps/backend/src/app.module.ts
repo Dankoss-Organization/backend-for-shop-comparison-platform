@@ -10,6 +10,7 @@ import { MeilisearchModule } from "./search/meilisearch.module";
 import { StoresModule } from "./stores/stores.module";
 import { CartOptimizationModule } from "./cart-optimization/cart-optimization.module";
 import { CartsModule } from "./carts/carts.module";
+import { CartOptimizationModule } from "./cart-optimization/cart-optimization.module";
 
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 const envFilePath =
@@ -31,6 +32,7 @@ const envFilePath =
     StoresModule,
     CartOptimizationModule,
     CartsModule,
+    CartOptimizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

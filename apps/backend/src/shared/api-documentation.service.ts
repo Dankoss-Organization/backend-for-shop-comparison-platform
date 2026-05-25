@@ -8,6 +8,7 @@ export class ApiDocumentationService {
       .setDescription("Backend API for product cards, offers, price history, and related products.")
       .setVersion("1.0")
       .addTag("products")
+      .addTag("recipes")
       .build();
 
     return SwaggerModule.createDocument(app, swaggerConfig);

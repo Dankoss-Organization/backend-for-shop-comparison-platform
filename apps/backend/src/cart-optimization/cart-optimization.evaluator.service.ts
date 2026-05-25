@@ -1,4 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, Optional } from "@nestjs/common";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 import {
   CartOptimizationEvaluationInput,
   CartOptimizationItemAllocation,
@@ -37,12 +39,39 @@ type CandidateChoice = {
 
 @Injectable()
 export class CartOptimizationEvaluatorService {
-  constructor(private readonly pricingService: CartOptimizationPricingService) {}
+  private readonly logger: Logger;
+
+  constructor(
+    private readonly pricingService: CartOptimizationPricingService,
+    @Optional()
+    @Inject(WINSTON_MODULE_PROVIDER)
+    logger?: Logger,
+  ) {
+    this.logger =
+      logger ??
+      ({
+        info: () => undefined,
+        warn: () => undefined,
+        error: () => undefined,
+      } as unknown as Logger);
+  }
 
   evaluate(input: CartOptimizationEvaluationInput): CartOptimizationResponse {
+    const itemCount = input.request.cartItems.length;
+    const offerCount = input.offers.length;
+
+    this.logger.info("Starting cart optimization evaluation", {
+      service: CartOptimizationEvaluatorService.name,
+      itemCount,
+      offerCount,
+      fulfillmentType: input.request.fulfillmentType,
+    });
+
     const groupedOffers = this.groupOffersByItem(input.offers);
     const lockedItemIds = new Set(
-      input.request.cartItems.filter((item) => item.isLocked).map((item) => item.itemId),
+      input.request.cartItems
+        .filter((item) => item.isLocked)
+        .map((item) => item.itemId),
     );
 
     const baseline = this.buildBaselineScenario(input, groupedOffers);
@@ -51,7 +80,10 @@ export class CartOptimizationEvaluatorService {
         .filter((item) => item.isLocked)
         .map((item) => item.selectedStoreId),
     ).size;
-    const maxStoreCount = Math.max(CART_OPTIMIZATION_DEFAULTS.maxDeliveryStoreSplit, lockedStoreCount);
+    const maxStoreCount = Math.max(
+      CART_OPTIMIZATION_DEFAULTS.maxDeliveryStoreSplit,
+      lockedStoreCount,
+    );
 
     const candidatesByItem = input.request.cartItems.map((cartItem) => {
       const itemOffers = groupedOffers.get(cartItem.itemId) ?? [];
@@ -116,6 +148,17 @@ export class CartOptimizationEvaluatorService {
       input.request.fulfillmentType,
       lockedStoreCount,
     );
+
+    this.logger.info("Cart optimization evaluation completed", {
+      service: CartOptimizationEvaluatorService.name,
+      itemCount,
+      offerCount,
+      maxStoreCount,
+      baselineItems: baselineScenario.items.length,
+      cheapestItems: cheapest?.items.length ?? 0,
+      closestItems: closest?.items.length ?? 0,
+      optimalItems: optimal?.items.length ?? 0,
+    });
 
     return {
       baseline: baselineScenario,
@@ -202,8 +245,10 @@ export class CartOptimizationEvaluatorService {
 
       const current = input.orderedItems[index];
       const cartItem = current.cartItem;
-      const choices = current.choices.filter((choice) =>
-        !cartItem.isLocked || choice.offer.storeId === cartItem.selectedStoreId,
+      const choices = current.choices.filter(
+        (choice) =>
+          !cartItem.isLocked ||
+          choice.offer.storeId === cartItem.selectedStoreId,
       );
 
       for (const choice of choices) {
@@ -315,7 +360,9 @@ export class CartOptimizationEvaluatorService {
       stores,
       items: [...state.itemAllocations],
       notes: [
-        fulfillmentType === "delivery" ? "delivery_pricing_applied" : "pickup_penalty_applied",
+        fulfillmentType === "delivery"
+          ? "delivery_pricing_applied"
+          : "pickup_penalty_applied",
         lockedStoreCount > CART_OPTIMIZATION_DEFAULTS.maxDeliveryStoreSplit
           ? "locked_store_split_exception_applied"
           : "store_split_limited",
@@ -340,7 +387,10 @@ export class CartOptimizationEvaluatorService {
     };
   }
 
-  private compareCheapest(left: AssignmentState, right: AssignmentState): number {
+  private compareCheapest(
+    left: AssignmentState,
+    right: AssignmentState,
+  ): number {
     const leftStoreCost = this.sumStoreCost(left);
     const rightStoreCost = this.sumStoreCost(right);
 
@@ -355,7 +405,10 @@ export class CartOptimizationEvaluatorService {
     return left.itemsCost - right.itemsCost;
   }
 
-  private compareClosest(left: AssignmentState, right: AssignmentState): number {
+  private compareClosest(
+    left: AssignmentState,
+    right: AssignmentState,
+  ): number {
     const leftDistance = this.sumDistance(left);
     const rightDistance = this.sumDistance(right);
 
@@ -370,26 +423,39 @@ export class CartOptimizationEvaluatorService {
     return this.sumStoreCost(left) - this.sumStoreCost(right);
   }
 
-  private compareOptimal(left: AssignmentState, right: AssignmentState): number {
+  private compareOptimal(
+    left: AssignmentState,
+    right: AssignmentState,
+  ): number {
     const leftScore = this.scoreOptimal(left);
     const rightScore = this.scoreOptimal(right);
     return leftScore - rightScore;
   }
 
   private scoreOptimal(state: AssignmentState): number {
-    return this.sumStoreCost(state) + this.sumDistance(state) * 4 + state.storeBuckets.size * 25;
+    return (
+      this.sumStoreCost(state) +
+      this.sumDistance(state) * 4 +
+      state.storeBuckets.size * 25
+    );
   }
 
   private sumDistance(state: AssignmentState): number {
     return this.roundMoney(
-      [...state.storeBuckets.values()].reduce((sum, bucket) => sum + bucket.quote.distanceKm, 0),
+      [...state.storeBuckets.values()].reduce(
+        (sum, bucket) => sum + bucket.quote.distanceKm,
+        0,
+      ),
     );
   }
 
   private sumStoreCost(state: AssignmentState): number {
     return this.roundMoney(
       state.itemsCost +
-        [...state.storeBuckets.values()].reduce((sum, bucket) => sum + bucket.quote.logisticsCost, 0),
+        [...state.storeBuckets.values()].reduce(
+          (sum, bucket) => sum + bucket.quote.logisticsCost,
+          0,
+        ),
     );
   }
 
@@ -402,7 +468,9 @@ export class CartOptimizationEvaluatorService {
       return this.cloneState(candidate);
     }
 
-    return comparator(candidate, existing) < 0 ? this.cloneState(candidate) : existing;
+    return comparator(candidate, existing) < 0
+      ? this.cloneState(candidate)
+      : existing;
   }
 
   private cloneState(state: AssignmentState): AssignmentState {
