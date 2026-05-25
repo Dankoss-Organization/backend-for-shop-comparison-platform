@@ -74,8 +74,8 @@ export class CartOptimizationPricingService {
       const deliveryFee = this.calculateDeliveryFee(
         userLocation,
         store.location,
-        store.deliveryBaseFee ?? 0,
-        store.deliveryFeePerKm ?? 0,
+        store.deliveryBaseFee,
+        store.deliveryFeePerKm,
       );
 
       return {
@@ -97,14 +97,18 @@ export class CartOptimizationPricingService {
       ]);
     }
 
-    const pickupRadiusKm = store.pickupRadiusKm ?? CART_OPTIMIZATION_DEFAULTS.pickupSearchRadiusKm;
+    const pickupRadiusKm =
+      store.pickupRadiusKm ?? CART_OPTIMIZATION_DEFAULTS.pickupSearchRadiusKm;
     if (distanceKm > pickupRadiusKm) {
       return this.buildUnavailableQuote(store, fulfillmentType, distanceKm, [
         "pickup_out_of_radius",
       ]);
     }
 
-    const pickupPenalty = this.calculatePickupPenalty(userLocation, store.location);
+    const pickupPenalty = this.calculatePickupPenalty(
+      userLocation,
+      store.location,
+    );
 
     return {
       storeId: store.storeId,
