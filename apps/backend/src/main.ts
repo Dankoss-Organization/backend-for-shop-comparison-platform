@@ -4,6 +4,7 @@ import { AppModule } from "./app.module";
 import { ApiDocumentationService } from "./shared/api-documentation.service";
 import { AuthGuard } from "./auth/guards/auth.guard";
 import { RolesGuard } from "./auth/guards/roles.guard";
+import cookieParser from "cookie-parser";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -14,6 +15,8 @@ async function bootstrap() {
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   ApiDocumentationService.configure(app);
+
+  app.use(cookieParser());
 
   app.enableCors({
     origin: process.env.CLIENT_URL,

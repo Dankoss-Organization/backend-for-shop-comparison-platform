@@ -15,7 +15,19 @@ export class JwtAuthGuard implements CanActivate {
       token = authHeader.slice(7).trim();
     }
 
-    const user = await this.authService.validateTokenAndGetUser(token);
+    // Also support token in cookies (auth_token)
+    if (!token && req.cookies) {
+      token = req.cookies["auth_token"] || req.cookies["token"];
+    }
+
+    // 1) Check local session by token
+    let user = token ? await this.authService.getUserBySessionToken(token) : null;
+
+    // 2) Fall back to validating token with external provider
+    if (!user) {
+      user = await this.authService.validateTokenAndGetUser(token);
+    }
+
     if (user) {
       req.user = user;
     } else {

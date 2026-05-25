@@ -11,12 +11,14 @@ import {
 import { AuthService } from "./auth.service";
 import { GetUser } from "./core/get-user.decorator";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { Public } from "./core/public.decorator";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // Verify a bearer token and create a session
+  @Public()
   @Post("/verify")
   @HttpCode(HttpStatus.OK)
   async verify(@Req() req: any) {
