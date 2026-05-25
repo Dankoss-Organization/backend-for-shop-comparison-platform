@@ -4,6 +4,7 @@ import { AppService } from "./app.service";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ConfigModule } from "@nestjs/config";
 import { ProductsModule } from "./products/products.module";
+import { RecipesModule } from "./recipes/recipes.module";
 import { LoggerModule } from "./logger/logger.module";
 import { MeilisearchModule } from "./search/meilisearch.module";
 import { StoresModule } from "./stores/stores.module";
@@ -24,6 +25,7 @@ const envFilePath =
     PrismaModule,
     MeilisearchModule,
     ProductsModule,
+    RecipesModule,
     LoggerModule,
     StoresModule,
     CartsModule,
