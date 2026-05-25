@@ -1,4 +1,12 @@
-import { IsOptional, IsInt, Min, Max, IsString, IsEnum } from "class-validator";
+import {
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsString,
+  IsEnum,
+  IsNumber,
+} from "class-validator";
 import { Type } from "class-transformer";
 
 export enum StoreProductsSort {
@@ -34,6 +42,19 @@ export class GetStoreProductsQueryDto {
   @Min(0)
   @Max(100)
   minDiscount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  minRating?: number;
 
   @IsOptional()
   @IsEnum(StoreProductsSort, {

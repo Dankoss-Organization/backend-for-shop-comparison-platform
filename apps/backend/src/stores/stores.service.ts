@@ -76,6 +76,8 @@ export class StoresService {
       search?: string;
       categoryId?: string;
       minDiscount?: number;
+      maxPrice?: number;
+      minRating?: number;
       sort: StoreProductsSort;
     },
   ): Promise<GetStoreProductsResponseDto> {
@@ -86,6 +88,18 @@ export class StoresService {
         storeId,
         ...options,
       });
+
+      if (options.minRating !== undefined) {
+        this.logger.info(
+          "Ignoring minRating filter for store products because rating data is not available in the current product/store model",
+          {
+            service: "StoresService",
+            method: "getStoreProducts",
+            storeId,
+            minRating: options.minRating,
+          },
+        );
+      }
 
       // Verify store exists
       const store = await this.prisma.localStore.findFirst({
@@ -129,6 +143,11 @@ export class StoresService {
             storeId,
             currentPrice: {
               gt: 0,
+              ...(options.maxPrice !== undefined
+                ? {
+                    lte: options.maxPrice,
+                  }
+                : {}),
             },
           },
         },
@@ -143,6 +162,11 @@ export class StoresService {
               storeId,
               currentPrice: {
                 gt: 0,
+                ...(options.maxPrice !== undefined
+                  ? {
+                      lte: options.maxPrice,
+                    }
+                  : {}),
               },
             },
             include: {
@@ -183,7 +207,7 @@ export class StoresService {
             productId: product.productId,
             canonicalName: product.canonicalName,
             brand: product.brand,
-            media: product.mainImage || "",
+            media: product.media,
             currentPrice,
             regularPrice,
             discountPercent,

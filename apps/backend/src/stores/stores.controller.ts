@@ -62,6 +62,21 @@ export class StoresController {
     description: "Filter by minimum discount percentage",
   })
   @ApiQuery({
+    name: "maxPrice",
+    required: false,
+    type: Number,
+    minimum: 0,
+    description: "Filter by maximum product price",
+  })
+  @ApiQuery({
+    name: "minRating",
+    required: false,
+    type: Number,
+    minimum: 0,
+    maximum: 5,
+    description: "Filter by minimum rating (currently accepted but not applied)",
+  })
+  @ApiQuery({
     name: "sort",
     required: false,
     enum: ["price_asc", "discount", "updated"],
@@ -85,6 +100,8 @@ export class StoresController {
       search: query.search?.trim() || undefined,
       categoryId: query.categoryId?.trim() || undefined,
       minDiscount: query.minDiscount,
+      maxPrice: query.maxPrice,
+      minRating: query.minRating,
       sort: query.sort ?? StoreProductsSort.UPDATED,
     });
   }
