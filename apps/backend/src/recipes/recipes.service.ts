@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, Recipe } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -32,6 +32,116 @@ type RecipeRatingRow = {
 @Injectable()
 export class RecipesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getRecipeById(id: string) {
+    const [recipe, ratingStats] = await this.prisma.$transaction([
+      this.prisma.recipe.findUnique({
+        where: { id },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          ingredients: {
+            include: {
+              ingredient: {
+                select: {
+                  id: true,
+                  name: true,
+                  imageUrl: true,
+                },
+              },
+            },
+            orderBy: {
+              id: "asc",
+            },
+          },
+          equipment: {
+            include: {
+              equipment: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+            orderBy: {
+              id: "asc",
+            },
+          },
+          reviews: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 10,
+            select: {
+              id: true,
+              rate: true,
+              comment: true,
+              createdAt: true,
+            },
+          },
+        },
+      }),
+      this.prisma.review.aggregate({
+        where: {
+          recipeId: id,
+        },
+        _avg: {
+          rate: true,
+        },
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
+
+    if (!recipe) {
+      throw new NotFoundException(`Recipe '${id}' not found`);
+    }
+
+    return {
+      id: recipe.id,
+      name: recipe.name,
+      imageUrl: recipe.imageUrl,
+      instructions: recipe.instructions,
+      difficulty: recipe.difficulty,
+      prepTime: recipe.prepTime,
+      servings: recipe.servings,
+      category: {
+        id: recipe.category.id,
+        name: recipe.category.name,
+      },
+      ingredients: recipe.ingredients.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        unit: item.unit,
+        ingredient: {
+          id: item.ingredient.id,
+          name: item.ingredient.name,
+          imageUrl: item.ingredient.imageUrl,
+        },
+      })),
+      equipment: recipe.equipment.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        equipment: {
+          id: item.equipment.id,
+          name: item.equipment.name,
+        },
+      })),
+      reviews: recipe.reviews.map((review) => ({
+        id: review.id,
+        rate: review.rate,
+        comment: review.comment,
+        createdAt: review.createdAt.toISOString(),
+      })),
+      avgRating: Number((ratingStats._avg.rate ?? 0).toFixed(1)),
+      reviewCount: ratingStats._count._all,
+    };
+  }
 
   async getRecipes(options: {
     page: number;

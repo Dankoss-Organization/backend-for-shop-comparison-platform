@@ -1,6 +1,7 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -33,5 +34,13 @@ export class RecipesController {
       difficulty: query.difficulty,
       sort: query.sort ?? "rating",
     });
+  }
+
+  @ApiOperation({ summary: "Get recipe details" })
+  @ApiOkResponse({ description: "Recipe details returned successfully." })
+  @ApiNotFoundResponse({ description: "Recipe was not found." })
+  @Get(":id")
+  getRecipeById(@Param("id") id: string) {
+    return this.recipesService.getRecipeById(id);
   }
 }
