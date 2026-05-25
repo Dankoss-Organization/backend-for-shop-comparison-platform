@@ -183,7 +183,7 @@ export class StoresService {
             productId: product.productId,
             canonicalName: product.canonicalName,
             brand: product.brand,
-            media: product.media || "",
+            media: product.mainImage || "",
             currentPrice,
             regularPrice,
             discountPercent,
