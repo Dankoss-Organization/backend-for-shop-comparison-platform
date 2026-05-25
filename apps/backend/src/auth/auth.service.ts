@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { BetterAuthService } from "./better-auth.service";
 
+const DEFAULT_SESSION_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS ?? 30);
+
 @Injectable()
 export class AuthService {
   private readonly providerId = process.env.BETTER_AUTH_PROVIDER_ID || "better-auth";
@@ -61,6 +63,39 @@ export class AuthService {
       });
     }
 
+    return user;
+  }
+
+  /** Create a session record for a validated token */
+  async createSessionForToken(
+    userId: string,
+    token: string,
+    ipAddress?: string,
+    userAgent?: string,
+    expiresAt?: Date,
+  ) {
+    const ttl = expiresAt ?? new Date(Date.now() + DEFAULT_SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+    return this.prisma.session.create({
+      data: {
+        token,
+        userId,
+        expiresAt: ttl,
+        ipAddress,
+        userAgent,
+      },
+    });
+  }
+
+  /** Revoke session by token */
+  async revokeSession(token: string) {
+    return this.prisma.session.deleteMany({ where: { token } });
+  }
+
+  /** Find a user by session token */
+  async getUserBySessionToken(token: string) {
+    const session = await this.prisma.session.findUnique({ where: { token } });
+    if (!session) return null;
+    const user = await this.prisma.user.findUnique({ where: { id: session.userId } });
     return user;
   }
 }
