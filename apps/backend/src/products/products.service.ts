@@ -833,9 +833,9 @@ export class ProductsService {
       productId: product.id,
       related: related.map((item) => {
         const mappedOffers = this.mapOffers(item.offers);
-        const bestPrice = mappedOffers.length
-          ? Math.min(...mappedOffers.map((offer) => offer.effectivePrice))
-          : null;
+        const bestOffer = mappedOffers
+          .slice()
+          .sort((left, right) => left.effectivePrice - right.effectivePrice)[0];
 
         return {
           id: item.id,
@@ -843,7 +843,13 @@ export class ProductsService {
           canonicalName: item.canonicalName,
           brand: item.brand,
           media: (item as any).media ?? item.mainImage,
-          bestPrice,
+          store: bestOffer
+            ? {
+                id: bestOffer.store.id,
+                name: bestOffer.store.brand,
+              }
+            : null,
+          bestPrice: bestOffer?.effectivePrice ?? null,
           offersCount: mappedOffers.length,
         };
       }),

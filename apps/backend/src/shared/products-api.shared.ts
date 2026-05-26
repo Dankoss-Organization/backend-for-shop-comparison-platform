@@ -172,6 +172,10 @@ export interface RelatedProductsResponse {
     canonicalName: string;
     brand: string | null;
     media: string;
+    store: {
+      id: string;
+      name: string;
+    } | null;
     bestPrice: number | null;
     offersCount: number;
   }>;
