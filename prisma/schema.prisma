@@ -198,7 +198,7 @@ model Offer {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   discountPrice     Decimal?       @map("discount_price") @db.Decimal(12, 2)
-  discountCondition String         @default("[]") @map("discount_condition")
+  discountCondition String?        @default("[]") @map("discount_condition")
   storeSku          String?        @map("store_sku")
   cartItems         CartItem[]     @relation("OfferToCartItem")
   product           Product        @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
