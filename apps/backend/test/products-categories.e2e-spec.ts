@@ -264,6 +264,93 @@ describe("Products categories endpoints (e2e)", () => {
     }
   });
 
+  it("returns category facets scoped to the selected category", async () => {
+    const prisma = context.prisma as any;
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+    const categoryTreeResponse = await request(context.app.getHttpServer())
+      .get("/api/v1/categories")
+      .expect(200);
+
+    const root = categoryTreeResponse.body.categories.find(
+      (category: { id: string }) => category.id === context.fixture.categoryId,
+    );
+
+    const foreignCategory = await prisma.productCategory.create({
+      data: {
+        name: `E2E Foreign Category ${suffix}`,
+      },
+    });
+
+    const foreignProduct = await prisma.product.create({
+      data: {
+        productId: `E2E-FOREIGN-${suffix}`,
+        canonicalName: `E2E Foreign Product ${suffix}`,
+        brand: "Foreign Brand",
+        categoryId: foreignCategory.id,
+        measurements: { weight: "1kg" },
+        pricingLogic: { pricePer: "item" },
+        mainImage: "https://example.com/e2e-foreign.jpg",
+      },
+    });
+
+    await prisma.offer.create({
+      data: {
+        storeId: context.fixture.storeIds[0],
+        productId: foreignProduct.id,
+        currentPrice: 10,
+      },
+    });
+
+    try {
+      const response = await request(context.app.getHttpServer())
+        .get(`/api/v1/categories/${root.slug}/facets`)
+        .expect(200);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          brands: expect.arrayContaining([
+            expect.objectContaining({
+              name: "E2E Brand",
+              count: 2,
+            }),
+          ]),
+          priceRange: {
+            min: 88,
+            max: 95,
+          },
+          ratings: [],
+          stores: expect.arrayContaining([
+            expect.objectContaining({
+              id: context.fixture.storeIds[0],
+              name: expect.any(String),
+              count: expect.any(Number),
+            }),
+          ]),
+          availability: {
+            inStock: 3,
+            outOfStock: 0,
+          },
+        }),
+      );
+
+      expect(
+        response.body.brands.some(
+          (brand: { name: string }) => brand.name === "Foreign Brand",
+        ),
+      ).toBe(false);
+      expect(response.body.priceRange.min).toBe(88);
+      expect(response.body.priceRange.max).toBe(95);
+    } finally {
+      await prisma.offer.deleteMany({
+        where: {
+          productId: foreignProduct.id,
+        },
+      });
+      await prisma.product.delete({ where: { id: foreignProduct.id } });
+      await prisma.productCategory.delete({ where: { id: foreignCategory.id } });
+    }
+  });
+
   it("returns 404 for unknown parent category", async () => {
     const response = await request(context.app.getHttpServer())
       .get("/api/v1/products/categories")
