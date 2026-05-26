@@ -1,3 +1,14 @@
+# Search Module
+
+Documentation for the search subsystem (Meilisearch integration and indexing).
+
+Sections:
+- Indexing pipeline
+- Meilisearch settings and tuning
+- Search API behavior
+- Troubleshooting and reindexing
+
+TODO: link to implementation files in `apps/backend/src/search`.
 # Meilisearch Integration Documentation
 
 Complete guide for using and developing Meilisearch integration in the Shop Comparison Platform backend.
