@@ -185,7 +185,9 @@ export interface ProductCatalogResponse {
 
 export interface CategoryTreeNode {
   id: string;
+  slug: string;
   name: string;
+  thumbnailUrl: string;
   parentId: string | null;
   productCount: number;
   children: CategoryTreeNode[];

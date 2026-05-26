@@ -23,18 +23,79 @@ describe("Products categories endpoints (e2e)", () => {
 
     expect(Array.isArray(response.body.categories)).toBe(true);
     expect(response.body.categories.length).toBeGreaterThan(0);
-      const found = response.body.categories.find(
-        (c: { id: string }) => c.id === context.fixture.categoryId,
+    const found = response.body.categories.find(
+      (c: { id: string }) => c.id === context.fixture.categoryId,
+    );
+    expect(found).toBeDefined();
+    expect(found).toEqual(
+      expect.objectContaining({
+        id: context.fixture.categoryId,
+        name: expect.any(String),
+        parentId: null,
+        productCount: expect.any(Number),
+      }),
+    );
+  });
+
+  it("returns SEO-friendly category tree at /api/v1/categories", async () => {
+    const prisma = context.prisma as any;
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+    const childCategory = await prisma.productCategory.create({
+      data: {
+        name: `E2E Child Category ${suffix}`,
+        parentId: context.fixture.categoryId,
+      },
+    });
+    const childProduct = await prisma.product.create({
+      data: {
+        productId: `E2E-CHILD-${suffix}`,
+        canonicalName: `E2E Child Product ${suffix}`,
+        brand: "E2E Brand",
+        categoryId: childCategory.id,
+        measurements: { weight: "1kg" },
+        pricingLogic: { pricePer: "item" },
+        mainImage: "https://example.com/e2e-child.jpg",
+      },
+    });
+
+    try {
+      const response = await request(context.app.getHttpServer())
+        .get("/api/v1/categories")
+        .expect(200);
+
+      expect(Array.isArray(response.body.categories)).toBe(true);
+      const root = response.body.categories.find(
+        (category: { id: string }) =>
+          category.id === context.fixture.categoryId,
       );
-      expect(found).toBeDefined();
-      expect(found).toEqual(
+
+      expect(root).toEqual(
         expect.objectContaining({
           id: context.fixture.categoryId,
-          name: expect.any(String),
+          slug: expect.any(String),
+          thumbnailUrl: expect.any(String),
           parentId: null,
-          productCount: expect.any(Number),
+          productCount: 3,
         }),
       );
+
+      const child = root.children.find(
+        (category: { id: string }) => category.id === childCategory.id,
+      );
+
+      expect(child).toEqual(
+        expect.objectContaining({
+          id: childCategory.id,
+          slug: expect.any(String),
+          thumbnailUrl: expect.any(String),
+          parentId: context.fixture.categoryId,
+          productCount: 1,
+        }),
+      );
+    } finally {
+      await prisma.product.delete({ where: { id: childProduct.id } });
+      await prisma.productCategory.delete({ where: { id: childCategory.id } });
+    }
   });
 
   it("returns 404 for unknown parent category", async () => {

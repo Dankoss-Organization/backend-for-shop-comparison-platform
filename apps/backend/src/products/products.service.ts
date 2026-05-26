@@ -64,7 +64,9 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
 
 export type CategoryTreeNode = {
   id: string;
+  slug: string;
   name: string;
+  thumbnailUrl: string;
   parentId: string | null;
   productCount: number;
   children: CategoryTreeNode[];
@@ -77,6 +79,8 @@ interface HistoryAggregateRow {
   first_price: number | null;
   last_price: number | null;
 }
+
+const CATEGORY_THUMBNAIL_BASE_URL = "https://assets.dankoss.ua/categories";
 
 @Injectable()
 export class ProductsService {
@@ -227,7 +231,7 @@ export class ProductsService {
       parentId,
     });
 
-    const [categories, productCounts] = await this.prisma.$transaction([
+    const [categories, productCounts] = await Promise.all([
       this.prisma.productCategory.findMany({
         orderBy: {
           name: "asc",
@@ -250,9 +254,12 @@ export class ProductsService {
 
     const nodesById = new Map<string, CategoryTreeNode>();
     for (const category of categories) {
+      const slug = this.toCategorySlug(category.name);
       nodesById.set(category.id, {
         id: category.id,
+        slug,
         name: category.name,
+        thumbnailUrl: this.buildCategoryThumbnailUrl(slug),
         parentId: category.parentId,
         productCount: countsByCategoryId.get(category.id) ?? 0,
         children: [],
@@ -271,26 +278,26 @@ export class ProductsService {
       }
     }
 
-    if (parentId) {
-      const selectedRoot = nodesById.get(parentId);
-      if (!selectedRoot) {
-        this.logger.warn("Category not found", {
-          service: "ProductsService",
-          method: "getCategories",
-          parentId,
-        });
-        throw new NotFoundException(`Category '${parentId}' not found`);
-      }
-
-      return {
-        categories: [this.sortCategoryTree(selectedRoot)],
-      };
+    const selectedRoot = parentId ? nodesById.get(parentId) : undefined;
+    if (parentId && !selectedRoot) {
+      this.logger.warn("Category not found", {
+        service: "ProductsService",
+        method: "getCategories",
+        parentId,
+      });
+      throw new NotFoundException(`Category '${parentId}' not found`);
     }
 
-    const roots = categories
-      .filter((category) => category.parentId === null)
-      .map((category) => nodesById.get(category.id))
-      .filter(Boolean) as CategoryTreeNode[];
+    const roots = parentId
+      ? [selectedRoot as CategoryTreeNode]
+      : (categories
+          .filter((category) => category.parentId === null)
+          .map((category) => nodesById.get(category.id))
+          .filter(Boolean) as CategoryTreeNode[]);
+
+    for (const root of roots) {
+      this.aggregateCategoryProductCounts(root);
+    }
 
     return {
       categories: roots.map((node) => this.sortCategoryTree(node)),
@@ -532,6 +539,31 @@ export class ProductsService {
     product: ProductWithRelations,
   ): ProductCatalogItemWithMeta | null {
     return this.buildCatalogItem(product, {});
+  }
+
+  private toCategorySlug(name: string): string {
+    const normalized = name
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    return normalized || "category";
+  }
+
+  private buildCategoryThumbnailUrl(slug: string): string {
+    return `${CATEGORY_THUMBNAIL_BASE_URL}/${slug}_thumb.png`;
+  }
+
+  private aggregateCategoryProductCounts(node: CategoryTreeNode): number {
+    const descendantCount = node.children.reduce(
+      (total, child) => total + this.aggregateCategoryProductCounts(child),
+      0,
+    );
+
+    node.productCount += descendantCount;
+    return node.productCount;
   }
 
   private sortCategoryTree(node: CategoryTreeNode): CategoryTreeNode {
