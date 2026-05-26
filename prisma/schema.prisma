@@ -151,18 +151,25 @@ model Product {
 }
 
 model Offer {
-  id            String         @id @default(uuid())
-  storeId       String         @map("store_id")
-  productId     String         @map("product_id")
-  currentPrice  Decimal        @map("current_price") @db.Decimal(12, 2)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  discountPrice Decimal?       @map("discount_price") @db.Decimal(12, 2)
-  storeSku      String?        @map("store_sku")
-  cartItems     CartItem[]     @relation("OfferToCartItem")
-  product       Product        @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
-  store         LocalStore     @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
-  priceHistory  PriceHistory[] @relation("OfferToPriceHistory")
+  id String @id @default(uuid())
+
+  storeId String     @map("store_id")
+  store   LocalStore @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
+
+  productId String  @map("product_id")
+  product   Product @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
+
+  currentPrice      Decimal  @map("current_price") @db.Decimal(12, 2)
+  discountPrice     Decimal? @map("discount_price") @db.Decimal(12, 2)
+  discountCondition String?  @map("discount_condition") @db.Text
+
+  storeSku String? @map("store_sku")
+
+  priceHistory PriceHistory[] @relation("OfferToPriceHistory")
+  cartItems    CartItem[]     @relation("OfferToCartItem")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([storeId, productId])
   @@map("offers")
