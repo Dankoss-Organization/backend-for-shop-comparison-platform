@@ -1,0 +1,506 @@
+[
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 64,
+      "iterations": 10000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 12.6143,
+      "opsPerSec": 79.27510840871074,
+      "avgTaskCpuMs": 12
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 13.3485,
+      "opsPerSec": 74.9147844327078,
+      "avgTaskCpuMs": 14
+    },
+    "speedupVsSync": 1.0582037845936754
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 64,
+      "iterations": 10000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 96.481,
+      "opsPerSec": 82.91788020439259,
+      "avgTaskCpuMs": 11.75
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 99.7961,
+      "opsPerSec": 80.16345328124045,
+      "avgTaskCpuMs": 12.5
+    },
+    "speedupVsSync": 1.0343601330831977
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 64,
+      "iterations": 30000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 36.2801,
+      "opsPerSec": 27.56331983649439,
+      "avgTaskCpuMs": 36
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 33.2439,
+      "opsPerSec": 30.080706535635112,
+      "avgTaskCpuMs": 34
+    },
+    "speedupVsSync": 0.9163122483124357
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 64,
+      "iterations": 30000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 285.9172,
+      "opsPerSec": 27.98012851273026,
+      "avgTaskCpuMs": 35.375
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 283.9422,
+      "opsPerSec": 28.174748241015248,
+      "avgTaskCpuMs": 35.5
+    },
+    "speedupVsSync": 0.9930924057734198
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 512,
+      "iterations": 10000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 92.4398,
+      "opsPerSec": 10.817851185311953,
+      "avgTaskCpuMs": 92
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 91.3241,
+      "opsPerSec": 10.95001209976337,
+      "avgTaskCpuMs": 91
+    },
+    "speedupVsSync": 0.9879305234325474
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 512,
+      "iterations": 10000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 797.6667,
+      "opsPerSec": 10.029251565848243,
+      "avgTaskCpuMs": 99.375
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 802.7712,
+      "opsPerSec": 9.965479578739247,
+      "avgTaskCpuMs": 100.375
+    },
+    "speedupVsSync": 1.006399289327234
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 512,
+      "iterations": 30000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 275.4514,
+      "opsPerSec": 3.6304044924077354,
+      "avgTaskCpuMs": 275
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 283.4697,
+      "opsPerSec": 3.527713896758631,
+      "avgTaskCpuMs": 283
+    },
+    "speedupVsSync": 1.029109672341473
+  },
+  {
+    "scenario": {
+      "poolSize": 1,
+      "dataSize": 512,
+      "iterations": 30000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 2432.8838,
+      "opsPerSec": 3.288278708584438,
+      "avgTaskCpuMs": 304.125
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 2244.4846,
+      "opsPerSec": 3.5642926665658567,
+      "avgTaskCpuMs": 280.375
+    },
+    "speedupVsSync": 0.9225613652407072
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 64,
+      "iterations": 10000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 13.6905,
+      "opsPerSec": 73.04335122895439,
+      "avgTaskCpuMs": 13
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 11.3243,
+      "opsPerSec": 88.30567893821252,
+      "avgTaskCpuMs": 11
+    },
+    "speedupVsSync": 0.827164822322048
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 64,
+      "iterations": 10000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 49.2734,
+      "opsPerSec": 162.35940690108657,
+      "avgTaskCpuMs": 11.75
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 87.5286,
+      "opsPerSec": 91.39869711157269,
+      "avgTaskCpuMs": 11
+    },
+    "speedupVsSync": 1.7763864478603058
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 64,
+      "iterations": 30000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 33.2223,
+      "opsPerSec": 30.1002639793151,
+      "avgTaskCpuMs": 33
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 34.0663,
+      "opsPerSec": 29.35452338528106,
+      "avgTaskCpuMs": 34
+    },
+    "speedupVsSync": 1.025404622798542
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 64,
+      "iterations": 30000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 142.7272,
+      "opsPerSec": 56.05098397502368,
+      "avgTaskCpuMs": 35.25
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 274.109,
+      "opsPerSec": 29.185470013753655,
+      "avgTaskCpuMs": 34.25
+    },
+    "speedupVsSync": 1.9205098958012206
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 512,
+      "iterations": 10000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 91.6797,
+      "opsPerSec": 10.907540055213968,
+      "avgTaskCpuMs": 91
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 90.4288,
+      "opsPerSec": 11.058423864963375,
+      "avgTaskCpuMs": 90
+    },
+    "speedupVsSync": 0.9863557581449328
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 512,
+      "iterations": 10000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 413.3167,
+      "opsPerSec": 19.35561761719282,
+      "avgTaskCpuMs": 96.75
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 727.2244,
+      "opsPerSec": 11.000730998574857,
+      "avgTaskCpuMs": 90.875
+    },
+    "speedupVsSync": 1.7594846760365597
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 512,
+      "iterations": 30000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 273.0569,
+      "opsPerSec": 3.6622403608918144,
+      "avgTaskCpuMs": 273
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 274.6835,
+      "opsPerSec": 3.640553582577767,
+      "avgTaskCpuMs": 275
+    },
+    "speedupVsSync": 1.0059570001710265
+  },
+  {
+    "scenario": {
+      "poolSize": 2,
+      "dataSize": 512,
+      "iterations": 30000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 1075.2957,
+      "opsPerSec": 7.439813997210257,
+      "avgTaskCpuMs": 268.5
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 2215.0256,
+      "opsPerSec": 3.6116964065787776,
+      "avgTaskCpuMs": 276.875
+    },
+    "speedupVsSync": 2.0599223078823807
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 64,
+      "iterations": 10000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 11.7368,
+      "opsPerSec": 85.20209937972871,
+      "avgTaskCpuMs": 12
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 11.9963,
+      "opsPerSec": 83.359035702675,
+      "avgTaskCpuMs": 12
+    },
+    "speedupVsSync": 1.0221099447890396
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 64,
+      "iterations": 10000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 27.9348,
+      "opsPerSec": 286.3811446654352,
+      "avgTaskCpuMs": 12.375
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 88.5013,
+      "opsPerSec": 90.39415240228111,
+      "avgTaskCpuMs": 11.125
+    },
+    "speedupVsSync": 3.1681379497973854
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 64,
+      "iterations": 30000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 33.3704,
+      "opsPerSec": 29.966677055114715,
+      "avgTaskCpuMs": 33
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 33.8788,
+      "opsPerSec": 29.5169840726354,
+      "avgTaskCpuMs": 34
+    },
+    "speedupVsSync": 1.0152350586148204
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 64,
+      "iterations": 30000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 73.0977,
+      "opsPerSec": 109.4425679604146,
+      "avgTaskCpuMs": 34.875
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 272.2372,
+      "opsPerSec": 29.38613826471915,
+      "avgTaskCpuMs": 34.125
+    },
+    "speedupVsSync": 3.724292282794123
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 512,
+      "iterations": 10000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 90.3652,
+      "opsPerSec": 11.066206902657216,
+      "avgTaskCpuMs": 90
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 88.5965,
+      "opsPerSec": 11.287127595333901,
+      "avgTaskCpuMs": 88
+    },
+    "speedupVsSync": 0.9804271998512702
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 512,
+      "iterations": 10000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 187.4073,
+      "opsPerSec": 42.687771500896716,
+      "avgTaskCpuMs": 91.375
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 722.388,
+      "opsPerSec": 11.074381080527361,
+      "avgTaskCpuMs": 90.25
+    },
+    "speedupVsSync": 3.854641734873722
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 512,
+      "iterations": 30000,
+      "tasks": 1
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 272.8606,
+      "opsPerSec": 3.6648750314263037,
+      "avgTaskCpuMs": 273
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 272.2693,
+      "opsPerSec": 3.672834212303774,
+      "avgTaskCpuMs": 273
+    },
+    "speedupVsSync": 0.9978329593939177
+  },
+  {
+    "scenario": {
+      "poolSize": 4,
+      "dataSize": 512,
+      "iterations": 30000,
+      "tasks": 8
+    },
+    "workerThreads": {
+      "mode": "worker_threads",
+      "totalMs": 561.818,
+      "opsPerSec": 14.239486808895409,
+      "avgTaskCpuMs": 275.125
+    },
+    "sync": {
+      "mode": "sync",
+      "totalMs": 2170.7422,
+      "opsPerSec": 3.6853754443986944,
+      "avgTaskCpuMs": 271.375
+    },
+    "speedupVsSync": 3.8637818653015747
+  }
+]
