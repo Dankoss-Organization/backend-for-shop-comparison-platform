@@ -32,6 +32,8 @@ model User {
   favourites    UserFavourite[]
   sessions      Session[]
   accounts      Account[]
+  accounts      accounts[]
+  sessions      sessions[]
 
   @@map("users")
 }
@@ -51,20 +53,20 @@ model Session {
 }
 
 model Account {
-  id                   String   @id @default(uuid())
-  accountId            String
-  providerId           String
-  userId               String
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken          String?
-  refreshToken         String?
-  idToken              String?
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  scope                String?
-  password             String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   @@map("accounts")
 }
@@ -160,38 +162,30 @@ model CartItem {
 }
 
 model Product {
-  id            String  @id @default(uuid())
-  productId     String  @unique
-  canonicalName String  @map("canonical_name")
-  brand         String?
-  country       String?
-
-  rawMaiImage String? @map("raw_main_image")
-  mainImage   String? @map("main_image")
-
-  measurements Json
-
-  pricingLogic Json @map("pricing_logic")
-
-  description       String? @db.Text
-  calories          String?
-  proteins          Float?  @map("proteins_g")
-  fats              Float?  @map("fats_g")
-  carbohydrates     Float?  @map("carbohydrates_g")
-  alcoholPercentage Float?  @map("alcohol_percentage")
-
-  isTobacco                  Boolean @default(false) @map("is_tobacco")
-  is18Plus                   Boolean @default(false) @map("is_18_plus")
-  isNationalCashbackEligible Boolean @default(false) @map("is_national_cashback_eligible")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  categoryId String?          @map("category_id")
-  category   ProductCategory? @relation(fields: [categoryId], references: [id])
-
-  offers           Offer[]           @relation("ProductToOffer")
-  favouriteDetails FavouriteProduct? @relation("ProductToFavourite")
+  id                         String            @id @default(uuid())
+  productId                  String            @unique
+  canonicalName              String            @map("canonical_name")
+  brand                      String?
+  country                    String?
+  rawMaiImage                String?           @map("raw_main_image")
+  measurements               Json
+  pricingLogic               Json              @map("pricing_logic")
+  description                String?
+  calories                   String?
+  proteins                   Float?            @map("proteins_g")
+  fats                       Float?            @map("fats_g")
+  carbohydrates              Float?            @map("carbohydrates_g")
+  alcoholPercentage          Float?            @map("alcohol_percentage")
+  isTobacco                  Boolean           @default(false) @map("is_tobacco")
+  is18Plus                   Boolean           @default(false) @map("is_18_plus")
+  isNationalCashbackEligible Boolean           @default(false) @map("is_national_cashback_eligible")
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  categoryId                 String?           @map("category_id")
+  mainImage                  String?           @map("main_image")
+  favouriteDetails           FavouriteProduct? @relation("ProductToFavourite")
+  offers                     Offer[]           @relation("ProductToOffer")
+  category                   ProductCategory?  @relation(fields: [categoryId], references: [id])
 
   @@index([categoryId])
   @@index([brand])
@@ -199,25 +193,19 @@ model Product {
 }
 
 model Offer {
-  id String @id @default(uuid())
-
-  storeId String     @map("store_id")
-  store   LocalStore @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
-
-  productId String  @map("product_id")
-  product   Product @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
-
-  currentPrice      Decimal  @map("current_price") @db.Decimal(12, 2)
-  discountPrice     Decimal? @map("discount_price") @db.Decimal(12, 2)
-  discountCondition String?  @map("discount_condition") @db.Text
-
-  storeSku String? @map("store_sku")
-
-  priceHistory PriceHistory[] @relation("OfferToPriceHistory")
-  cartItems    CartItem[]     @relation("OfferToCartItem")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  storeId       String         @map("store_id")
+  productId     String         @map("product_id")
+  currentPrice  Decimal        @map("current_price") @db.Decimal(12, 2)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  discountPrice Decimal?       @map("discount_price") @db.Decimal(12, 2)
+  bulkDiscounts Json           @default("[]") @map("bulk_discounts")
+  storeSku      String?        @map("store_sku")
+  cartItems     CartItem[]     @relation("OfferToCartItem")
+  product       Product        @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
+  store         LocalStore     @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
+  priceHistory  PriceHistory[] @relation("OfferToPriceHistory")
 
   @@unique([storeId, productId])
   @@map("offers")
@@ -262,26 +250,22 @@ model StoreBrand {
 }
 
 model LocalStore {
-  id          String @id @default(uuid())
-  longitude   Float
-  latitude    Float
-  address     String
-  openingHour String @map("opening_hour")
-  closingHour String @map("closing_hour")
-  city        String
-
-  supportsDelivery Boolean @default(true) @map("supports_delivery")
-  supportsPickup   Boolean @default(true) @map("supports_pickup")
-
-  deliveryBaseFee  Decimal @default(0) @map("delivery_base_fee") @db.Decimal(12, 2)
-  deliveryFeePerKm Decimal @default(0) @map("delivery_fee_per_km") @db.Decimal(12, 2)
-  pickupRadiusKm   Float?  @map("pickup_radius_km")
-
-  brandId String     @map("brand_id")
-  brand   StoreBrand @relation(fields: [brandId], references: [id])
-
-  offers           Offer[]         @relation("StoreToOffer")
+  id               String          @id @default(uuid())
+  longitude        Float
+  latitude         Float
+  address          String
+  openingHour      String          @map("opening_hour")
+  closingHour      String          @map("closing_hour")
+  city             String
+  brandId          String          @map("brand_id")
+  supportsDelivery Boolean         @default(true) @map("supports_delivery")
+  supportsPickup   Boolean         @default(true) @map("supports_pickup")
+  deliveryBaseFee  Decimal         @default(0) @map("delivery_base_fee") @db.Decimal(12, 2)
+  deliveryFeePerKm Decimal         @default(0) @map("delivery_fee_per_km") @db.Decimal(12, 2)
+  pickupRadiusKm   Float?          @map("pickup_radius_km")
   favouriteDetails FavouriteStore?
+  brand            StoreBrand      @relation(fields: [brandId], references: [id])
+  offers           Offer[]         @relation("StoreToOffer")
 
   @@map("local_store")
 }
@@ -403,4 +387,42 @@ model RecipeEquipment {
   @@index([recipeId])
   @@index([equipmentId])
   @@map("recipe_equipment")
+}
+
+model accounts {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime
+  users                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model sessions {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model verifications {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime?
 }
