@@ -38,6 +38,7 @@ describe("Products list endpoints (e2e)", () => {
         canonicalName: expect.any(String),
         brand: expect.anything(),
         categoryId: context.fixture.categoryId,
+        media: expect.any(String),
         offers: expect.arrayContaining([
           expect.objectContaining({
             id: expect.any(String),

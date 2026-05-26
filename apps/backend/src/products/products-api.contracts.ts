@@ -164,7 +164,6 @@ export interface ProductCatalogItem {
     id: string;
     name: string;
   } | null;
-  media: string;
   description: string | null;
   bestPrice: number | null;
   oldPrice: number | null;
@@ -173,6 +172,7 @@ export interface ProductCatalogItem {
   offersCount: number;
   availabilityStatus: AvailabilityStatus;
   updatedAt: string;
+  media: string;
 }
 
 export interface ProductCatalogResponse {

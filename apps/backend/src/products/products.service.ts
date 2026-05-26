@@ -37,6 +37,7 @@ type ProductCatalogItemWithMeta = ProductCatalogItem & {
   updatedAt: Date;
   bestPrice: number;
   bestDiscount: number;
+  media: string;
 };
 
 type CategoryProductsSort = ProductsSort;
@@ -308,7 +309,7 @@ export class ProductsService {
       categorySlug,
     });
 
-    const { categoryNode } = await this.resolveCategoryNode(categorySlug);
+    const { categoryNode, nodesById } = await this.resolveCategoryNode(categorySlug);
 
     const parent = categoryNode.parentId
       ? nodesById.get(categoryNode.parentId)
@@ -1199,6 +1200,7 @@ export class ProductsService {
       canonicalName: product.canonicalName,
       brand: product.brand,
       categoryId: product.categoryId ?? null,
+      media: product.mainImage ?? product.rawMaiImage ?? "",
       offers: offers.map((offer) => ({
         id: offer.id,
         storeId: offer.store.id,
