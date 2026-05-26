@@ -10,6 +10,7 @@ export interface ProductsE2EFixture {
   relatedProductDbId: string;
   categoryId: string;
   storeBrandId: string;
+  storeBrandName: string;
   storeIds: string[];
 }
 
@@ -69,7 +70,7 @@ export const createProductsE2EContext =
     await app.init();
 
     const prisma = app.get(PrismaService);
-    const suffix = Date.now();
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
 
     const category = await prisma.productCategory.create({
       data: {
@@ -77,9 +78,10 @@ export const createProductsE2EContext =
       },
     });
 
+    const storeBrandName = `E2E Store Brand ${suffix}`;
     const storeBrand = await prisma.storeBrand.create({
       data: {
-        name: `E2E Store Brand ${suffix}`,
+        name: storeBrandName,
       },
     });
 
@@ -113,8 +115,8 @@ export const createProductsE2EContext =
         productId: `E2E-PRODUCT-${suffix}`,
         canonicalName: "E2E Main Product",
         brand: "E2E Brand",
-        categoryId: category.id,
-        media: "https://example.com/e2e-main.jpg",
+        category: { connect: { id: category.id } },
+        mainImage: "https://example.com/e2e-main.jpg",
         measurements: { weight: "500g" },
         pricingLogic: { pricePer: "item" },
       },
@@ -125,8 +127,8 @@ export const createProductsE2EContext =
         productId: `E2E-RELATED-${suffix}`,
         canonicalName: "E2E Related Product",
         brand: "E2E Brand",
-        categoryId: category.id,
-        media: "https://example.com/e2e-related.jpg",
+        category: { connect: { id: category.id } },
+        mainImage: "https://example.com/e2e-related.jpg",
         measurements: { weight: "450g" },
         pricingLogic: { pricePer: "item" },
       },
@@ -201,6 +203,7 @@ export const createProductsE2EContext =
         relatedProductDbId: relatedProduct.id,
         categoryId: category.id,
         storeBrandId: storeBrand.id,
+        storeBrandName,
         storeIds: [storeA.id, storeB.id],
       },
     };

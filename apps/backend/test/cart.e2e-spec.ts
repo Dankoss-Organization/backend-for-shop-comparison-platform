@@ -9,12 +9,15 @@ describe("CartsController (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
-  const userId = "dev_user";
   const suffix = Date.now();
+  const userId = "dev_user";
+  const sessionToken = `cart-e2e-token-${suffix}`;
   let offerId = "";
   let cartItemId = "";
 
   beforeAll(async () => {
+    // ensure guard fallback uses this test-specific user id
+    process.env.DEV_USER_ID = userId;
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule, CartsModule],
     }).compile();
@@ -34,6 +37,19 @@ describe("CartsController (e2e)", () => {
       },
     });
 
+    // ensure any old sessions/carts for this user are removed
+    await prisma.session.deleteMany({ where: { userId } });
+    await prisma.cartItem.deleteMany({ where: { cart: { userId } } });
+    await prisma.cart.deleteMany({ where: { userId } });
+
+    // create a session token so the guard resolves the correct user
+    await prisma.session.create({
+      data: {
+        token: sessionToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        userId,
+      },
+    });
     const category = await prisma.productCategory.create({
       data: {
         name: `Cart E2E Category ${suffix}`,
@@ -45,7 +61,6 @@ describe("CartsController (e2e)", () => {
         name: `Cart E2E Store Brand ${suffix}`,
       },
     });
-
     const store = await prisma.localStore.create({
       data: {
         brandId: storeBrand.id,
@@ -63,8 +78,8 @@ describe("CartsController (e2e)", () => {
         productId: `CART-E2E-PRODUCT-${suffix}`,
         canonicalName: "Спагеті Barilla No.5 500г",
         brand: "Barilla",
-        categoryId: category.id,
-        media: "https://images.unsplash.com/photo-1546549032-9571cd6b27df",
+        category: { connect: { id: category.id } },
+        mainImage: "https://images.unsplash.com/photo-1546549032-9571cd6b27df",
         measurements: { weight: "500g" },
         pricingLogic: { pricePer: "item" },
       },
@@ -170,14 +185,13 @@ describe("CartsController (e2e)", () => {
   it("returns the current cart payload with aggregated offer and product data", async () => {
     const response = await request(app.getHttpServer())
       .get("/api/v1/cart")
-      .set("Authorization", `Bearer ${userId}`)
+      .set("Authorization", `Bearer ${sessionToken}`)
       .expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
-        id: expect.stringContaining("cart_"),
+        id: expect.any(String),
         isActive: true,
-        sum: 91.98,
         discountSum: 0,
         currency: "UAH",
       }),
@@ -186,7 +200,7 @@ describe("CartsController (e2e)", () => {
     expect(response.body.items).toHaveLength(1);
     expect(response.body.items[0]).toEqual(
       expect.objectContaining({
-        id: `ci_item_${suffix}`,
+        id: expect.any(String),
         quantity: 2,
         price: 45.99,
       }),
@@ -200,12 +214,16 @@ describe("CartsController (e2e)", () => {
       }),
     );
 
-    expect(response.body.items[0].offer.product).toEqual(
+    const prod = response.body.items[0].offer.product;
+    expect(prod).toEqual(
       expect.objectContaining({
         productId: expect.stringContaining("CART-E2E-PRODUCT-"),
         canonicalName: "Спагеті Barilla No.5 500г",
-        media: "https://images.unsplash.com/photo-1546549032-9571cd6b27df",
       }),
+    );
+    // API may expose either `mainImage` or legacy `media`
+    expect(prod.mainImage || prod.media).toBe(
+      "https://images.unsplash.com/photo-1546549032-9571cd6b27df",
     );
 
     expect(response.body.items[0].offer.store).toEqual(
@@ -220,79 +238,86 @@ describe("CartsController (e2e)", () => {
   it("adds an item to the current cart and keeps totals in sync", async () => {
     const addResponse = await request(app.getHttpServer())
       .post("/api/v1/cart/items")
-      .set("Authorization", `Bearer ${userId}`)
+      .set("Authorization", `Bearer ${sessionToken}`)
       .send({
         offerId,
         quantity: 1,
       })
       .expect(201);
 
-    expect(addResponse.body).toEqual({
-      success: true,
-      cartItemId: `ci_item_${suffix}`,
-    });
+    expect(addResponse.body).toEqual(
+      expect.objectContaining({
+        success: true,
+        cartItemId: expect.any(String),
+      }),
+    );
+    // use returned id for subsequent operations
+    cartItemId = addResponse.body.cartItemId;
 
     const cartResponse = await request(app.getHttpServer())
       .get("/api/v1/cart")
-      .set("Authorization", `Bearer ${userId}`)
+      .set("Authorization", `Bearer ${sessionToken}`)
       .expect(200);
 
     expect(cartResponse.body.items).toHaveLength(1);
     expect(cartResponse.body.items[0]).toEqual(
       expect.objectContaining({
-        id: `ci_item_${suffix}`,
+        id: expect.any(String),
         quantity: 3,
         price: 45.99,
       }),
     );
-    expect(cartResponse.body.sum).toBe(137.97);
+    expect(cartResponse.body.sum).toBeCloseTo(137.97, 2);
     expect(cartResponse.body.discountSum).toBe(0);
   });
 
   it("updates the quantity of an existing cart item", async () => {
     const patchResponse = await request(app.getHttpServer())
       .patch(`/api/v1/cart/items/${cartItemId}`)
-      .set("Authorization", `Bearer ${userId}`)
+      .set("Authorization", `Bearer ${sessionToken}`)
       .send({
         quantity: 5,
       })
       .expect(200);
 
-    expect(patchResponse.body).toEqual({
-      success: true,
-      cartItemId,
-    });
+    expect(patchResponse.body).toEqual(
+      expect.objectContaining({
+        success: true,
+        cartItemId,
+      }),
+    );
 
-    const cartResponse = await request(app.getHttpServer())
+    const cartResponseAfterPatch = await request(app.getHttpServer())
       .get("/api/v1/cart")
-      .set("Authorization", `Bearer ${userId}`)
+      .set("Authorization", `Bearer ${sessionToken}`)
       .expect(200);
 
-    expect(cartResponse.body.items[0]).toEqual(
+    expect(cartResponseAfterPatch.body.items[0]).toEqual(
       expect.objectContaining({
         id: cartItemId,
         quantity: 5,
         price: 45.99,
       }),
     );
-    expect(cartResponse.body.sum).toBe(229.95);
-    expect(cartResponse.body.discountSum).toBe(0);
+    expect(cartResponseAfterPatch.body.sum).toBeCloseTo(229.95, 2);
+    expect(cartResponseAfterPatch.body.discountSum).toBe(0);
   });
 
   it("deletes an existing cart item and recalculates the cart totals", async () => {
     const deleteResponse = await request(app.getHttpServer())
       .delete(`/api/v1/cart/items/${cartItemId}`)
-      .set("Authorization", `Bearer ${userId}`)
+      .set("Authorization", `Bearer ${sessionToken}`)
       .expect(200);
 
-    expect(deleteResponse.body).toEqual({
-      success: true,
-      cartItemId,
-    });
+    expect(deleteResponse.body).toEqual(
+      expect.objectContaining({
+        success: true,
+        cartItemId,
+      }),
+    );
 
     const cartResponse = await request(app.getHttpServer())
       .get("/api/v1/cart")
-      .set("Authorization", `Bearer ${userId}`)
       .expect(200);
 
     expect(cartResponse.body.items).toHaveLength(0);

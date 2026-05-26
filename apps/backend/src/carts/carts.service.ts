@@ -31,11 +31,11 @@ export class CartsService {
             offer: {
               include: {
                 product: {
-                  select: {
-                    productId: true,
-                    canonicalName: true,
-                    media: true,
-                  },
+                    select: {
+                      productId: true,
+                      canonicalName: true,
+                      mainImage: true,
+                    },
                 },
                 store: {
                   include: {
@@ -89,7 +89,7 @@ export class CartsService {
           product: {
             productId: item.offer.product.productId,
             canonicalName: item.offer.product.canonicalName,
-            media: item.offer.product.media,
+            media: item.offer.product.mainImage,
           },
           store: {
             id: item.offer.store.id,

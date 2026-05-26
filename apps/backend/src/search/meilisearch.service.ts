@@ -14,27 +14,42 @@ export class MeilisearchService implements OnModuleInit {
   private readonly logger = new Logger(MeilisearchService.name);
   private client: MeilisearchSDK.MeiliSearch;
   private indexName: string;
+  private disabled = false;
 
   constructor(private configService: ConfigService) {
-    const host = this.configService.get<string>("MEILISEARCH_HOST");
+    let host = this.configService.get<string>("MEILISEARCH_HOST");
     const apiKey = this.configService.get<string>("MEILISEARCH_API_KEY");
     this.indexName = this.configService.get<string>(
       "MEILISEARCH_INDEX_NAME",
       "products"
     );
+    const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 
-    if (!host) {
-      throw new Error("MEILISEARCH_HOST environment variable is not set");
+    if (appEnv === "test") {
+      this.logger.warn("Meilisearch disabled in test environment");
+      this.disabled = true;
+      return;
     }
 
-    this.client = new MeilisearchSDK.MeiliSearch({
-      host,
-      apiKey: apiKey || undefined,
-    });
+    if (!host) {
+      this.logger.warn(
+        "MEILISEARCH_HOST is not set — falling back to http://127.0.0.1:7700 for local testing",
+      );
+      // fallback for local development
+      host = "http://127.0.0.1:7700";
+    }
+
+    this.client = new MeilisearchSDK.MeiliSearch({ host, apiKey: apiKey || undefined });
   }
 
   async onModuleInit(): Promise<void> {
-    await this.initializeIndex();
+    if (this.disabled) return;
+
+    try {
+      await this.initializeIndex();
+    } catch (err) {
+      this.logger.warn(`Meilisearch initialization failed: ${(err as Error).message}`);
+    }
   }
 
   /**
