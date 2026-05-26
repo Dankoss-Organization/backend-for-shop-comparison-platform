@@ -9,6 +9,7 @@ import {
 } from "@nestjs/swagger";
 import { GetCategoriesQueryDto } from "./dto/get-categories-query.dto";
 import { GetCategoryProductsQueryDto } from "./dto/get-category-products-query.dto";
+import { GetCategoryFacetsResponseDto } from "./dto/get-category-facets-response.dto";
 import { ProductsService } from "./products.service";
 
 @ApiTags("categories")
@@ -113,5 +114,21 @@ export class CategoriesController {
       inStock: query.inStock ?? false,
       sort: query.sort ?? "updated",
     });
+  }
+
+  @ApiOperation({ summary: "Get category facets for filters" })
+  @ApiParam({
+    name: "categorySlug",
+    type: String,
+    description: "Slug of the category to fetch facets for",
+  })
+  @ApiOkResponse({
+    description: "Category facets returned successfully.",
+    type: GetCategoryFacetsResponseDto,
+  })
+  @ApiNotFoundResponse({ description: "Category was not found." })
+  @Get("categories/:categorySlug/facets")
+  getCategoryFacets(@Param("categorySlug") categorySlug: string) {
+    return this.productsService.getCategoryFacets(categorySlug.trim());
   }
 }

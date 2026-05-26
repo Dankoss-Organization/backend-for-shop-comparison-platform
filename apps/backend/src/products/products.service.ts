@@ -308,19 +308,7 @@ export class ProductsService {
       categorySlug,
     });
 
-    const { nodesById } = await this.loadCategoryNodes();
-    const categoryNode = Array.from(nodesById.values()).find(
-      (node) => node.slug === categorySlug,
-    );
-
-    if (!categoryNode) {
-      this.logger.warn("Category not found", {
-        service: "ProductsService",
-        method: "getCategoryBySlug",
-        categorySlug,
-      });
-      throw new NotFoundException(`Category '${categorySlug}' not found`);
-    }
+    const { categoryNode } = await this.resolveCategoryNode(categorySlug);
 
     const parent = categoryNode.parentId
       ? nodesById.get(categoryNode.parentId)
@@ -372,6 +360,24 @@ export class ProductsService {
     };
   }
 
+  private async resolveCategoryNode(categorySlug: string) {
+    const { nodesById } = await this.loadCategoryNodes();
+    const categoryNode = Array.from(nodesById.values()).find(
+      (node) => node.slug === categorySlug,
+    );
+
+    if (!categoryNode) {
+      this.logger.warn("Category not found", {
+        service: "ProductsService",
+        method: "resolveCategoryNode",
+        categorySlug,
+      });
+      throw new NotFoundException(`Category '${categorySlug}' not found`);
+    }
+
+    return { categoryNode, nodesById };
+  }
+
   async getCategoryProducts(
     categorySlug: string,
     options: CategoryProductsQueryOptions,
@@ -394,19 +400,8 @@ export class ProductsService {
       );
     }
 
-    const { nodesById } = await this.loadCategoryNodes();
-    const categoryNode = Array.from(nodesById.values()).find(
-      (node) => node.slug === categorySlug,
-    );
-
-    if (!categoryNode) {
-      this.logger.warn("Category not found", {
-        service: "ProductsService",
-        method: "getCategoryProducts",
-        categorySlug,
-      });
-      throw new NotFoundException(`Category '${categorySlug}' not found`);
-    }
+    const { categoryNode, nodesById } =
+      await this.resolveCategoryNode(categorySlug);
 
     const categoryIds = this.collectCategoryIds(categoryNode, nodesById);
 
@@ -521,6 +516,144 @@ export class ProductsService {
       page: options.page,
       limit: options.limit,
       totalPages: Math.max(1, Math.ceil(total / options.limit)),
+    };
+  }
+
+  async getCategoryFacets(categorySlug: string) {
+    this.logger.info("Fetching category facets", {
+      service: "ProductsService",
+      method: "getCategoryFacets",
+      categorySlug,
+    });
+
+    const { categoryNode, nodesById } =
+      await this.resolveCategoryNode(categorySlug);
+    const categoryIds = this.collectCategoryIds(categoryNode, nodesById);
+
+    const brandRows = await this.prisma.product.groupBy({
+      by: ["brand"],
+      where: {
+        categoryId: {
+          in: categoryIds,
+        },
+        brand: {
+          not: null,
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const brands = brandRows
+      .filter(
+        (row): row is { brand: string; _count: { _all: number } } =>
+          row.brand !== null,
+      )
+      .map((row) => ({
+        name: row.brand,
+        count: row._count._all,
+      }))
+      .sort((left, right) => right.count - left.count);
+
+    const storeRows = await this.prisma.offer.groupBy({
+      by: ["storeId"],
+      where: {
+        product: {
+          categoryId: {
+            in: categoryIds,
+          },
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const storeIds = storeRows.map((row) => row.storeId);
+    const storesById = new Map(
+      (
+        await this.prisma.localStore.findMany({
+          where: {
+            id: {
+              in: storeIds,
+            },
+          },
+          select: {
+            id: true,
+            brand: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        })
+      ).map((store) => [store.id, store.brand.name]),
+    );
+
+    const stores = storeRows
+      .map((row) => ({
+        id: row.storeId,
+        name: storesById.get(row.storeId) ?? row.storeId,
+        count: row._count._all,
+      }))
+      .sort((left, right) => right.count - left.count);
+
+    const priceRangeRows = await this.prisma.$queryRaw<
+      Array<{ min_price: number | null; max_price: number | null }>
+    >(Prisma.sql`
+      SELECT
+        MIN(COALESCE(o.discount_price, o.current_price)) AS min_price,
+        MAX(COALESCE(o.discount_price, o.current_price)) AS max_price
+      FROM offers o
+      INNER JOIN product p ON p.id = o.product_id
+      WHERE p.category_id IN (${Prisma.join(categoryIds)})
+        AND COALESCE(o.discount_price, o.current_price) > 0
+    `);
+
+    const priceRangeRow = priceRangeRows[0] ?? {
+      min_price: null,
+      max_price: null,
+    };
+
+    const inStockCount = await this.prisma.offer.count({
+      where: {
+        product: {
+          categoryId: {
+            in: categoryIds,
+          },
+        },
+        currentPrice: {
+          gt: 0,
+        },
+      },
+    });
+
+    const outOfStockCount = await this.prisma.offer.count({
+      where: {
+        product: {
+          categoryId: {
+            in: categoryIds,
+          },
+        },
+        currentPrice: {
+          lte: 0,
+        },
+      },
+    });
+
+    return {
+      brands,
+      priceRange: {
+        min: priceRangeRow.min_price,
+        max: priceRangeRow.max_price,
+      },
+      ratings: [],
+      stores,
+      availability: {
+        inStock: inStockCount,
+        outOfStock: outOfStockCount,
+      },
     };
   }
 
