@@ -39,6 +39,42 @@ type ProductCatalogItemWithMeta = ProductCatalogItem & {
   bestDiscount: number;
 };
 
+type CategoryProductsSort = ProductsSort;
+
+type CategoryProductsQueryOptions = {
+  page: number;
+  limit: number;
+  search?: string;
+  brand?: string[];
+  storeId?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  minDiscount?: number;
+  minRating?: number;
+  inStock?: boolean;
+  sort: CategoryProductsSort;
+};
+
+type CategoryProductAvailabilityStatus =
+  | "in_stock"
+  | "low_stock"
+  | "out_of_stock";
+
+type CategoryProductResponseItem = {
+  id: string;
+  productId: string;
+  canonicalName: string;
+  brand: string | null;
+  media: string[];
+  currentPrice: number;
+  regularPrice: number;
+  discountPercent: number;
+  currency: "UAH";
+  rating: number;
+  reviewsCount: number;
+  availabilityStatus: CategoryProductAvailabilityStatus;
+};
+
 const productRelationsInclude = {
   category: true,
   offers: {
@@ -333,6 +369,158 @@ export class ProductsService {
       productCount: categoryNode.productCount,
       breadcrumbs,
       seo: this.buildCategorySeo(categoryNode.name),
+    };
+  }
+
+  async getCategoryProducts(
+    categorySlug: string,
+    options: CategoryProductsQueryOptions,
+  ) {
+    this.logger.info("Fetching category products", {
+      service: "ProductsService",
+      method: "getCategoryProducts",
+      categorySlug,
+      ...options,
+    });
+
+    if (options.minRating !== undefined) {
+      this.logger.info(
+        "Ignoring minRating filter for category product queries because product rating data is not available in the current catalog model",
+        {
+          service: "ProductsService",
+          method: "getCategoryProducts",
+          minRating: options.minRating,
+        },
+      );
+    }
+
+    const { nodesById } = await this.loadCategoryNodes();
+    const categoryNode = Array.from(nodesById.values()).find(
+      (node) => node.slug === categorySlug,
+    );
+
+    if (!categoryNode) {
+      this.logger.warn("Category not found", {
+        service: "ProductsService",
+        method: "getCategoryProducts",
+        categorySlug,
+      });
+      throw new NotFoundException(`Category '${categorySlug}' not found`);
+    }
+
+    const categoryIds = this.collectCategoryIds(categoryNode, nodesById);
+
+    const searchConditions: Prisma.ProductWhereInput[] = options.search
+      ? [
+          {
+            canonicalName: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            productId: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            brand: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+        ]
+      : [];
+
+    const brandConditions: Prisma.ProductWhereInput[] = (
+      options.brand ?? []
+    ).map((brand) => ({
+      brand: {
+        contains: brand,
+        mode: "insensitive",
+      },
+    }));
+
+    const where: Prisma.ProductWhereInput = {
+      categoryId: {
+        in: categoryIds,
+      },
+      ...(searchConditions.length > 0 || brandConditions.length > 0
+        ? {
+            OR: [...searchConditions, ...brandConditions],
+          }
+        : {}),
+    };
+
+    const offerWhere: Prisma.OfferWhereInput = {
+      ...(options.storeId?.length
+        ? {
+            storeId: {
+              in: options.storeId,
+            },
+          }
+        : {}),
+      ...(options.inStock
+        ? {
+            currentPrice: {
+              gt: 0,
+            },
+          }
+        : {}),
+    };
+
+    if (
+      options.minPrice !== undefined ||
+      options.maxPrice !== undefined ||
+      options.inStock ||
+      options.storeId?.length
+    ) {
+      where.offers = {
+        some: offerWhere,
+      };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where,
+      include: productRelationsInclude,
+    });
+
+    const candidates = products
+      .map((product) => this.buildCategoryProductCandidate(product, options))
+      .filter(
+        (candidate): candidate is NonNullable<typeof candidate> =>
+          candidate !== null,
+      )
+      .sort((left, right) =>
+        this.compareCategoryProductCandidates(left, right, options.sort),
+      );
+
+    const total = candidates.length;
+    const start = (options.page - 1) * options.limit;
+    const items = candidates
+      .slice(start, start + options.limit)
+      .map((candidate) => candidate.item);
+
+    this.logger.info("Category products fetched", {
+      service: "ProductsService",
+      method: "getCategoryProducts",
+      categorySlug,
+      total,
+      page: options.page,
+    });
+
+    return {
+      category: {
+        id: categoryNode.id,
+        slug: categoryNode.slug,
+        name: categoryNode.name,
+      },
+      items,
+      total,
+      page: options.page,
+      limit: options.limit,
+      totalPages: Math.max(1, Math.ceil(total / options.limit)),
     };
   }
 
@@ -660,6 +848,19 @@ export class ProductsService {
     };
   }
 
+  private collectCategoryIds(
+    node: CategoryTreeNode,
+    nodesById: Map<string, CategoryTreeNode>,
+  ): string[] {
+    const ids = [node.id];
+
+    for (const child of node.children) {
+      ids.push(...this.collectCategoryIds(child, nodesById));
+    }
+
+    return ids;
+  }
+
   private extractCategoryKeywords(name: string): string[] {
     const tokens = name
       .toLowerCase()
@@ -688,6 +889,122 @@ export class ProductsService {
         .map((child) => this.sortCategoryTree(child))
         .sort((left, right) => left.name.localeCompare(right.name)),
     };
+  }
+
+  private buildCategoryProductCandidate(
+    product: ProductWithRelations,
+    options: CategoryProductsQueryOptions,
+  ): {
+    item: CategoryProductResponseItem;
+    updatedAt: number;
+    price: number;
+    discount: number;
+  } | null {
+    const offers = this.mapOffers(product.offers)
+      .filter((offer) => {
+        if (
+          options.storeId?.length &&
+          !options.storeId.includes(offer.store.id)
+        ) {
+          return false;
+        }
+
+        if (options.inStock && offer.currentPrice <= 0) {
+          return false;
+        }
+
+        if (
+          options.minPrice !== undefined &&
+          offer.effectivePrice < options.minPrice
+        ) {
+          return false;
+        }
+
+        if (
+          options.maxPrice !== undefined &&
+          offer.effectivePrice > options.maxPrice
+        ) {
+          return false;
+        }
+
+        if (
+          options.minDiscount !== undefined &&
+          (offer.discountPercent ?? 0) < options.minDiscount
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((left, right) => left.effectivePrice - right.effectivePrice);
+
+    if (options.inStock && offers.length === 0) {
+      return null;
+    }
+
+    const bestOffer = offers[0];
+    const currentPrice = bestOffer?.effectivePrice ?? 0;
+    const regularPrice = bestOffer?.oldPrice ?? 0;
+    const discountPercent = bestOffer?.discountPercent ?? 0;
+    const media = product.mainImage ? [product.mainImage] : [];
+
+    const availabilityStatus: CategoryProductAvailabilityStatus =
+      offers.length === 0
+        ? "out_of_stock"
+        : offers.length === 1
+          ? "low_stock"
+          : "in_stock";
+
+    return {
+      item: {
+        id: product.id,
+        productId: product.productId,
+        canonicalName: product.canonicalName,
+        brand: product.brand,
+        media,
+        currentPrice,
+        regularPrice,
+        discountPercent,
+        currency: "UAH",
+        rating: 0,
+        reviewsCount: 0,
+        availabilityStatus,
+      },
+      updatedAt: bestOffer
+        ? Date.parse(bestOffer.updatedAt)
+        : product.updatedAt.getTime(),
+      price: currentPrice,
+      discount: discountPercent,
+    };
+  }
+
+  private compareCategoryProductCandidates(
+    left: {
+      item: CategoryProductResponseItem;
+      updatedAt: number;
+      price: number;
+      discount: number;
+    },
+    right: {
+      item: CategoryProductResponseItem;
+      updatedAt: number;
+      price: number;
+      discount: number;
+    },
+    sort: CategoryProductsSort,
+  ) {
+    switch (sort) {
+      case "name":
+        return left.item.canonicalName.localeCompare(right.item.canonicalName);
+      case "price_asc":
+        return left.price - right.price;
+      case "price_desc":
+        return right.price - left.price;
+      case "discount":
+        return right.discount - left.discount;
+      default:
+        return right.updatedAt - left.updatedAt;
+    }
   }
 
   private buildCatalogItem(

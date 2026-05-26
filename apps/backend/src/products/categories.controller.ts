@@ -8,6 +8,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { GetCategoriesQueryDto } from "./dto/get-categories-query.dto";
+import { GetCategoryProductsQueryDto } from "./dto/get-category-products-query.dto";
 import { ProductsService } from "./products.service";
 
 @ApiTags("categories")
@@ -42,5 +43,75 @@ export class CategoriesController {
   @Get("categories/:categorySlug")
   getCategoryBySlug(@Param("categorySlug") categorySlug: string) {
     return this.productsService.getCategoryBySlug(categorySlug.trim());
+  }
+
+  @ApiOperation({ summary: "Get products for a category" })
+  @ApiParam({
+    name: "categorySlug",
+    type: String,
+    description: "Slug of the category to fetch products for",
+  })
+  @ApiQuery({ name: "page", required: false, type: Number, minimum: 1 })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 100,
+  })
+  @ApiQuery({
+    name: "search",
+    required: false,
+    type: String,
+    description: "Search by product name, productId or brand",
+  })
+  @ApiQuery({
+    name: "brand",
+    required: false,
+    type: [String],
+    description: "Filter by one or more brands",
+  })
+  @ApiQuery({
+    name: "storeId",
+    required: false,
+    type: [String],
+    description: "Filter by one or more stores",
+  })
+  @ApiQuery({ name: "minPrice", required: false, type: Number })
+  @ApiQuery({ name: "maxPrice", required: false, type: Number })
+  @ApiQuery({ name: "minDiscount", required: false, type: Number })
+  @ApiQuery({ name: "minRating", required: false, type: Number })
+  @ApiQuery({
+    name: "inStock",
+    required: false,
+    type: Boolean,
+    description: "When true, return only products with available offers",
+  })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    enum: ["updated", "name", "price_asc", "price_desc", "discount"],
+    description: "Sort field",
+  })
+  @ApiOkResponse({ description: "Category products returned successfully." })
+  @ApiNotFoundResponse({ description: "Category was not found." })
+  @Get("categories/:categorySlug/products")
+  getCategoryProducts(
+    @Param("categorySlug") categorySlug: string,
+    @Query() query: GetCategoryProductsQueryDto,
+  ) {
+    return this.productsService.getCategoryProducts(categorySlug.trim(), {
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+      search: query.search?.trim() || undefined,
+      brand: query.brand,
+      storeId: query.storeId,
+      minPrice: query.minPrice,
+      maxPrice: query.maxPrice,
+      minDiscount: query.minDiscount,
+      minRating: query.minRating,
+      inStock: query.inStock ?? false,
+      sort: query.sort ?? "updated",
+    });
   }
 }

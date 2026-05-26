@@ -162,6 +162,108 @@ describe("Products categories endpoints (e2e)", () => {
     }
   });
 
+  it("returns category products with pagination, sorting, search and child aggregation", async () => {
+    const prisma = context.prisma as any;
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+    const childCategory = await prisma.productCategory.create({
+      data: {
+        name: `E2E Category Products Child ${suffix}`,
+        parentId: context.fixture.categoryId,
+      },
+    });
+
+    const childProduct = await prisma.product.create({
+      data: {
+        productId: `E2E-CATEGORY-PRODUCT-${suffix}`,
+        canonicalName: `E2E Child Product ${suffix}`,
+        brand: "E2E Brand",
+        categoryId: childCategory.id,
+        measurements: { weight: "1kg" },
+        pricingLogic: { pricePer: "item" },
+        mainImage: "https://example.com/e2e-child-category.jpg",
+      },
+    });
+
+    const childOffer = await prisma.offer.create({
+      data: {
+        storeId: context.fixture.storeIds[0],
+        productId: childProduct.id,
+        currentPrice: 40,
+        discountPrice: 32,
+      },
+    });
+
+    await prisma.priceHistory.create({
+      data: {
+        offerId: childOffer.id,
+        price: 40,
+        regularPrice: 50,
+        startDate: new Date(),
+      },
+    });
+
+    try {
+      const categoryTreeResponse = await request(context.app.getHttpServer())
+        .get("/api/v1/categories")
+        .expect(200);
+
+      const root = categoryTreeResponse.body.categories.find(
+        (category: { id: string }) =>
+          category.id === context.fixture.categoryId,
+      );
+
+      const response = await request(context.app.getHttpServer())
+        .get(`/api/v1/categories/${root.slug}/products`)
+        .query({ page: 1, limit: 10, sort: "name" })
+        .expect(200);
+
+      expect(response.body.category).toEqual({
+        id: context.fixture.categoryId,
+        slug: root.slug,
+        name: root.name,
+      });
+      expect(response.body.page).toBe(1);
+      expect(response.body.limit).toBe(10);
+      expect(response.body.total).toBeGreaterThanOrEqual(3);
+      expect(response.body.totalPages).toBeGreaterThanOrEqual(1);
+      expect(
+        response.body.items.some(
+          (item: { productId: string }) =>
+            item.productId === childProduct.productId,
+        ),
+      ).toBe(true);
+      expect(response.body.items[0]).toEqual(
+        expect.objectContaining({
+          id: expect.any(String),
+          productId: expect.any(String),
+          canonicalName: expect.any(String),
+          brand: expect.anything(),
+          media: expect.any(Array),
+          currentPrice: expect.any(Number),
+          regularPrice: expect.any(Number),
+          discountPercent: expect.anything(),
+          currency: "UAH",
+          availabilityStatus: expect.stringMatching(
+            /in_stock|low_stock|out_of_stock/,
+          ),
+        }),
+      );
+
+      const searchResponse = await request(context.app.getHttpServer())
+        .get(`/api/v1/categories/${root.slug}/products`)
+        .query({ search: "Child Product", limit: 10 })
+        .expect(200);
+
+      expect(searchResponse.body.total).toBe(1);
+      expect(searchResponse.body.items[0].productId).toBe(
+        childProduct.productId,
+      );
+    } finally {
+      await prisma.product.delete({ where: { id: childProduct.id } });
+      await prisma.productCategory.delete({ where: { id: childCategory.id } });
+    }
+  });
+
   it("returns 404 for unknown parent category", async () => {
     const response = await request(context.app.getHttpServer())
       .get("/api/v1/products/categories")
