@@ -1,8 +1,3 @@
--- AlterTable
-ALTER TABLE "users" ADD COLUMN     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ALTER COLUMN "password" DROP NOT NULL;
-
 -- CreateTable
 CREATE TABLE "sessions" (
     "id" TEXT NOT NULL,

@@ -32,8 +32,6 @@ model User {
   favourites    UserFavourite[]
   sessions      Session[]
   accounts      Account[]
-  accounts      accounts[]
-  sessions      sessions[]
 
   @@map("users")
 }
@@ -193,19 +191,19 @@ model Product {
 }
 
 model Offer {
-  id            String         @id @default(uuid())
-  storeId       String         @map("store_id")
-  productId     String         @map("product_id")
-  currentPrice  Decimal        @map("current_price") @db.Decimal(12, 2)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  discountPrice Decimal?       @map("discount_price") @db.Decimal(12, 2)
-  bulkDiscounts Json           @default("[]") @map("bulk_discounts")
-  storeSku      String?        @map("store_sku")
-  cartItems     CartItem[]     @relation("OfferToCartItem")
-  product       Product        @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
-  store         LocalStore     @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
-  priceHistory  PriceHistory[] @relation("OfferToPriceHistory")
+  id                String         @id @default(uuid())
+  storeId           String         @map("store_id")
+  productId         String         @map("product_id")
+  currentPrice      Decimal        @map("current_price") @db.Decimal(12, 2)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  discountPrice     Decimal?       @map("discount_price") @db.Decimal(12, 2)
+  discountCondition String         @default("[]") @map("discount_condition")
+  storeSku          String?        @map("store_sku")
+  cartItems         CartItem[]     @relation("OfferToCartItem")
+  product           Product        @relation("ProductToOffer", fields: [productId], references: [id], onDelete: Cascade)
+  store             LocalStore     @relation("StoreToOffer", fields: [storeId], references: [id], onDelete: Cascade)
+  priceHistory      PriceHistory[] @relation("OfferToPriceHistory")
 
   @@unique([storeId, productId])
   @@map("offers")
@@ -387,42 +385,4 @@ model RecipeEquipment {
   @@index([recipeId])
   @@index([equipmentId])
   @@map("recipe_equipment")
-}
-
-model accounts {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime
-  users                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model sessions {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model verifications {
-  id         String    @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime? @default(now())
-  updatedAt  DateTime?
 }
