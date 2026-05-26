@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
@@ -28,5 +29,18 @@ export class CategoriesController {
     return this.productsService.getCategories(
       query.parentId?.trim() || undefined,
     );
+  }
+
+  @ApiOperation({ summary: "Get category metadata by slug" })
+  @ApiParam({
+    name: "categorySlug",
+    type: String,
+    description: "Slug of the category to fetch",
+  })
+  @ApiOkResponse({ description: "Category metadata returned successfully." })
+  @ApiNotFoundResponse({ description: "Category was not found." })
+  @Get("categories/:categorySlug")
+  getCategoryBySlug(@Param("categorySlug") categorySlug: string) {
+    return this.productsService.getCategoryBySlug(categorySlug.trim());
   }
 }

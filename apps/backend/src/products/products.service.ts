@@ -81,6 +81,12 @@ interface HistoryAggregateRow {
 }
 
 const CATEGORY_THUMBNAIL_BASE_URL = "https://assets.dankoss.ua/categories";
+const CATEGORY_BANNER_BASE_URL = "https://assets.dankoss.ua/categories/banners";
+const CATALOG_BREADCRUMB = {
+  id: "catalog",
+  name: "Каталог",
+  slug: "catalog",
+};
 
 @Injectable()
 export class ProductsService {
@@ -231,52 +237,7 @@ export class ProductsService {
       parentId,
     });
 
-    const [categories, productCounts] = await Promise.all([
-      this.prisma.productCategory.findMany({
-        orderBy: {
-          name: "asc",
-        },
-      }),
-      this.prisma.product.groupBy({
-        by: ["categoryId"],
-        _count: {
-          _all: true,
-        },
-      }),
-    ]);
-
-    const countsByCategoryId = new Map<string, number>();
-    for (const row of productCounts) {
-      if (row.categoryId) {
-        countsByCategoryId.set(row.categoryId, row._count._all);
-      }
-    }
-
-    const nodesById = new Map<string, CategoryTreeNode>();
-    for (const category of categories) {
-      const slug = this.toCategorySlug(category.name);
-      nodesById.set(category.id, {
-        id: category.id,
-        slug,
-        name: category.name,
-        thumbnailUrl: this.buildCategoryThumbnailUrl(slug),
-        parentId: category.parentId,
-        productCount: countsByCategoryId.get(category.id) ?? 0,
-        children: [],
-      });
-    }
-
-    for (const category of categories) {
-      if (!category.parentId) {
-        continue;
-      }
-
-      const parent = nodesById.get(category.parentId);
-      const child = nodesById.get(category.id);
-      if (parent && child) {
-        parent.children.push(child);
-      }
-    }
+    const { nodesById, categories } = await this.loadCategoryNodes();
 
     const selectedRoot = parentId ? nodesById.get(parentId) : undefined;
     if (parentId && !selectedRoot) {
@@ -301,6 +262,77 @@ export class ProductsService {
 
     return {
       categories: roots.map((node) => this.sortCategoryTree(node)),
+    };
+  }
+
+  async getCategoryBySlug(categorySlug: string) {
+    this.logger.info("Fetching category metadata", {
+      service: "ProductsService",
+      method: "getCategoryBySlug",
+      categorySlug,
+    });
+
+    const { nodesById } = await this.loadCategoryNodes();
+    const categoryNode = Array.from(nodesById.values()).find(
+      (node) => node.slug === categorySlug,
+    );
+
+    if (!categoryNode) {
+      this.logger.warn("Category not found", {
+        service: "ProductsService",
+        method: "getCategoryBySlug",
+        categorySlug,
+      });
+      throw new NotFoundException(`Category '${categorySlug}' not found`);
+    }
+
+    const parent = categoryNode.parentId
+      ? nodesById.get(categoryNode.parentId)
+      : null;
+
+    const children = categoryNode.children.map((child) => ({
+      id: child.id,
+      slug: child.slug,
+      name: child.name,
+      productCount: child.productCount,
+    }));
+
+    const breadcrumbs = [CATALOG_BREADCRUMB];
+    const chain: Array<{ id: string; name: string; slug: string }> = [];
+    let currentNode: CategoryTreeNode | null = categoryNode;
+    while (currentNode) {
+      chain.push({
+        id: currentNode.id,
+        name: currentNode.name,
+        slug: currentNode.slug,
+      });
+      currentNode = currentNode.parentId
+        ? (nodesById.get(currentNode.parentId) ?? null)
+        : null;
+    }
+
+    for (let index = chain.length - 1; index >= 0; index -= 1) {
+      breadcrumbs.push(chain[index]);
+    }
+
+    return {
+      id: categoryNode.id,
+      slug: categoryNode.slug,
+      name: categoryNode.name,
+      description: this.buildCategoryDescription(categoryNode.name),
+      bannerUrl: this.buildCategoryBannerUrl(categoryNode.slug),
+      thumbnailUrl: categoryNode.thumbnailUrl,
+      parent: parent
+        ? {
+            id: parent.id,
+            slug: parent.slug,
+            name: parent.name,
+          }
+        : null,
+      children,
+      productCount: categoryNode.productCount,
+      breadcrumbs,
+      seo: this.buildCategorySeo(categoryNode.name),
     };
   }
 
@@ -541,6 +573,60 @@ export class ProductsService {
     return this.buildCatalogItem(product, {});
   }
 
+  private async loadCategoryNodes() {
+    const [categories, productCounts] = await Promise.all([
+      this.prisma.productCategory.findMany({
+        orderBy: {
+          name: "asc",
+        },
+      }),
+      this.prisma.product.groupBy({
+        by: ["categoryId"],
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
+
+    const countsByCategoryId = new Map<string, number>();
+    for (const row of productCounts) {
+      if (row.categoryId) {
+        countsByCategoryId.set(row.categoryId, row._count._all);
+      }
+    }
+
+    const nodesById = new Map<string, CategoryTreeNode>();
+    for (const category of categories) {
+      const slug = this.toCategorySlug(category.name);
+      nodesById.set(category.id, {
+        id: category.id,
+        slug,
+        name: category.name,
+        thumbnailUrl: this.buildCategoryThumbnailUrl(slug),
+        parentId: category.parentId,
+        productCount: countsByCategoryId.get(category.id) ?? 0,
+        children: [],
+      });
+    }
+
+    for (const category of categories) {
+      if (!category.parentId) {
+        continue;
+      }
+
+      const parent = nodesById.get(category.parentId);
+      const child = nodesById.get(category.id);
+      if (parent && child) {
+        parent.children.push(child);
+      }
+    }
+
+    return {
+      categories,
+      nodesById,
+    };
+  }
+
   private toCategorySlug(name: string): string {
     const normalized = name
       .normalize("NFKD")
@@ -554,6 +640,35 @@ export class ProductsService {
 
   private buildCategoryThumbnailUrl(slug: string): string {
     return `${CATEGORY_THUMBNAIL_BASE_URL}/${slug}_thumb.png`;
+  }
+
+  private buildCategoryBannerUrl(slug: string): string {
+    return `${CATEGORY_BANNER_BASE_URL}/${slug}_bg.png`;
+  }
+
+  private buildCategoryDescription(name: string): string {
+    return `Оберіть ${name.toLowerCase()} зі знижками та зручно порівняйте ціни в каталозі.`;
+  }
+
+  private buildCategorySeo(name: string) {
+    const keywords = this.extractCategoryKeywords(name);
+
+    return {
+      title: `${name} — купити онлайн`,
+      description: `${name} доступний у каталозі з актуальними цінами та знижками.`,
+      keywords,
+    };
+  }
+
+  private extractCategoryKeywords(name: string): string[] {
+    const tokens = name
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+
+    return tokens.length > 0 ? tokens : ["каталог"];
   }
 
   private aggregateCategoryProductCounts(node: CategoryTreeNode): number {

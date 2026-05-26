@@ -42,6 +42,7 @@ describe("API documentation endpoints (e2e)", () => {
         "/api/v1/products": expect.any(Object),
         "/api/v1/products/categories": expect.any(Object),
         "/api/v1/categories": expect.any(Object),
+        "/api/v1/categories/{categorySlug}": expect.any(Object),
         "/api/v1/products/{id}/card": expect.any(Object),
         "/api/v1/products/{id}/offers": expect.any(Object),
         "/api/v1/products/{id}/price-history": expect.any(Object),

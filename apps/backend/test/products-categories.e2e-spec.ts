@@ -98,6 +98,70 @@ describe("Products categories endpoints (e2e)", () => {
     }
   });
 
+  it("returns category metadata by slug", async () => {
+    const prisma = context.prisma as any;
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+    const childCategory = await prisma.productCategory.create({
+      data: {
+        name: `E2E Metadata Child ${suffix}`,
+        parentId: context.fixture.categoryId,
+      },
+    });
+
+    try {
+      const categoryTreeResponse = await request(context.app.getHttpServer())
+        .get("/api/v1/categories")
+        .expect(200);
+
+      const root = categoryTreeResponse.body.categories.find(
+        (category: { id: string }) =>
+          category.id === context.fixture.categoryId,
+      );
+
+      const response = await request(context.app.getHttpServer())
+        .get(`/api/v1/categories/${root.slug}`)
+        .expect(200);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: context.fixture.categoryId,
+          slug: root.slug,
+          name: root.name,
+          description: expect.any(String),
+          bannerUrl: expect.stringContaining(
+            "https://assets.dankoss.ua/categories/banners/",
+          ),
+          thumbnailUrl: root.thumbnailUrl,
+          parent: null,
+          children: expect.arrayContaining([
+            expect.objectContaining({
+              id: childCategory.id,
+              slug: expect.any(String),
+              name: `E2E Metadata Child ${suffix}`,
+              productCount: 0,
+            }),
+          ]),
+          productCount: 2,
+          breadcrumbs: [
+            { id: "catalog", name: "Каталог", slug: "catalog" },
+            {
+              id: context.fixture.categoryId,
+              name: root.name,
+              slug: root.slug,
+            },
+          ],
+          seo: {
+            title: expect.stringContaining(root.name),
+            description: expect.any(String),
+            keywords: expect.arrayContaining([expect.any(String)]),
+          },
+        }),
+      );
+    } finally {
+      await prisma.productCategory.delete({ where: { id: childCategory.id } });
+    }
+  });
+
   it("returns 404 for unknown parent category", async () => {
     const response = await request(context.app.getHttpServer())
       .get("/api/v1/products/categories")
