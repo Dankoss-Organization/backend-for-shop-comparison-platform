@@ -1,5 +1,5 @@
 export type OffersSort = "price" | "discount" | "updated";
-export type AvailabilityStatus = "in_stock" | "out_of_stock";
+export type AvailabilityStatus = "in_stock" | "low_stock" | "out_of_stock";
 export type PriceTrend = "up" | "down" | "stable";
 
 export interface ApiErrorResponse {
@@ -87,7 +87,9 @@ export interface ProductCatalogResponse {
 
 export interface CategoryTreeNode {
   id: string;
+  slug: string;
   name: string;
+  thumbnailUrl: string;
   parentId: string | null;
   productCount: number;
   children: CategoryTreeNode[];
@@ -170,6 +172,10 @@ export interface RelatedProductsResponse {
     canonicalName: string;
     brand: string | null;
     media: string;
+    store: {
+      id: string;
+      name: string;
+    } | null;
     bestPrice: number | null;
     offersCount: number;
   }>;

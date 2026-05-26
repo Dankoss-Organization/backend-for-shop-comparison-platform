@@ -41,6 +41,10 @@ describe("Products related endpoints (e2e)", () => {
         canonicalName: expect.any(String),
         brand: expect.anything(),
         media: expect.any(String),
+        store: expect.objectContaining({
+          id: expect.any(String),
+          name: expect.any(String),
+        }),
         bestPrice: expect.anything(),
         offersCount: expect.any(Number),
       }),

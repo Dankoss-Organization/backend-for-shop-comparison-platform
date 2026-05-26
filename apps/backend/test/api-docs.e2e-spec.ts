@@ -41,6 +41,8 @@ describe("API documentation endpoints (e2e)", () => {
       expect.objectContaining({
         "/api/v1/products": expect.any(Object),
         "/api/v1/products/categories": expect.any(Object),
+        "/api/v1/categories": expect.any(Object),
+        "/api/v1/categories/{categorySlug}": expect.any(Object),
         "/api/v1/products/{id}/card": expect.any(Object),
         "/api/v1/products/{id}/offers": expect.any(Object),
         "/api/v1/products/{id}/price-history": expect.any(Object),
@@ -73,6 +75,14 @@ describe("API documentation endpoints (e2e)", () => {
     const categoriesParams =
       response.body.paths["/api/v1/products/categories"].get.parameters;
     expect(categoriesParams).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "parentId", in: "query" }),
+      ]),
+    );
+
+    const categoriesAliasParams =
+      response.body.paths["/api/v1/categories"].get.parameters;
+    expect(categoriesAliasParams).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "parentId", in: "query" }),
       ]),

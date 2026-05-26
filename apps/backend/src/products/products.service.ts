@@ -37,6 +37,43 @@ type ProductCatalogItemWithMeta = ProductCatalogItem & {
   updatedAt: Date;
   bestPrice: number;
   bestDiscount: number;
+  media: string;
+};
+
+type CategoryProductsSort = ProductsSort;
+
+type CategoryProductsQueryOptions = {
+  page: number;
+  limit: number;
+  search?: string;
+  brand?: string[];
+  storeId?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  minDiscount?: number;
+  minRating?: number;
+  inStock?: boolean;
+  sort: CategoryProductsSort;
+};
+
+type CategoryProductAvailabilityStatus =
+  | "in_stock"
+  | "low_stock"
+  | "out_of_stock";
+
+type CategoryProductResponseItem = {
+  id: string;
+  productId: string;
+  canonicalName: string;
+  brand: string | null;
+  media: string[];
+  currentPrice: number;
+  regularPrice: number;
+  discountPercent: number;
+  currency: "UAH";
+  rating: number;
+  reviewsCount: number;
+  availabilityStatus: CategoryProductAvailabilityStatus;
 };
 
 const productRelationsInclude = {
@@ -64,7 +101,9 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
 
 export type CategoryTreeNode = {
   id: string;
+  slug: string;
   name: string;
+  thumbnailUrl: string;
   parentId: string | null;
   productCount: number;
   children: CategoryTreeNode[];
@@ -77,6 +116,14 @@ interface HistoryAggregateRow {
   first_price: number | null;
   last_price: number | null;
 }
+
+const CATEGORY_THUMBNAIL_BASE_URL = "https://assets.dankoss.ua/categories";
+const CATEGORY_BANNER_BASE_URL = "https://assets.dankoss.ua/categories/banners";
+const CATALOG_BREADCRUMB = {
+  id: "catalog",
+  name: "Каталог",
+  slug: "catalog",
+};
 
 @Injectable()
 export class ProductsService {
@@ -227,73 +274,387 @@ export class ProductsService {
       parentId,
     });
 
-    const [categories, productCounts] = await this.prisma.$transaction([
-      this.prisma.productCategory.findMany({
-        orderBy: {
-          name: "asc",
-        },
-      }),
-      this.prisma.product.groupBy({
-        by: ["categoryId"],
-        _count: {
-          _all: true,
-        },
-      }),
-    ]);
+    const { nodesById, categories } = await this.loadCategoryNodes();
 
-    const countsByCategoryId = new Map<string, number>();
-    for (const row of productCounts) {
-      if (row.categoryId) {
-        countsByCategoryId.set(row.categoryId, row._count._all);
-      }
-    }
-
-    const nodesById = new Map<string, CategoryTreeNode>();
-    for (const category of categories) {
-      nodesById.set(category.id, {
-        id: category.id,
-        name: category.name,
-        parentId: category.parentId,
-        productCount: countsByCategoryId.get(category.id) ?? 0,
-        children: [],
+    const selectedRoot = parentId ? nodesById.get(parentId) : undefined;
+    if (parentId && !selectedRoot) {
+      this.logger.warn("Category not found", {
+        service: "ProductsService",
+        method: "getCategories",
+        parentId,
       });
+      throw new NotFoundException(`Category '${parentId}' not found`);
     }
 
-    for (const category of categories) {
-      if (!category.parentId) {
-        continue;
-      }
+    const roots = parentId
+      ? [selectedRoot as CategoryTreeNode]
+      : (categories
+          .filter((category) => category.parentId === null)
+          .map((category) => nodesById.get(category.id))
+          .filter(Boolean) as CategoryTreeNode[]);
 
-      const parent = nodesById.get(category.parentId);
-      const child = nodesById.get(category.id);
-      if (parent && child) {
-        parent.children.push(child);
-      }
+    for (const root of roots) {
+      this.aggregateCategoryProductCounts(root);
     }
-
-    if (parentId) {
-      const selectedRoot = nodesById.get(parentId);
-      if (!selectedRoot) {
-        this.logger.warn("Category not found", {
-          service: "ProductsService",
-          method: "getCategories",
-          parentId,
-        });
-        throw new NotFoundException(`Category '${parentId}' not found`);
-      }
-
-      return {
-        categories: [this.sortCategoryTree(selectedRoot)],
-      };
-    }
-
-    const roots = categories
-      .filter((category) => category.parentId === null)
-      .map((category) => nodesById.get(category.id))
-      .filter(Boolean) as CategoryTreeNode[];
 
     return {
       categories: roots.map((node) => this.sortCategoryTree(node)),
+    };
+  }
+
+  async getCategoryBySlug(categorySlug: string) {
+    this.logger.info("Fetching category metadata", {
+      service: "ProductsService",
+      method: "getCategoryBySlug",
+      categorySlug,
+    });
+
+    const { categoryNode, nodesById } = await this.resolveCategoryNode(categorySlug);
+
+    const parent = categoryNode.parentId
+      ? nodesById.get(categoryNode.parentId)
+      : null;
+
+    const children = categoryNode.children.map((child) => ({
+      id: child.id,
+      slug: child.slug,
+      name: child.name,
+      productCount: child.productCount,
+    }));
+
+    const breadcrumbs = [CATALOG_BREADCRUMB];
+    const chain: Array<{ id: string; name: string; slug: string }> = [];
+    let currentNode: CategoryTreeNode | null = categoryNode;
+    while (currentNode) {
+      chain.push({
+        id: currentNode.id,
+        name: currentNode.name,
+        slug: currentNode.slug,
+      });
+      currentNode = currentNode.parentId
+        ? (nodesById.get(currentNode.parentId) ?? null)
+        : null;
+    }
+
+    for (let index = chain.length - 1; index >= 0; index -= 1) {
+      breadcrumbs.push(chain[index]);
+    }
+
+    return {
+      id: categoryNode.id,
+      slug: categoryNode.slug,
+      name: categoryNode.name,
+      description: this.buildCategoryDescription(categoryNode.name),
+      bannerUrl: this.buildCategoryBannerUrl(categoryNode.slug),
+      thumbnailUrl: categoryNode.thumbnailUrl,
+      parent: parent
+        ? {
+            id: parent.id,
+            slug: parent.slug,
+            name: parent.name,
+          }
+        : null,
+      children,
+      productCount: categoryNode.productCount,
+      breadcrumbs,
+      seo: this.buildCategorySeo(categoryNode.name),
+    };
+  }
+
+  private async resolveCategoryNode(categorySlug: string) {
+    const { nodesById } = await this.loadCategoryNodes();
+    const categoryNode = Array.from(nodesById.values()).find(
+      (node) => node.slug === categorySlug,
+    );
+
+    if (!categoryNode) {
+      this.logger.warn("Category not found", {
+        service: "ProductsService",
+        method: "resolveCategoryNode",
+        categorySlug,
+      });
+      throw new NotFoundException(`Category '${categorySlug}' not found`);
+    }
+
+    return { categoryNode, nodesById };
+  }
+
+  async getCategoryProducts(
+    categorySlug: string,
+    options: CategoryProductsQueryOptions,
+  ) {
+    this.logger.info("Fetching category products", {
+      service: "ProductsService",
+      method: "getCategoryProducts",
+      categorySlug,
+      ...options,
+    });
+
+    if (options.minRating !== undefined) {
+      this.logger.info(
+        "Ignoring minRating filter for category product queries because product rating data is not available in the current catalog model",
+        {
+          service: "ProductsService",
+          method: "getCategoryProducts",
+          minRating: options.minRating,
+        },
+      );
+    }
+
+    const { categoryNode, nodesById } =
+      await this.resolveCategoryNode(categorySlug);
+
+    const categoryIds = this.collectCategoryIds(categoryNode, nodesById);
+
+    const searchConditions: Prisma.ProductWhereInput[] = options.search
+      ? [
+          {
+            canonicalName: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            productId: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            brand: {
+              contains: options.search,
+              mode: "insensitive",
+            },
+          },
+        ]
+      : [];
+
+    const brandConditions: Prisma.ProductWhereInput[] = (
+      options.brand ?? []
+    ).map((brand) => ({
+      brand: {
+        contains: brand,
+        mode: "insensitive",
+      },
+    }));
+
+    const where: Prisma.ProductWhereInput = {
+      categoryId: {
+        in: categoryIds,
+      },
+      ...(searchConditions.length > 0 || brandConditions.length > 0
+        ? {
+            OR: [...searchConditions, ...brandConditions],
+          }
+        : {}),
+    };
+
+    const offerWhere: Prisma.OfferWhereInput = {
+      ...(options.storeId?.length
+        ? {
+            storeId: {
+              in: options.storeId,
+            },
+          }
+        : {}),
+      ...(options.inStock
+        ? {
+            currentPrice: {
+              gt: 0,
+            },
+          }
+        : {}),
+    };
+
+    if (
+      options.minPrice !== undefined ||
+      options.maxPrice !== undefined ||
+      options.inStock ||
+      options.storeId?.length
+    ) {
+      where.offers = {
+        some: offerWhere,
+      };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where,
+      include: productRelationsInclude,
+    });
+
+    const candidates = products
+      .map((product) => this.buildCategoryProductCandidate(product, options))
+      .filter(
+        (candidate): candidate is NonNullable<typeof candidate> =>
+          candidate !== null,
+      )
+      .sort((left, right) =>
+        this.compareCategoryProductCandidates(left, right, options.sort),
+      );
+
+    const total = candidates.length;
+    const start = (options.page - 1) * options.limit;
+    const items = candidates
+      .slice(start, start + options.limit)
+      .map((candidate) => candidate.item);
+
+    this.logger.info("Category products fetched", {
+      service: "ProductsService",
+      method: "getCategoryProducts",
+      categorySlug,
+      total,
+      page: options.page,
+    });
+
+    return {
+      category: {
+        id: categoryNode.id,
+        slug: categoryNode.slug,
+        name: categoryNode.name,
+      },
+      items,
+      total,
+      page: options.page,
+      limit: options.limit,
+      totalPages: Math.max(1, Math.ceil(total / options.limit)),
+    };
+  }
+
+  async getCategoryFacets(categorySlug: string) {
+    this.logger.info("Fetching category facets", {
+      service: "ProductsService",
+      method: "getCategoryFacets",
+      categorySlug,
+    });
+
+    const { categoryNode, nodesById } =
+      await this.resolveCategoryNode(categorySlug);
+    const categoryIds = this.collectCategoryIds(categoryNode, nodesById);
+
+    const brandRows = await this.prisma.product.groupBy({
+      by: ["brand"],
+      where: {
+        categoryId: {
+          in: categoryIds,
+        },
+        brand: {
+          not: null,
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const brands = brandRows
+      .filter(
+        (row): row is { brand: string; _count: { _all: number } } =>
+          row.brand !== null,
+      )
+      .map((row) => ({
+        name: row.brand,
+        count: row._count._all,
+      }))
+      .sort((left, right) => right.count - left.count);
+
+    const storeRows = await this.prisma.offer.groupBy({
+      by: ["storeId"],
+      where: {
+        product: {
+          categoryId: {
+            in: categoryIds,
+          },
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const storeIds = storeRows.map((row) => row.storeId);
+    const storesById = new Map(
+      (
+        await this.prisma.localStore.findMany({
+          where: {
+            id: {
+              in: storeIds,
+            },
+          },
+          select: {
+            id: true,
+            brand: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        })
+      ).map((store) => [store.id, store.brand.name]),
+    );
+
+    const stores = storeRows
+      .map((row) => ({
+        id: row.storeId,
+        name: storesById.get(row.storeId) ?? row.storeId,
+        count: row._count._all,
+      }))
+      .sort((left, right) => right.count - left.count);
+
+    const priceRangeRows = await this.prisma.$queryRaw<
+      Array<{ min_price: number | null; max_price: number | null }>
+    >(Prisma.sql`
+      SELECT
+        MIN(COALESCE(o.discount_price, o.current_price)) AS min_price,
+        MAX(COALESCE(o.discount_price, o.current_price)) AS max_price
+      FROM offers o
+      INNER JOIN product p ON p.id = o.product_id
+      WHERE p.category_id IN (${Prisma.join(categoryIds)})
+        AND COALESCE(o.discount_price, o.current_price) > 0
+    `);
+
+    const priceRangeRow = priceRangeRows[0] ?? {
+      min_price: null,
+      max_price: null,
+    };
+
+    const inStockCount = await this.prisma.offer.count({
+      where: {
+        product: {
+          categoryId: {
+            in: categoryIds,
+          },
+        },
+        currentPrice: {
+          gt: 0,
+        },
+      },
+    });
+
+    const outOfStockCount = await this.prisma.offer.count({
+      where: {
+        product: {
+          categoryId: {
+            in: categoryIds,
+          },
+        },
+        currentPrice: {
+          lte: 0,
+        },
+      },
+    });
+
+    return {
+      brands,
+      priceRange: {
+        min: priceRangeRow.min_price,
+        max: priceRangeRow.max_price,
+      },
+      ratings: [],
+      stores,
+      availability: {
+        inStock: inStockCount,
+        outOfStock: outOfStockCount,
+      },
     };
   }
 
@@ -472,9 +833,9 @@ export class ProductsService {
       productId: product.id,
       related: related.map((item) => {
         const mappedOffers = this.mapOffers(item.offers);
-        const bestPrice = mappedOffers.length
-          ? Math.min(...mappedOffers.map((offer) => offer.effectivePrice))
-          : null;
+        const bestOffer = mappedOffers
+          .slice()
+          .sort((left, right) => left.effectivePrice - right.effectivePrice)[0];
 
         return {
           id: item.id,
@@ -482,7 +843,13 @@ export class ProductsService {
           canonicalName: item.canonicalName,
           brand: item.brand,
           media: (item as any).media ?? item.mainImage,
-          bestPrice,
+          store: bestOffer
+            ? {
+                id: bestOffer.store.id,
+                name: bestOffer.store.brand,
+              }
+            : null,
+          bestPrice: bestOffer?.effectivePrice ?? null,
           offersCount: mappedOffers.length,
         };
       }),
@@ -534,6 +901,127 @@ export class ProductsService {
     return this.buildCatalogItem(product, {});
   }
 
+  private async loadCategoryNodes() {
+    const [categories, productCounts] = await Promise.all([
+      this.prisma.productCategory.findMany({
+        orderBy: {
+          name: "asc",
+        },
+      }),
+      this.prisma.product.groupBy({
+        by: ["categoryId"],
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
+
+    const countsByCategoryId = new Map<string, number>();
+    for (const row of productCounts) {
+      if (row.categoryId) {
+        countsByCategoryId.set(row.categoryId, row._count._all);
+      }
+    }
+
+    const nodesById = new Map<string, CategoryTreeNode>();
+    for (const category of categories) {
+      const slug = this.toCategorySlug(category.name);
+      nodesById.set(category.id, {
+        id: category.id,
+        slug,
+        name: category.name,
+        thumbnailUrl: this.buildCategoryThumbnailUrl(slug),
+        parentId: category.parentId,
+        productCount: countsByCategoryId.get(category.id) ?? 0,
+        children: [],
+      });
+    }
+
+    for (const category of categories) {
+      if (!category.parentId) {
+        continue;
+      }
+
+      const parent = nodesById.get(category.parentId);
+      const child = nodesById.get(category.id);
+      if (parent && child) {
+        parent.children.push(child);
+      }
+    }
+
+    return {
+      categories,
+      nodesById,
+    };
+  }
+
+  private toCategorySlug(name: string): string {
+    const normalized = name
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    return normalized || "category";
+  }
+
+  private buildCategoryThumbnailUrl(slug: string): string {
+    return `${CATEGORY_THUMBNAIL_BASE_URL}/${slug}_thumb.png`;
+  }
+
+  private buildCategoryBannerUrl(slug: string): string {
+    return `${CATEGORY_BANNER_BASE_URL}/${slug}_bg.png`;
+  }
+
+  private buildCategoryDescription(name: string): string {
+    return `Оберіть ${name.toLowerCase()} зі знижками та зручно порівняйте ціни в каталозі.`;
+  }
+
+  private buildCategorySeo(name: string) {
+    const keywords = this.extractCategoryKeywords(name);
+
+    return {
+      title: `${name} — купити онлайн`,
+      description: `${name} доступний у каталозі з актуальними цінами та знижками.`,
+      keywords,
+    };
+  }
+
+  private collectCategoryIds(
+    node: CategoryTreeNode,
+    nodesById: Map<string, CategoryTreeNode>,
+  ): string[] {
+    const ids = [node.id];
+
+    for (const child of node.children) {
+      ids.push(...this.collectCategoryIds(child, nodesById));
+    }
+
+    return ids;
+  }
+
+  private extractCategoryKeywords(name: string): string[] {
+    const tokens = name
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean);
+
+    return tokens.length > 0 ? tokens : ["каталог"];
+  }
+
+  private aggregateCategoryProductCounts(node: CategoryTreeNode): number {
+    const descendantCount = node.children.reduce(
+      (total, child) => total + this.aggregateCategoryProductCounts(child),
+      0,
+    );
+
+    node.productCount += descendantCount;
+    return node.productCount;
+  }
+
   private sortCategoryTree(node: CategoryTreeNode): CategoryTreeNode {
     return {
       ...node,
@@ -541,6 +1029,122 @@ export class ProductsService {
         .map((child) => this.sortCategoryTree(child))
         .sort((left, right) => left.name.localeCompare(right.name)),
     };
+  }
+
+  private buildCategoryProductCandidate(
+    product: ProductWithRelations,
+    options: CategoryProductsQueryOptions,
+  ): {
+    item: CategoryProductResponseItem;
+    updatedAt: number;
+    price: number;
+    discount: number;
+  } | null {
+    const offers = this.mapOffers(product.offers)
+      .filter((offer) => {
+        if (
+          options.storeId?.length &&
+          !options.storeId.includes(offer.store.id)
+        ) {
+          return false;
+        }
+
+        if (options.inStock && offer.currentPrice <= 0) {
+          return false;
+        }
+
+        if (
+          options.minPrice !== undefined &&
+          offer.effectivePrice < options.minPrice
+        ) {
+          return false;
+        }
+
+        if (
+          options.maxPrice !== undefined &&
+          offer.effectivePrice > options.maxPrice
+        ) {
+          return false;
+        }
+
+        if (
+          options.minDiscount !== undefined &&
+          (offer.discountPercent ?? 0) < options.minDiscount
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((left, right) => left.effectivePrice - right.effectivePrice);
+
+    if (options.inStock && offers.length === 0) {
+      return null;
+    }
+
+    const bestOffer = offers[0];
+    const currentPrice = bestOffer?.effectivePrice ?? 0;
+    const regularPrice = bestOffer?.oldPrice ?? 0;
+    const discountPercent = bestOffer?.discountPercent ?? 0;
+    const media = product.mainImage ? [product.mainImage] : [];
+
+    const availabilityStatus: CategoryProductAvailabilityStatus =
+      offers.length === 0
+        ? "out_of_stock"
+        : offers.length === 1
+          ? "low_stock"
+          : "in_stock";
+
+    return {
+      item: {
+        id: product.id,
+        productId: product.productId,
+        canonicalName: product.canonicalName,
+        brand: product.brand,
+        media,
+        currentPrice,
+        regularPrice,
+        discountPercent,
+        currency: "UAH",
+        rating: 0,
+        reviewsCount: 0,
+        availabilityStatus,
+      },
+      updatedAt: bestOffer
+        ? Date.parse(bestOffer.updatedAt)
+        : product.updatedAt.getTime(),
+      price: currentPrice,
+      discount: discountPercent,
+    };
+  }
+
+  private compareCategoryProductCandidates(
+    left: {
+      item: CategoryProductResponseItem;
+      updatedAt: number;
+      price: number;
+      discount: number;
+    },
+    right: {
+      item: CategoryProductResponseItem;
+      updatedAt: number;
+      price: number;
+      discount: number;
+    },
+    sort: CategoryProductsSort,
+  ) {
+    switch (sort) {
+      case "name":
+        return left.item.canonicalName.localeCompare(right.item.canonicalName);
+      case "price_asc":
+        return left.price - right.price;
+      case "price_desc":
+        return right.price - left.price;
+      case "discount":
+        return right.discount - left.discount;
+      default:
+        return right.updatedAt - left.updatedAt;
+    }
   }
 
   private buildCatalogItem(
@@ -602,6 +1206,7 @@ export class ProductsService {
       canonicalName: product.canonicalName,
       brand: product.brand,
       categoryId: product.categoryId ?? null,
+      media: product.mainImage ?? product.rawMaiImage ?? "",
       offers: offers.map((offer) => ({
         id: offer.id,
         storeId: offer.store.id,
