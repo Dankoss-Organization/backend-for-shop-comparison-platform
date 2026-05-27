@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logging | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+      .container { max-width: 960px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      p, li { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+      code, pre { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./index.html">Back to docs index</a></div>
+      <h1>Logging</h1>
+      <p class="subtitle">Structured logging guidance for backend services, workers, correlation IDs, and safe production output.</p>
+
+      <section class="panel">
+        <h2>Goals</h2>
+        <ul>
+          <li>Emit machine-parseable JSON logs.</li>
+          <li>Include request correlation and trace identifiers.</li>
+          <li>Avoid sensitive data in logs.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Recommended Schema</h2>
+        <pre><code>{
+  "timestamp": "2026-05-26T12:34:56.789Z",
+  "level": "info",
+  "service": "backend",
+  "env": "production",
+  "message": "Product search executed",
+  "correlationId": "req-123",
+  "component": "search",
+  "meta": { "q": "apple", "limit": 20, "durationMs": 42 }
+}</code></pre>
+      </section>
+
+      <section class="panel">
+        <h2>Key Notes</h2>
+        <ul>
+          <li>Log to stdout/stderr in containers.</li>
+          <li>Keep `meta` small and structured.</li>
+          <li>Redact secrets and sensitive payloads.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

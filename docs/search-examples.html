@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Examples | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+      .container { max-width: 960px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      p, li { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+      code, pre { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./search.html">Back to Search docs</a></div>
+      <h1>Search Examples</h1>
+      <p class="subtitle">Practical cURL and JavaScript examples for search, filtering, sorting, and autocomplete.</p>
+
+      <section class="panel">
+        <h2>Examples Covered</h2>
+        <ul>
+          <li>Basic search</li>
+          <li>Paginated search</li>
+          <li>Advanced filters</li>
+          <li>Sorting and facets</li>
+          <li>Fetch and Axios usage</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Sample Request</h2>
+        <pre><code>curl "http://localhost:3000/api/v1/search?q=iphone"</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

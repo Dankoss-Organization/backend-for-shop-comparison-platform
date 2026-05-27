@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Reference | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+      .container { max-width: 980px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+      .card { display: block; text-decoration: none; color: inherit; border: 1px solid #cbd5e1; border-radius: 14px; padding: 20px; background: #fff; transition: transform 0.16s ease, box-shadow 0.16s ease; }
+      .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12); }
+      .card h2 { margin: 0 0 8px; font-size: 20px; }
+      .card p { margin: 0; color: #334155; line-height: 1.6; }
+      .card span { color: #1d4ed8; font-weight: 600; display: inline-block; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="../index.html">Back to docs home</a></div>
+      <h1>API Reference</h1>
+      <p class="subtitle">HTML landing page for endpoint-group documentation. Each section below has its own HTML page for browser-friendly reading.</p>
+
+      <section class="grid">
+        <a class="card" href="./authentication.html">
+          <h2>Authentication</h2>
+          <p>Token flows, session handling, and protected routes.</p>
+          <span>Open auth docs</span>
+        </a>
+        <a class="card" href="./products.html">
+          <h2>Products</h2>
+          <p>Product, category, and offer endpoints.</p>
+          <span>Open products docs</span>
+        </a>
+        <a class="card" href="./search.html">
+          <h2>Search</h2>
+          <p>Meilisearch endpoints, health checks, and stats.</p>
+          <span>Open search docs</span>
+        </a>
+        <a class="card" href="./jobs.html">
+          <h2>Jobs / Queue</h2>
+          <p>Background job status and queue management endpoints.</p>
+          <span>Open jobs docs</span>
+        </a>
+        <a class="card" href="./admin.html">
+          <h2>Admin / Internal</h2>
+          <p>Internal endpoints for reindexing, health, and metrics.</p>
+          <span>Open admin docs</span>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

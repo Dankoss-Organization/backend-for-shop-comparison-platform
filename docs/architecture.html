@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architecture | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+      .container { max-width: 960px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      p, li { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code, pre { font-family: Consolas, "Courier New", monospace; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+      .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+      .links a { display: inline-block; padding: 8px 12px; border-radius: 999px; background: #eff6ff; color: #1e3a8a; text-decoration: none; border: 1px solid #bfdbfe; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./index.html">Back to docs index</a></div>
+      <h1>Architecture</h1>
+      <p class="subtitle">System architecture overview, component responsibilities, and the main data flow across API, workers, database, and search.</p>
+
+      <section class="panel">
+        <h2>Scope</h2>
+        <ul>
+          <li>High-level system diagram</li>
+          <li>Service responsibilities</li>
+          <li>Sync, indexing, and API data flow</li>
+          <li>Deployment topology</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Recommended Topics</h2>
+        <div class="links">
+          <a href="./search.html">Search module</a>
+          <a href="./multithreading.html">Workers</a>
+          <a href="./database.html">Database</a>
+          <a href="./logging.html">Logging</a>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Current Notes</h2>
+        <p>This page is the HTML visualization for the architecture markdown section. The detailed diagram can be embedded here later as SVG or Mermaid without changing the navigation model.</p>
+        <pre><code>API &lt;-&gt; DB
+API -&gt; Queue -&gt; Worker -&gt; Search index
+API -&gt; Logging / Metrics</code></pre>
+      </section>
+    </main>
+  </body>
+</html>
