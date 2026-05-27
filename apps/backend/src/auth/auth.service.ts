@@ -1,12 +1,19 @@
-import { Injectable } from "@nestjs/common";
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { BetterAuthService } from "./better-auth.service";
+import * as bcrypt from "bcrypt";
+import { randomBytes } from "crypto";
 
 const DEFAULT_SESSION_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS ?? 30);
 
 @Injectable()
 export class AuthService {
-  private readonly providerId = process.env.BETTER_AUTH_PROVIDER_ID || "better-auth";
+  private readonly providerId =
+    process.env.BETTER_AUTH_PROVIDER_ID || "better-auth";
 
   constructor(
     private readonly prisma: PrismaService,
@@ -35,13 +42,16 @@ export class AuthService {
         where: { accountId, providerId: this.providerId },
       });
       if (account) {
-        const user = await this.prisma.user.findUnique({ where: { id: account.userId } });
+        const user = await this.prisma.user.findUnique({
+          where: { id: account.userId },
+        });
         if (user) return user;
       }
     }
 
     // Create a new user when we have at least an account id or email
-    const emailForNew = email ?? (accountId ? `${accountId}@${this.providerId}.local` : null);
+    const emailForNew =
+      email ?? (accountId ? `${accountId}@${this.providerId}.local` : null);
     if (!emailForNew) return null;
 
     const name = (payload as any).name ?? "";
@@ -74,7 +84,9 @@ export class AuthService {
     userAgent?: string,
     expiresAt?: Date,
   ) {
-    const ttl = expiresAt ?? new Date(Date.now() + DEFAULT_SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+    const ttl =
+      expiresAt ??
+      new Date(Date.now() + DEFAULT_SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
     return this.prisma.session.create({
       data: {
         token,
@@ -95,7 +107,47 @@ export class AuthService {
   async getUserBySessionToken(token: string) {
     const session = await this.prisma.session.findUnique({ where: { token } });
     if (!session) return null;
-    const user = await this.prisma.user.findUnique({ where: { id: session.userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: session.userId },
+    });
     return user;
+  }
+
+  /** Register a new user with email/password */
+  async registerWithEmail(email: string, password: string, name?: string) {
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing)
+      throw new ConflictException("User with this email already exists");
+
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        password: hashed,
+        name: name || email,
+      },
+    });
+
+    return user;
+  }
+
+  /** Authenticate user by email/password and create a session token */
+  async authenticateWithEmail(
+    email: string,
+    password: string,
+    ip?: string,
+    userAgent?: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || !user.password) throw new UnauthorizedException();
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) throw new UnauthorizedException();
+
+    // Create a random token and session
+    const token = randomBytes(48).toString("hex");
+    await this.createSessionForToken(user.id, token, ip, userAgent);
+
+    return { user, token };
   }
 }
