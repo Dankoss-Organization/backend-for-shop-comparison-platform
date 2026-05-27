@@ -27,12 +27,29 @@
       <h1>Users</h1>
       <p class="subtitle">Authenticated user favorites endpoints.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/users/me/favorites</code></li>
-          <li><code>POST /api/v1/users/me/favorites/:productId</code></li>
-          <li><code>DELETE /api/v1/users/me/favorites/:productId</code></li>
-        </ul>
+        <h2>GET /api/v1/users/me/favorites</h2>
+        <p>Returns the current user's favorite product IDs.</p>
+        <pre>{
+  "productIds": ["BAR-005", "KMO-112", "GAL-025"]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>POST /api/v1/users/me/favorites/:productId</h2>
+        <p>Adds a product to the current user's favorites.</p>
+        <pre>POST /api/v1/users/me/favorites/BAR-005</pre>
+        <pre>{
+  "success": true,
+  "productId": "BAR-005"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>DELETE /api/v1/users/me/favorites/:productId</h2>
+        <p>Removes a product from the current user's favorites.</p>
+        <pre>DELETE /api/v1/users/me/favorites/BAR-005</pre>
+        <pre>{
+  "success": true,
+  "productId": "BAR-005"
+}</pre>
       </section>
     </main>
   </body>

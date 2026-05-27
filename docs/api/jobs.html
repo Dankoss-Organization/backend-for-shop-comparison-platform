@@ -25,14 +25,36 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Jobs / Queue</h1>
-      <p class="subtitle">Background job status endpoints and queue-related internal operations.</p>
+      <p class="subtitle">Background job status endpoints for product sync and analytics jobs. The current backend does not expose a public <code>/api/v1/queues</code> endpoint.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/products/sync-jobs/:jobId</code></li>
-          <li><code>GET /api/v1/products/analytics-jobs/:jobId</code></li>
-          <li><code>GET /api/v1/queues</code></li>
-        </ul>
+        <h2>GET /api/v1/products/sync-jobs/:jobId</h2>
+        <p>Checks the status of a previously enqueued product sync job.</p>
+        <pre>GET /api/v1/products/sync-jobs/123</pre>
+        <pre>{
+  "queue": "product-sync",
+  "jobId": "123",
+  "name": "product-sync",
+  "status": "completed",
+  "attemptsMade": 0,
+  "data": { "productId": "BAR-005", "source": "manual-refresh" },
+  "result": { "productId": "prod-1", "offersCount": 8, "bestPrice": 45.99 },
+  "failedReason": null
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/analytics-jobs/:jobId</h2>
+        <p>Checks the status of a product analytics rebuild job.</p>
+        <pre>GET /api/v1/products/analytics-jobs/456</pre>
+        <pre>{
+  "queue": "product-analytics",
+  "jobId": "456",
+  "name": "product-analytics",
+  "status": "queued",
+  "attemptsMade": 0,
+  "data": { "productId": "BAR-005", "period": "30d", "source": "manual-analytics" },
+  "result": null,
+  "failedReason": null
+}</pre>
       </section>
     </main>
   </body>

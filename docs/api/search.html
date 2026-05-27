@@ -25,17 +25,102 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Search</h1>
-      <p class="subtitle">Meilisearch-backed search endpoints, health checks, task tracking, and index statistics.</p>
+      <p class="subtitle">Meilisearch-backed search endpoints, health checks, task tracking, and index statistics. Query examples below follow the current DTOs and response shapes.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/search</code> - full-text search with filtering and sorting.</li>
-          <li><code>GET /api/v1/search/advanced</code> - advanced search with facets and applied filters.</li>
-          <li><code>GET /api/v1/search/suggestions</code> - autocomplete suggestions.</li>
-          <li><code>GET /api/v1/search/health</code> - search service health check.</li>
-          <li><code>GET /api/v1/search/stats</code> - index statistics.</li>
-          <li><code>GET /api/v1/search/task/:taskId</code> - async index task status.</li>
-        </ul>
+        <h2>GET /api/v1/search</h2>
+        <p>Full-text search over the product catalog with optional filter and sort parameters.</p>
+        <pre>GET /api/v1/search?q=apple+iphone&limit=20&offset=0&filter=category+%3D+%22Electronics%22&sort=bestPrice:asc</pre>
+        <pre>{
+  "results": [
+    {
+      "id": "prod-123",
+      "canonicalName": "Apple iPhone 15",
+      "brand": "Apple",
+      "category": "Electronics",
+      "bestPrice": 45999,
+      "storeNames": ["Foxtrot", "Eldorado"]
+    }
+  ],
+  "totalHits": 150,
+  "query": "apple iphone",
+  "processingTimeMs": 42,
+  "count": 20,
+  "offset": 0,
+  "limit": 20,
+  "totalPages": 8,
+  "page": 1
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/search/advanced</h2>
+        <p>Advanced search with structured filters, sorting, facets, and price statistics.</p>
+        <pre>GET /api/v1/search/advanced?q=iphone+15&page=1&limit=20&filters.categoryId=cat-001&filters.brand=Apple&filters.minPrice=5000&sort.field=bestPrice&sort.direction=asc&facets=category,brand,storeNames</pre>
+        <pre>{
+  "results": [],
+  "totalHits": 150,
+  "facets": [
+    {
+      "name": "brand",
+      "values": [
+        { "value": "Apple", "count": 12 }
+      ]
+    }
+  ],
+  "priceStats": {
+    "min": 1000,
+    "max": 100000,
+    "avg": 45000
+  },
+  "appliedFilters": {
+    "category": "Electronics",
+    "minPrice": 5000,
+    "maxPrice": 50000
+  }
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/search/suggestions</h2>
+        <p>Autocomplete endpoint that returns the most relevant product names for a query prefix.</p>
+        <pre>GET /api/v1/search/suggestions?q=iph&limit=10</pre>
+        <pre>{
+  "suggestions": ["Apple iPhone 15", "Apple iPhone 15 Pro"],
+  "query": "iph"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/search/health</h2>
+        <p>Health check for the Meilisearch instance.</p>
+        <pre>{
+  "status": "healthy",
+  "message": "Meilisearch is running",
+  "version": "1.10.2",
+  "timestamp": 1716030000000
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/search/stats</h2>
+        <p>Returns current index statistics, including document count and last update time.</p>
+        <pre>{
+  "numberOfDocuments": 10000,
+  "isIndexing": false,
+  "lastUpdate": 1716030000000,
+  "timestamp": 1716030000000
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/search/task/:taskId</h2>
+        <p>Returns the status of an asynchronous Meilisearch task. The task ID is a path parameter.</p>
+        <pre>GET /api/v1/search/task/1</pre>
+        <pre>{
+  "taskUid": 1,
+  "indexUid": "products",
+  "status": "succeeded",
+  "type": "documentAdditionOrUpdate",
+  "enqueuedAt": "2026-05-18T10:00:00Z",
+  "startedAt": "2026-05-18T10:00:01Z",
+  "finishedAt": "2026-05-18T10:00:02Z",
+  "duration": 1000
+}</pre>
       </section>
     </main>
   </body>

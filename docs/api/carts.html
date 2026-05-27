@@ -27,13 +27,70 @@
       <h1>Carts</h1>
       <p class="subtitle">Authenticated cart endpoints for reading and mutating the active cart.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/cart</code></li>
-          <li><code>POST /api/v1/cart/items</code></li>
-          <li><code>PATCH /api/v1/cart/items/:itemId</code></li>
-          <li><code>DELETE /api/v1/cart/items/:itemId</code></li>
-        </ul>
+        <h2>GET /api/v1/cart</h2>
+        <p>Returns the active cart with aggregated product and offer data.</p>
+        <pre>{
+  "id": "cart_usr_9921",
+  "isActive": true,
+  "items": [
+    {
+      "id": "ci_item_001",
+      "quantity": 2,
+      "price": 45.99,
+      "offer": {
+        "id": "off_shopp_771",
+        "currentPrice": 45.99,
+        "discountPrice": null,
+        "product": {
+          "productId": "BAR-005",
+          "canonicalName": "Spaghetti Barilla No.5 500g",
+          "media": "https://images.example.com/barilla.jpg"
+        },
+        "store": {
+          "id": "s_silpo",
+          "brand": "Silpo",
+          "city": "Kyiv"
+        }
+      }
+    }
+  ],
+  "sum": 91.98,
+  "discountSum": 0,
+  "currency": "UAH"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>POST /api/v1/cart/items</h2>
+        <p>Adds a cart item or increases its quantity when the offer already exists.</p>
+        <pre>{
+  "offerId": "off_shopp_771",
+  "quantity": 2
+}</pre>
+        <pre>{
+  "success": true,
+  "cartItemId": "ci_item_001"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>PATCH /api/v1/cart/items/:itemId</h2>
+        <p>Updates a cart item quantity.</p>
+        <pre>PATCH /api/v1/cart/items/ci_item_001</pre>
+        <pre>{
+  "quantity": 3
+}</pre>
+        <pre>{
+  "success": true,
+  "cartItemId": "ci_item_001"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>DELETE /api/v1/cart/items/:itemId</h2>
+        <p>Deletes a cart item from the active cart.</p>
+        <pre>DELETE /api/v1/cart/items/ci_item_001</pre>
+        <pre>{
+  "success": true,
+  "cartItemId": "ci_item_001"
+}</pre>
       </section>
     </main>
   </body>

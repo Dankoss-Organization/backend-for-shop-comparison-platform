@@ -25,12 +25,65 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Cart Optimization</h1>
-      <p class="subtitle">Endpoint for evaluating a cart optimization payload and returning fulfillment guidance.</p>
+      <p class="subtitle">Evaluates a cart payload and returns baseline, cheapest, closest, and optimal fulfillment scenarios.</p>
       <section class="panel">
-        <h2>Endpoint</h2>
-        <ul>
-          <li><code>POST /api/v1/cart/optimize</code></li>
-        </ul>
+        <h2>POST /api/v1/cart/optimize</h2>
+        <p>Accepts the user's location, fulfillment type, and cart items, then compares store allocation strategies.</p>
+        <pre>{
+  "userLocation": { "lat": 50.4501, "lng": 30.5234 },
+  "fulfillmentType": "delivery",
+  "cartItems": [
+    {
+      "itemId": "item-1",
+      "productId": "prod-1",
+      "quantity": 1,
+      "selectedStoreId": "store-a",
+      "isLocked": true
+    }
+  ]
+}</pre>
+        <pre>{
+  "baseline": {
+    "name": "baseline",
+    "isFeasible": true,
+    "itemsCost": 210,
+    "deliveryCost": 45,
+    "totalCost": 255,
+    "storeCount": 2,
+    "stores": [],
+    "items": []
+  },
+  "cheapest": {
+    "name": "cheapest",
+    "isFeasible": true,
+    "itemsCost": 200,
+    "deliveryCost": 40,
+    "totalCost": 240,
+    "storeCount": 1,
+    "stores": [],
+    "items": []
+  },
+  "closest": {
+    "name": "closest",
+    "isFeasible": true,
+    "itemsCost": 208,
+    "deliveryCost": 36,
+    "totalCost": 244,
+    "storeCount": 1,
+    "stores": [],
+    "items": []
+  },
+  "optimal": {
+    "name": "optimal",
+    "isFeasible": true,
+    "itemsCost": 202,
+    "deliveryCost": 38,
+    "totalCost": 240,
+    "storeCount": 1,
+    "stores": [],
+    "items": []
+  }
+}</pre>
       </section>
     </main>
   </body>

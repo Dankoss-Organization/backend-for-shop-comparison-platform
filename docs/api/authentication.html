@@ -26,14 +26,37 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Authentication</h1>
-      <p class="subtitle">Authentication endpoints for bearer-token verification, current user lookup, and logout.</p>
+      <p class="subtitle">Bearer-token verification, current user lookup, and session logout. The controller is mounted at <code>/auth</code>, not <code>/api/v1/auth</code>.</p>
       <section class="panel">
         <h2>Endpoints</h2>
-        <ul>
-          <li><code>POST /auth/verify</code> - verify a bearer token and create a session.</li>
-          <li><code>GET /auth/me</code> - return the current authenticated user.</li>
-          <li><code>POST /auth/logout</code> - revoke the current session token.</li>
-        </ul>
+        <p><code>POST /auth/verify</code></p>
+        <p>Verifies a bearer token, creates a session, and returns the authenticated user.</p>
+        <pre>{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIs..."
+}</pre>
+        <pre>{
+  "user": {
+    "id": "usr_123",
+    "email": "alice@example.com"
+  }
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /auth/me</h2>
+        <p>Returns the current authenticated user from the active JWT session.</p>
+        <pre>{
+  "user": {
+    "id": "usr_123",
+    "email": "alice@example.com"
+  }
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>POST /auth/logout</h2>
+        <p>Revokes the current token session. Successful responses return HTTP 204 and no body.</p>
+        <pre>{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIs..."
+}</pre>
       </section>
     </main>
   </body>

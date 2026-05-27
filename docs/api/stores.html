@@ -27,11 +27,46 @@
       <h1>Stores</h1>
       <p class="subtitle">Store brand listing and store-scoped product browsing endpoints.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/stores</code></li>
-          <li><code>GET /api/v1/stores/:storeId/products</code></li>
-        </ul>
+        <h2>GET /api/v1/stores</h2>
+        <p>Returns the available store brands and their location counts.</p>
+        <pre>{
+  "stores": [
+    {
+      "id": "s_silpo",
+      "brand": "Silpo",
+      "logo": "https://assets.dankoss.ua/logos/silpo.png",
+      "website": "https://silpo.ua",
+      "locationCount": 42
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/stores/:storeId/products</h2>
+        <p>Returns products sold in a specific store with the same filtering model as the product catalog.</p>
+        <pre>GET /api/v1/stores/s_silpo/products?page=1&limit=20&search=barilla&sort=price_asc</pre>
+        <pre>{
+  "storeId": "s_silpo",
+  "storeName": "Сільпо",
+  "items": [
+    {
+      "id": "off-1",
+      "productId": "BAR-005",
+      "canonicalName": "Spaghetti Barilla No.5 500g",
+      "brand": "Barilla",
+      "media": "https://images.example.com/barilla.jpg",
+      "currentPrice": 45.99,
+      "regularPrice": 59.99,
+      "discountPercent": 23,
+      "currency": "UAH",
+      "availabilityStatus": "in_stock"
+    }
+  ],
+  "total": 85,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 5
+}</pre>
       </section>
     </main>
   </body>

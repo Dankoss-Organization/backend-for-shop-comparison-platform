@@ -25,14 +25,11 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Admin / Internal</h1>
-      <p class="subtitle">Internal endpoints for operational tasks such as health checks, reindexing, and metrics.</p>
+      <p class="subtitle">This snapshot does not expose a dedicated admin controller. Operational checks are currently covered by the search health and stats endpoints, plus the product job-status routes.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/admin/health</code></li>
-          <li><code>POST /api/v1/admin/reindex</code></li>
-          <li><code>GET /api/v1/admin/metrics</code></li>
-        </ul>
+        <h2>Current status</h2>
+        <p>No dedicated <code>/api/v1/admin</code> endpoints are implemented in the current backend module set.</p>
+        <p>If admin endpoints are added later, document them here with request and response examples that match the actual controller output.</p>
       </section>
     </main>
   </body>

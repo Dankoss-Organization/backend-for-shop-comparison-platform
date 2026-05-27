@@ -25,21 +25,183 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Products</h1>
-      <p class="subtitle">Product catalog, detail, offer, sync, and related-product endpoints.</p>
+      <p class="subtitle">Product catalog, detail, offer, sync, and related-product endpoints. Examples below use the actual response shapes returned by the product service.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
-        <ul>
-          <li><code>GET /api/v1/products</code> - list products.</li>
-          <li><code>GET /api/v1/products/categories</code> - get categories tree for product browsing.</li>
-          <li><code>GET /api/v1/products/:id/card</code> - get product card with summary stats.</li>
-          <li><code>GET /api/v1/products/:id/offers</code> - get product offers with sorting/filtering.</li>
-          <li><code>GET /api/v1/products/:id/price-history</code> - get product price history.</li>
-          <li><code>GET /api/v1/products/:id/related</code> - get related products.</li>
-          <li><code>POST /api/v1/products/:id/sync</code> - enqueue product sync job.</li>
-          <li><code>GET /api/v1/products/sync-jobs/:jobId</code> - check sync job status.</li>
-          <li><code>POST /api/v1/products/:id/analytics/rebuild</code> - enqueue analytics rebuild job.</li>
-          <li><code>GET /api/v1/products/analytics-jobs/:jobId</code> - check analytics job status.</li>
-        </ul>
+        <h2>GET /api/v1/products</h2>
+        <p>Lists catalog items with pagination and filters for brand, category, price, stock, and search.</p>
+        <pre>GET /api/v1/products?page=1&limit=20&search=barilla&inStock=true&sort=updated</pre>
+        <pre>{
+  "items": [
+    {
+      "id": "prod-1",
+      "canonicalName": "Spaghetti Barilla No.5 500g",
+      "brand": "Barilla",
+      "categoryId": "cat-pasta",
+      "media": "https://images.example.com/barilla.jpg",
+      "offers": [
+        {
+          "id": "off-1",
+          "storeId": "s_silpo",
+          "price": 45.99,
+          "regularPrice": 59.99,
+          "discountPercent": 23
+        }
+      ],
+      "bestPrice": 45.99,
+      "bestDiscount": 23,
+      "updatedAt": "2026-05-27T10:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/categories</h2>
+        <p>Returns the product category tree, or a subtree when <code>parentId</code> is provided.</p>
+        <pre>GET /api/v1/products/categories?parentId=cat-food</pre>
+        <pre>{
+  "categories": [
+    {
+      "id": "cat-food",
+      "name": "Food",
+      "slug": "food",
+      "children": []
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/:id/card</h2>
+        <p>Returns the product card with top offers, pricing summary, badges, and history stats.</p>
+        <pre>GET /api/v1/products/BAR-005/card</pre>
+        <pre>{
+  "product": {
+    "id": "prod-1",
+    "productId": "BAR-005",
+    "canonicalName": "Spaghetti Barilla No.5 500g",
+    "brand": "Barilla",
+    "category": "Pasta",
+    "media": "https://images.example.com/barilla.jpg",
+    "description": "Classic durum wheat spaghetti"
+  },
+  "pricingSummary": {
+    "bestPrice": 45.99,
+    "oldPrice": 59.99,
+    "discountPercent": 23,
+    "currency": "UAH"
+  },
+  "availabilityStatus": "in_stock"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/:id/offers</h2>
+        <p>Returns all offers for a product, sorted by price, discount, or update time.</p>
+        <pre>GET /api/v1/products/BAR-005/offers?sort=price&inStock=true</pre>
+        <pre>{
+  "productId": "prod-1",
+  "offers": [
+    {
+      "id": "off-1",
+      "store": { "id": "s_silpo", "brand": "Silpo", "city": "Kyiv" },
+      "currentPrice": 45.99,
+      "discountPrice": null
+    }
+  ],
+  "total": 1
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/:id/price-history</h2>
+        <p>Returns the price history for the requested time period. The default period is <code>30d</code>.</p>
+        <pre>GET /api/v1/products/BAR-005/price-history?period=30d</pre>
+        <pre>{
+  "productId": "prod-1",
+  "period": "30d",
+  "points": [],
+  "stats": {
+    "minPrice": 42.5,
+    "maxPrice": 59.99,
+    "avgPrice": 48.6,
+    "trend": "down"
+  }
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/:id/related</h2>
+        <p>Returns similar products based on category and brand overlap.</p>
+        <pre>GET /api/v1/products/BAR-005/related?limit=8</pre>
+        <pre>{
+  "productId": "prod-1",
+  "related": [
+    {
+      "id": "prod-2",
+      "canonicalName": "Spaghetti Barilla No.3 500g",
+      "bestPrice": 41.99
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>POST /api/v1/products/:id/sync</h2>
+        <p>Queues a background sync job for the product. The request body can include an optional source.</p>
+        <pre>{
+  "source": "manual-refresh"
+}</pre>
+        <pre>{
+  "queue": "product-sync",
+  "jobName": "product-sync",
+  "jobId": "123",
+  "status": "queued",
+  "createdAt": "2026-05-27T10:00:00.000Z"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/sync-jobs/:jobId</h2>
+        <p>Returns the current status for a queued product sync job.</p>
+        <pre>GET /api/v1/products/sync-jobs/123</pre>
+        <pre>{
+  "queue": "product-sync",
+  "jobId": "123",
+  "name": "product-sync",
+  "status": "processing",
+  "attemptsMade": 0,
+  "data": { "productId": "BAR-005", "source": "manual-refresh" },
+  "result": null,
+  "failedReason": null
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>POST /api/v1/products/:id/analytics/rebuild</h2>
+        <p>Queues an analytics rebuild job for the selected product and period.</p>
+        <pre>{
+  "source": "manual-analytics",
+  "period": "30d"
+}</pre>
+        <pre>{
+  "queue": "product-analytics",
+  "jobName": "product-analytics",
+  "jobId": "456",
+  "status": "queued",
+  "createdAt": "2026-05-27T10:00:00.000Z"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/analytics-jobs/:jobId</h2>
+        <p>Returns the current status for a queued analytics rebuild job.</p>
+        <pre>GET /api/v1/products/analytics-jobs/456</pre>
+        <pre>{
+  "queue": "product-analytics",
+  "jobId": "456",
+  "name": "product-analytics",
+  "status": "completed",
+  "attemptsMade": 0,
+  "data": { "productId": "BAR-005", "period": "30d", "source": "manual-analytics" },
+  "result": { "productId": "prod-1", "offersCount": 8, "bestPrice": 45.99 },
+  "failedReason": null
+}</pre>
       </section>
     </main>
   </body>
