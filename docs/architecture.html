@@ -27,8 +27,8 @@
   <body>
     <main class="container">
       <div class="topbar"><a href="./index.html">Back to docs index</a></div>
-      <h1>Architecture</h1>
-      <p class="subtitle">System architecture overview, component responsibilities, and the main data flow across API, workers, database, and search.</p>
+      <h1>Архітектура</h1>
+      <p class="subtitle">Огляд архітектури системи, відповідальність компонентів та основні потоки даних між API, робітниками, БД та пошуком.</p>
 
       <section class="panel">
         <h2>Scope</h2>
@@ -51,11 +51,37 @@
       </section>
 
       <section class="panel">
-        <h2>Current Notes</h2>
-        <p>This page is the HTML visualization for the architecture markdown section. The detailed diagram can be embedded here later as SVG or Mermaid without changing the navigation model.</p>
-        <pre><code>API &lt;-&gt; DB
-API -&gt; Queue -&gt; Worker -&gt; Search index
-API -&gt; Logging / Metrics</code></pre>
+        <h2>Опис компонентів</h2>
+        <p>Короткий опис основних компонентів системи та їх відповідальності.</p>
+        <ul>
+          <li><strong>API Server</strong>: обробляє запити клієнтів, авторизацію та роутинг.</li>
+          <li><strong>Queue</strong>: черга завдань (BullMQ) для фонової обробки.</li>
+          <li><strong>Workers</strong>: фонова обробка синхронізації, індексації та агрегацій.</li>
+          <li><strong>Database</strong>: основне сховище (Postgres + Prisma).</li>
+          <li><strong>Search Index</strong>: пошуковий індекс для швидких пошукових запитів.</li>
+          <li><strong>Cache</strong>: Redis для кешування та блокувань.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Діаграми</h2>
+        <p>Нижче — статичні SVG-діаграми, згенеровані з Mermaid для кращого відображення у браузерах.</p>
+        <div style="display:flex;flex-direction:column;gap:18px;margin-top:12px;">
+          <figure>
+            <img src="./architecture-overview.svg" alt="Architecture overview" style="max-width:100%;border:1px solid #e2e8f0;border-radius:8px;" />
+            <figcaption style="color:#475569;margin-top:6px">Високорівнева архітектура: API, Queue, Workers, DB, Search, Infra.</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./architecture-indexing-sequence.svg" alt="Indexing sequence" style="max-width:100%;border:1px solid #e2e8f0;border-radius:8px;" />
+            <figcaption style="color:#475569;margin-top:6px">Послідовність індексації: enqueue → worker → DB → Search.</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./architecture-deployment.svg" alt="Deployment topology" style="max-width:100%;border:1px solid #e2e8f0;border-radius:8px;" />
+            <figcaption style="color:#475569;margin-top:6px">Спрощена топологія розгортання (Kubernetes).</figcaption>
+          </figure>
+        </div>
       </section>
     </main>
   </body>

@@ -1,0 +1,25 @@
+graph LR
+  subgraph API Layer
+    API[API Server]
+  end
+  subgraph Backend
+    Q[Queue]
+    W[Workers]
+    Search[Search Index]
+    DB[(Postgres / Prisma)]
+  end
+  subgraph Infra
+    Cache[Redis]
+    Storage[S3]
+    Metrics[Metrics / Logging]
+  end
+
+  API -->|reads/writes| DB
+  API -->|enqueue jobs| Q
+  Q --> W
+  W -->|index| Search
+  W -->|read/write| DB
+  API -->|caches| Cache
+  API --> Metrics
+  W --> Metrics
+  Storage --> W
