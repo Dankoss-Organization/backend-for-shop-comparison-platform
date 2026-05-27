@@ -20,6 +20,25 @@
       ul { margin: 10px 0 0; padding-left: 20px; }
       pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
       code, pre { font-family: Consolas, "Courier New", monospace; }
+      .example-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-top: 12px;
+      }
+      .example {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 14px;
+      }
+      .example h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      .example p {
+        margin: 0 0 10px;
+      }
     </style>
   </head>
   <body>
@@ -39,6 +58,10 @@
 
       <section class="panel">
         <h2>Recommended Schema</h2>
+        <p>
+          Use single-line JSON objects in production. The example below shows the standard fields that should be
+          present when they are available.
+        </p>
         <pre><code>{
   "timestamp": "2026-05-26T12:34:56.789Z",
   "level": "info",
@@ -46,17 +69,111 @@
   "env": "production",
   "message": "Product search executed",
   "correlationId": "req-123",
+  "traceId": "trace-abc",
+  "spanId": "span-001",
   "component": "search",
-  "meta": { "q": "apple", "limit": 20, "durationMs": 42 }
+  "meta": {
+    "q": "apple",
+    "limit": 20,
+    "durationMs": 42,
+    "results": 12
+  }
 }</code></pre>
+      </section>
+
+      <section class="panel">
+        <h2>Template</h2>
+        <p>
+          Treat the following shape as the default log contract for request, worker, and error events.
+          Fields marked optional can be omitted when they are not relevant.
+        </p>
+        <pre><code>{
+  "timestamp": "ISO-8601 timestamp",
+  "level": "error|warn|info|debug|trace",
+  "service": "backend",
+  "env": "development|staging|production",
+  "message": "Human-readable summary",
+  "correlationId": "request-scoped id",
+  "traceId": "distributed trace id (optional)",
+  "spanId": "trace span id (optional)",
+  "component": "search|worker|db|queue",
+  "meta": {
+    "durationMs": 42,
+    "entityId": "prod-123",
+    "count": 12
+  },
+  "error": {
+    "type": "HttpError",
+    "message": "429 Too Many Requests",
+    "stack": "Error: 429..."
+  }
+}</code></pre>
+      </section>
+
+      <section class="panel">
+        <h2>Examples</h2>
+        <div class="example-grid">
+          <article class="example">
+            <h3>Info event</h3>
+            <p>Normal business event for request completion or job progress.</p>
+            <pre><code>{
+  "timestamp": "2026-05-26T12:34:56.789Z",
+  "level": "info",
+  "service": "backend",
+  "env": "production",
+  "message": "Cart total recalculated",
+  "correlationId": "req-123",
+  "component": "cart",
+  "meta": { "cartId": "cart-45", "items": 3, "durationMs": 18 }
+}</code></pre>
+          </article>
+
+          <article class="example">
+            <h3>Warn event</h3>
+            <p>Recoverable problem where the request still succeeds, but something is suboptimal.</p>
+            <pre><code>{
+  "timestamp": "2026-05-26T12:35:12.004Z",
+  "level": "warn",
+  "service": "backend",
+  "env": "production",
+  "message": "Search returned partial results",
+  "correlationId": "req-124",
+  "component": "search",
+  "meta": { "q": "milk", "fallbackUsed": true, "durationMs": 91 }
+}</code></pre>
+          </article>
+
+          <article class="example">
+            <h3>Error event</h3>
+            <p>Failure event with structured error details and a small metadata payload.</p>
+            <pre><code>{
+  "timestamp": "2026-05-26T12:35:01.123Z",
+  "level": "error",
+  "service": "backend",
+  "env": "production",
+  "message": "Failed to index product",
+  "correlationId": "req-125",
+  "traceId": "trace-xyz",
+  "component": "indexer",
+  "meta": { "productId": "prod-123", "attempt": 2 },
+  "error": {
+    "type": "HttpError",
+    "message": "429 Too Many Requests",
+    "stack": "Error: 429\n at ..."
+  }
+}</code></pre>
+          </article>
+        </div>
       </section>
 
       <section class="panel">
         <h2>Key Notes</h2>
         <ul>
           <li>Log to stdout/stderr in containers.</li>
+          <li>Keep one event per line so log collectors can parse records safely.</li>
           <li>Keep `meta` small and structured.</li>
           <li>Redact secrets and sensitive payloads.</li>
+          <li>Include `correlationId` on every request-scoped log entry.</li>
         </ul>
       </section>
     </main>

@@ -1,45 +1,116 @@
 
 # Logging
 
-This document defines the recommended structured log format, examples and a minimal `winston` configuration for production-ready JSON logs.
+This document defines the recommended structured log format, concrete examples, and a minimal `winston` configuration for production-ready JSON logs.
 
-1) Goals
+## Goals
 
-- Produce structured, machine-parseable logs (JSON) for ingestion by log pipelines (ELK/Loki/Datadog).
+- Produce structured, machine-parseable logs for ingestion by ELK, Loki, Datadog, or similar pipelines.
 - Include correlation and trace identifiers for request linking.
 - Avoid sensitive data in logs.
 
-2) Recommended JSON log schema (single-line JSON)
+## JSON Log Contract
 
-All logs should be emitted as single-line JSON objects with the following fields when available:
+All logs should be emitted as single-line JSON objects. The standard fields are:
 
-- `timestamp` (ISO 8601): event time
-- `level` (string): `error|warn|info|debug|trace`
-- `service` (string): service name (e.g. `backend`) 
-- `env` (string): environment (e.g. `development`, `staging`, `production`)
-- `message` (string): human-readable message
-- `correlationId` (string|null): request-scoped id shared across services
-- `traceId` (string|null): distributed-trace id (optional)
-- `spanId` (string|null): trace span id (optional)
-- `component` (string|null): subsystem (e.g. `search`, `worker`, `db`)
-- `meta` (object|null): additional structured metadata (ids, durations, filters, error details)
+- `timestamp` (ISO 8601): event time.
+- `level` (`error|warn|info|debug|trace`): severity of the event.
+- `service` (string): service name, for example `backend`.
+- `env` (string): environment, for example `development`, `staging`, `production`.
+- `message` (string): human-readable summary.
+- `correlationId` (string|null): request-scoped id shared across services.
+- `traceId` (string|null): distributed trace id.
+- `spanId` (string|null): trace span id.
+- `component` (string|null): subsystem, for example `search`, `worker`, `db`.
+- `meta` (object|null): structured metadata such as ids, counts, durations, or filters.
+- `error` (object|null): structured error details when a failure occurs.
 
-Example JSON log (info):
+## Template
 
-```json
-{"timestamp":"2026-05-26T12:34:56.789Z","level":"info","service":"backend","env":"production","message":"Product search executed","correlationId":"req-123","traceId":"trace-abc","component":"search","meta":{"q":"apple","limit":20,"durationMs":42,"results":12}}
-```
-
-Example JSON log (error):
+Use this shape as the default contract for request, worker, and error events:
 
 ```json
-{"timestamp":"2026-05-26T12:35:01.123Z","level":"error","service":"backend","env":"production","message":"Failed to index product","correlationId":"req-124","component":"indexer","meta":{"productId":"prod-123"},"error":{"type":"HttpError","message":"429 Too Many Requests","stack":"Error: 429\n at ..."}}
+{
+	"timestamp": "ISO-8601 timestamp",
+	"level": "error|warn|info|debug|trace",
+	"service": "backend",
+	"env": "development|staging|production",
+	"message": "Human-readable summary",
+	"correlationId": "request-scoped id",
+	"traceId": "distributed trace id (optional)",
+	"spanId": "trace span id (optional)",
+	"component": "search|worker|db|queue",
+	"meta": {
+		"durationMs": 42,
+		"entityId": "prod-123",
+		"count": 12
+	},
+	"error": {
+		"type": "HttpError",
+		"message": "429 Too Many Requests",
+		"stack": "Error: 429..."
+	}
+}
 ```
 
-3) Minimal `winston` config example (JSON output)
+## Examples
+
+### Info event
+
+```json
+{
+	"timestamp": "2026-05-26T12:34:56.789Z",
+	"level": "info",
+	"service": "backend",
+	"env": "production",
+	"message": "Cart total recalculated",
+	"correlationId": "req-123",
+	"component": "cart",
+	"meta": { "cartId": "cart-45", "items": 3, "durationMs": 18 }
+}
+```
+
+### Warn event
+
+```json
+{
+	"timestamp": "2026-05-26T12:35:12.004Z",
+	"level": "warn",
+	"service": "backend",
+	"env": "production",
+	"message": "Search returned partial results",
+	"correlationId": "req-124",
+	"component": "search",
+	"meta": { "q": "milk", "fallbackUsed": true, "durationMs": 91 }
+}
+```
+
+### Error event
+
+```json
+{
+	"timestamp": "2026-05-26T12:35:01.123Z",
+	"level": "error",
+	"service": "backend",
+	"env": "production",
+	"message": "Failed to index product",
+	"correlationId": "req-125",
+	"traceId": "trace-xyz",
+	"component": "indexer",
+	"meta": { "productId": "prod-123", "attempt": 2 },
+	"error": {
+		"type": "HttpError",
+		"message": "429 Too Many Requests",
+		"stack": "Error: 429\n at ..."
+	}
+}
+```
+
+## Minimal `winston` Config
 
 ```js
 const { createLogger, transports, format } = require('winston');
+
 const logger = createLogger({
 	level: process.env.LOG_LEVEL || 'info',
 	format: format.combine(
@@ -55,26 +126,22 @@ const logger = createLogger({
 module.exports = logger;
 ```
 
-4) Field guidance
+## Field Guidance
 
-- Correlation IDs: generate at HTTP entrypoint (middleware) and include for background jobs.
-- Error objects: include `type`, `message`, and `stack` only in non-sensitive environments; redact in public logs.
-- Meta: prefer small, structured objects (ids, counts, durations). Avoid dumping large request bodies.
+- Generate `correlationId` at the HTTP entrypoint and pass it through background jobs.
+- Keep `meta` small and structured; avoid logging full request bodies.
+- Include `error.type`, `error.message`, and `error.stack` only where it is safe to do so.
+- In containers, emit to stdout/stderr and let the platform collect logs.
 
-5) Rotation, retention and ingestion
-
-- In containers emit to stdout/stderr and let the platform collect logs (Docker, Kubernetes). Use a log forwarder to send JSON to ELK/Loki.
-- Set retention and rotation policy in the log backend (not in-app).
-
-6) Query examples
+## Query Examples
 
 - Kibana / Elasticsearch: filter by `correlationId` to trace a request across services.
 - Example ES query: `correlationId: "req-123" AND level: error`
 
-7) Checklist for adding logs
+## Checklist
 
-- [ ] Use structured `meta` instead of free-text when adding contextual data.
-- [ ] Add `correlationId` to logs emitted in request scope.
-- [ ] Do not log secrets (passwords, tokens, full card numbers).
-- [ ] Ensure exceptions include stack traces in staging, and minimal fields in production if required.
+- [ ] Use structured `meta` instead of free text for contextual data.
+- [ ] Add `correlationId` to request-scoped log entries.
+- [ ] Do not log secrets, tokens, or full card numbers.
+- [ ] Keep error output minimal in production and detailed in staging when needed.
 
