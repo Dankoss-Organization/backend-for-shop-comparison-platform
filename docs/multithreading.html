@@ -25,24 +25,26 @@
   <body>
     <main class="container">
       <div class="topbar"><a href="./index.html">Back to docs index</a></div>
-      <h1>Multithreading & Workers</h1>
-      <p class="subtitle">Concurrency model, worker processes, queue processing, and tuning guidance for background workloads.</p>
+      <h1>Мультипоточність та Воркери</h1>
+      <p class="subtitle">Модель конкурентності, поведінка фонівих процесів і рекомендації з налаштування фонових задач.</p>
 
       <section class="panel">
-        <h2>Scope</h2>
+        <h2>Область покриття</h2>
         <ul>
-          <li>Worker vs API process</li>
-          <li>Threading model and `ENABLE_WORKER_THREADS`</li>
-          <li>Queue configuration and concurrency tuning</li>
-          <li>Best practices and troubleshooting</li>
+          <li>Розмежування API та воркерів</li>
+          <li>Потоки: `ENABLE_WORKER_THREADS`</li>
+          <li>Налаштування черг та паралельність</li>
+          <li>Поради та усунення несправностей</li>
         </ul>
       </section>
 
       <section class="panel">
-        <h2>Example Settings</h2>
+        <h2>Ключові налаштування (приклад)</h2>
         <pre><code>WORKER_CONCURRENCY=4
 ENABLE_WORKER_THREADS=true
-ANALYTICS_WORKER_CONCURRENCY=2</code></pre>
+ANALYTICS_WORKER_CONCURRENCY=2
+UV_THREADPOOL_SIZE=8</code></pre>
+        <p>Детальніше про поведінку воркерів та модель конкурентності дивіться у [docs/multithreading.md](multithreading.md).</p>
       </section>
     </main>
   </body>

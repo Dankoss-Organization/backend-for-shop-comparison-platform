@@ -1,11 +1,108 @@
 # Multithreading and Workers
 
-Description of concurrency model, worker processes, and thread pool configuration.
+Опис поведінки воркерів (background workers), моделі конкурентності та рекомендації з налаштування.
 
-Sections:
-- Worker vs API process
-- Threading model and `ENABLE_WORKER_THREADS`
-- Queue configuration and concurrency tuning
-- Best practices and troubleshooting
+Цей документ пояснює, як в нашому проєкті працюють фоні процеси, як вони взаємодіють з основним API-процесом, які гарантії та обмеження мають, та як правильно налаштовувати конкуренцію для різних типів задач (I/O vs CPU-bound).
 
-TODO: add example env settings and metrics to watch.
+**Зміст**
+- Процеси: API vs Worker
+- Поведінка воркера (життєвий цикл, обробка задач, помилки)
+- Модель конкурентності (процеси, потоки, пул потоків)
+- Конфігурація черг і параметри оптимізації
+- Метрики та інструменти спостереження
+- Поради та шаблони (graceful shutdown, retry, idempotency)
+
+---
+
+## Процеси: API vs Worker
+
+- API-процес (HTTP, gRPC): орієнтований на швидку реакцію — неблокуючі I/O операції; рідко виконує тяжку CPU-роботу.
+- Worker-процес: спеціальний процес/контейнер для виконання фонових завдань (індексація, обробка зображень, аналітика, черги). Відокремлення гарантує, що довгі задачі не впливають на затримки API.
+
+Рекомендація: тримати логіку і залежності воркерів окремо від API (інколи в окремому Docker service), щоб масштабувати їх незалежно.
+
+## Поведінка воркера
+
+- Життєвий цикл: старт → підключення до черги/БД → отримання задач → виконання → ack/fail → повтори/логування → завершення (graceful shutdown).
+- Обробка задач має бути ідемпотентною: повторні виконання (retries) не повинні призводити до невідкатних побічних ефектів.
+- Помилки: помилки в задачі повинні бути явно оброблені. Для невідновлюваних помилок — reject/fail з логуванням і, за потреби, відправкою в dead-letter queue.
+
+Важливі практики:
+- Відокремлювати короткі (quick) і довгі (long-running) задачі в окремі черги і воркери.
+- Робити timeouts на виконання задачі та контролювати max retries.
+
+## Модель конкурентності
+
+В нашому стеку (Node.js + Nest) зустрічаються три рівні конкурентності:
+
+1. Процесна: запуск декількох worker-процесів (uploader-1, analytics-2 тощо). Горизонтальне масштабування — найнадійніший шлях для CPU-bound задач.
+2. Поточна (event-loop): в одному Node-процесі кілька асинхронних I/O операцій можуть виконуватись одночасно (не блокуючи event loop).
+3. Worker Threads / Thread pool: для виконання CPU-bound роботи можна використовувати `worker_threads` або внутрішній thread-pool (libuv). Параметри типу `ENABLE_WORKER_THREADS` керують використанням таких потоків.
+
+Практичні висновки:
+- Для I/O-bound задач (HTTP запити, робота з БД, S3) — достатньо асинхронного event-loop; підвищуйте concurrency на рівні черги.
+- Для CPU-bound (анімації, обробка зображень) — виконуйте роботу в окремих процесах або в `worker_threads` щоб не блокувати event loop.
+- Thread pool розмір (UV_THREADPOOL_SIZE) впливає на операції, що використовують libuv (наприклад bcrypt, fs). Налаштовуйте обережно: занадто великий пул може перевантажити систему.
+
+## Конфігурація черг і параметри оптимізації
+
+Типові змінні середовища, які використовуються в проєкті:
+
+- `WORKER_CONCURRENCY` — кількість паралельних задач, які воркер обробляє одночасно (на процес).
+- `ENABLE_WORKER_THREADS` — чи використовуються Node `worker_threads` для CPU-bound задач.
+- `ANALYTICS_WORKER_CONCURRENCY` — окреме значення конкуренції для аналітичних задач.
+- `UV_THREADPOOL_SIZE` — розмір thread pool для libuv (мінімум 4, за потреби збільшувати до числа вільних ядер * 2).
+
+Приклади налаштувань (орієнтовно):
+
+- Легкий воркер, I/O-bound: `WORKER_CONCURRENCY=8`, `ENABLE_WORKER_THREADS=false`
+- CPU-bound воркер: запускати 1–2 процеси з `WORKER_CONCURRENCY=2` і `ENABLE_WORKER_THREADS=true` або обробляти через зовнішній процесор (python, rust) під масштаб.
+
+## Метрики та моніторинг
+
+Слідкуйте за наступними показниками при налаштуванні:
+
+- Latency / duration задач (поріг спрацьовування для timeouts)
+- Throughput: jobs/sec
+- Queue length / waiting jobs
+- Process CPU% та load average
+- Memory RSS та heapUsed
+- Number of retries / dead-letter ratio
+
+Інструменти: Prometheus + Grafana, Application logs (structured), Sentry для помилок у воркерах.
+
+## Шаблони і поради
+
+- Graceful shutdown: на SIGTERM/ SIGINT перестати забирати нові задачі, дочекатись поточних або завершити за timeout. Після цього закрити підключення до БД/черг і завершитись.
+
+- Retry + backoff: використовувати експоненційний backoff для тимчасових помилок (мережа, зовнішні API).
+
+- Idempotency keys: для зовнішніх запитів та побічних ефектів зберігайте idempotency key, щоб уникнути дублювання при повторних виконаннях.
+
+- Dead-letter queue: налаштуйте окрему чергу для задач, що не вдалися після max retries, щоб аналізувати та вручну обробляти проблемні випадки.
+
+## Приклад: graceful shutdown (псевдокод)
+
+```ts
+// Приклад загальної логіки завершення воркера
+async function shutdown(signal) {
+	logger.info(`Received ${signal}, stopping fetch of new jobs`);
+	queue.pause(); // перестати забирати нові задачі
+	const ok = await waitForRunningJobsToFinish({timeout: 30000});
+	if (!ok) {
+		logger.warn('Forcing shutdown: some jobs still running');
+	}
+	await closeConnections();
+	process.exit(0);
+}
+``` 
+
+## Troubleshooting
+
+- Якщо event loop блокується — перевірити CPU usage та тривалість функцій; винести CPU-heavy частину в worker threads або інший процес.
+- Якщо велика черга і низький throughput — підвищуйте `WORKER_CONCURRENCY` або горизонтально масштабуйтесь (додайте більше процесів).
+- Якщо пам'ять росте — перевірити витоки (retain of large objects), GC pressure, а також розглянути рестарт воркерів за SLA.
+
+---
+
+Оновіть відповідні значення у deployment manifests (Docker Compose / Kubernetes) і адаптуйте метрики під вашу інфраструктуру. Для прикладів конфігурацій дивіться файл [docs/multithreading.html](multithreading.html).
