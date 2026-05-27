@@ -26,13 +26,13 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Authentication</h1>
-      <p class="subtitle">Authentication endpoints, token flows, and session handling for protected routes.</p>
+      <p class="subtitle">Authentication endpoints for bearer-token verification, current user lookup, and logout.</p>
       <section class="panel">
         <h2>Endpoints</h2>
         <ul>
-          <li><code>POST /api/v1/auth/login</code> - exchange credentials for an access token.</li>
-          <li><code>POST /api/v1/auth/logout</code> - invalidate refresh tokens or sessions.</li>
-          <li><code>POST /api/v1/auth/refresh</code> - refresh access token using a refresh token.</li>
+          <li><code>POST /auth/verify</code> - verify a bearer token and create a session.</li>
+          <li><code>GET /auth/me</code> - return the current authenticated user.</li>
+          <li><code>POST /auth/logout</code> - revoke the current session token.</li>
         </ul>
       </section>
     </main>

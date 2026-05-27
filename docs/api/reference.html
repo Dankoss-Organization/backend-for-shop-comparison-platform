@@ -26,33 +26,67 @@
     <main class="container">
       <div class="topbar"><a href="../index.html">Back to docs home</a></div>
       <h1>API Reference</h1>
-      <p class="subtitle">HTML landing page for endpoint-group documentation. Each section below has its own HTML page for browser-friendly reading.</p>
+      <p class="subtitle">HTML landing page for endpoint-group documentation. Each section below links to a browser-friendly index page for a real controller or route group.</p>
 
       <section class="grid">
+        <a class="card" href="./root.html">
+          <h2>Root</h2>
+          <p>Basic application hello endpoint.</p>
+          <span>Open root docs</span>
+        </a>
+
         <a class="card" href="./authentication.html">
           <h2>Authentication</h2>
-          <p>Token flows, session handling, and protected routes.</p>
+          <p>Token verification, current user, and logout routes.</p>
           <span>Open auth docs</span>
         </a>
+
+        <a class="card" href="./categories.html">
+          <h2>Categories</h2>
+          <p>Category tree, category details, category products, and facets.</p>
+          <span>Open categories docs</span>
+        </a>
+
+        <a class="card" href="./carts.html">
+          <h2>Carts</h2>
+          <p>Current cart, add, update, and delete cart items.</p>
+          <span>Open carts docs</span>
+        </a>
+
+        <a class="card" href="./cart-optimization.html">
+          <h2>Cart Optimization</h2>
+          <p>Optimize cart fulfillment and pricing decisions.</p>
+          <span>Open optimization docs</span>
+        </a>
+
         <a class="card" href="./products.html">
           <h2>Products</h2>
-          <p>Product, category, and offer endpoints.</p>
+          <p>Catalog, product detail, offers, price history, sync jobs, and related products.</p>
           <span>Open products docs</span>
         </a>
+
+        <a class="card" href="./recipes.html">
+          <h2>Recipes</h2>
+          <p>Recipe list, recipe details, categories, and related recipes.</p>
+          <span>Open recipes docs</span>
+        </a>
+
+        <a class="card" href="./stores.html">
+          <h2>Stores</h2>
+          <p>Store brand listing and store-scoped product browsing.</p>
+          <span>Open stores docs</span>
+        </a>
+
         <a class="card" href="./search.html">
           <h2>Search</h2>
-          <p>Meilisearch endpoints, health checks, and stats.</p>
+          <p>Search, advanced search, suggestions, health, stats, and task status.</p>
           <span>Open search docs</span>
         </a>
-        <a class="card" href="./jobs.html">
-          <h2>Jobs / Queue</h2>
-          <p>Background job status and queue management endpoints.</p>
-          <span>Open jobs docs</span>
-        </a>
-        <a class="card" href="./admin.html">
-          <h2>Admin / Internal</h2>
-          <p>Internal endpoints for reindexing, health, and metrics.</p>
-          <span>Open admin docs</span>
+
+        <a class="card" href="./users.html">
+          <h2>Users</h2>
+          <p>User favorites endpoints for the authenticated user.</p>
+          <span>Open users docs</span>
         </a>
       </section>
     </main>

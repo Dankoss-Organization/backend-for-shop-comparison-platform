@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Products API | Shop Comparison Platform</title>
+    <title>Root API | Shop Comparison Platform</title>
     <style>
       :root { color-scheme: light; }
       * { box-sizing: border-box; }
@@ -24,21 +24,12 @@
   <body>
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
-      <h1>Products</h1>
-      <p class="subtitle">Product catalog, detail, offer, sync, and related-product endpoints.</p>
+      <h1>Root</h1>
+      <p class="subtitle">Minimal application endpoint exposed at the root path.</p>
       <section class="panel">
-        <h2>Endpoints</h2>
+        <h2>Endpoint</h2>
         <ul>
-          <li><code>GET /api/v1/products</code> - list products.</li>
-          <li><code>GET /api/v1/products/categories</code> - get categories tree for product browsing.</li>
-          <li><code>GET /api/v1/products/:id/card</code> - get product card with summary stats.</li>
-          <li><code>GET /api/v1/products/:id/offers</code> - get product offers with sorting/filtering.</li>
-          <li><code>GET /api/v1/products/:id/price-history</code> - get product price history.</li>
-          <li><code>GET /api/v1/products/:id/related</code> - get related products.</li>
-          <li><code>POST /api/v1/products/:id/sync</code> - enqueue product sync job.</li>
-          <li><code>GET /api/v1/products/sync-jobs/:jobId</code> - check sync job status.</li>
-          <li><code>POST /api/v1/products/:id/analytics/rebuild</code> - enqueue analytics rebuild job.</li>
-          <li><code>GET /api/v1/products/analytics-jobs/:jobId</code> - check analytics job status.</li>
+          <li><code>GET /</code> - application hello / health-style entrypoint.</li>
         </ul>
       </section>
     </main>

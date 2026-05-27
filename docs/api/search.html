@@ -25,15 +25,16 @@
     <main class="container">
       <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
       <h1>Search</h1>
-      <p class="subtitle">Meilisearch-backed search endpoints, health checks, and index statistics.</p>
+      <p class="subtitle">Meilisearch-backed search endpoints, health checks, task tracking, and index statistics.</p>
       <section class="panel">
         <h2>Endpoints</h2>
         <ul>
-          <li><code>GET /api/v1/search</code></li>
-          <li><code>GET /api/v1/search/suggestions</code></li>
-          <li><code>GET /api/v1/search/advanced</code></li>
-          <li><code>GET /api/v1/search/health</code></li>
-          <li><code>GET /api/v1/search/stats</code></li>
+          <li><code>GET /api/v1/search</code> - full-text search with filtering and sorting.</li>
+          <li><code>GET /api/v1/search/advanced</code> - advanced search with facets and applied filters.</li>
+          <li><code>GET /api/v1/search/suggestions</code> - autocomplete suggestions.</li>
+          <li><code>GET /api/v1/search/health</code> - search service health check.</li>
+          <li><code>GET /api/v1/search/stats</code> - index statistics.</li>
+          <li><code>GET /api/v1/search/task/:taskId</code> - async index task status.</li>
         </ul>
       </section>
     </main>
