@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Reference | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+      .container { max-width: 980px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+      .card { display: block; text-decoration: none; color: inherit; border: 1px solid #cbd5e1; border-radius: 14px; padding: 20px; background: #fff; transition: transform 0.16s ease, box-shadow 0.16s ease; }
+      .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12); }
+      .card h2 { margin: 0 0 8px; font-size: 20px; }
+      .card p { margin: 0; color: #334155; line-height: 1.6; }
+      .card span { color: #1d4ed8; font-weight: 600; display: inline-block; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="../index.html">Back to docs home</a></div>
+      <h1>API Reference</h1>
+      <p class="subtitle">HTML landing page for endpoint-group documentation. Each section below links to a browser-friendly index page for a real controller or route group.</p>
+
+      <section class="grid">
+        <a class="card" href="./root.html">
+          <h2>Root</h2>
+          <p>Basic application hello endpoint.</p>
+          <span>Open root docs</span>
+        </a>
+
+        <a class="card" href="./authentication.html">
+          <h2>Authentication</h2>
+          <p>Token verification, current user, and logout routes.</p>
+          <span>Open auth docs</span>
+        </a>
+
+        <a class="card" href="./categories.html">
+          <h2>Categories</h2>
+          <p>Category tree, category details, category products, and facets.</p>
+          <span>Open categories docs</span>
+        </a>
+
+        <a class="card" href="./carts.html">
+          <h2>Carts</h2>
+          <p>Current cart, add, update, and delete cart items.</p>
+          <span>Open carts docs</span>
+        </a>
+
+        <a class="card" href="./cart-optimization.html">
+          <h2>Cart Optimization</h2>
+          <p>Optimize cart fulfillment and pricing decisions.</p>
+          <span>Open optimization docs</span>
+        </a>
+
+        <a class="card" href="./products.html">
+          <h2>Products</h2>
+          <p>Catalog, product detail, offers, price history, sync jobs, and related products.</p>
+          <span>Open products docs</span>
+        </a>
+
+        <a class="card" href="./recipes.html">
+          <h2>Recipes</h2>
+          <p>Recipe list, recipe details, categories, and related recipes.</p>
+          <span>Open recipes docs</span>
+        </a>
+
+        <a class="card" href="./stores.html">
+          <h2>Stores</h2>
+          <p>Store brand listing and store-scoped product browsing.</p>
+          <span>Open stores docs</span>
+        </a>
+
+        <a class="card" href="./search.html">
+          <h2>Search</h2>
+          <p>Search, advanced search, suggestions, health, stats, and task status.</p>
+          <span>Open search docs</span>
+        </a>
+
+        <a class="card" href="./users.html">
+          <h2>Users</h2>
+          <p>User favorites endpoints for the authenticated user.</p>
+          <span>Open users docs</span>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

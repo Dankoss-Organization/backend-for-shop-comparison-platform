@@ -1,0 +1,16 @@
+graph TD
+  subgraph K8s
+    Ingress[Ingress / LoadBalancer]
+    API[API Deployment]
+    Workers[Worker Deployment]
+    DB[(Postgres StatefulSet)]
+    Redis[(Redis)]
+    Search[(Search Cluster)]
+  end
+  Ingress --> API
+  API --> DB
+  API --> Redis
+  API -->|enqueue| Q[Queue Service]
+  Q --> Workers
+  Workers --> DB
+  Workers --> Search

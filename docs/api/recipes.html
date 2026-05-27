@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recipes API | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: #f8fafc; }
+      .container { max-width: 920px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      li, p { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
+      <h1>Recipes</h1>
+      <p class="subtitle">Recipe catalog endpoints for listing, details, categories, and related recipes.</p>
+      <section class="panel">
+        <h2>GET /api/v1/recipes</h2>
+        <p>Returns paginated recipe cards with search, category, difficulty, and sorting filters.</p>
+        <pre>GET /api/v1/recipes?page=1&limit=20&search=pasta&difficulty=easy&sort=rating</pre>
+        <pre>{
+  "items": [
+    {
+      "id": "rec-1",
+      "name": "Creamy Pasta",
+      "imageUrl": "https://images.example.com/recipe.jpg",
+      "difficulty": "easy",
+      "prepTime": 25,
+      "servings": 2,
+      "categoryId": "cat-pasta",
+      "avgRating": 4.8,
+      "reviewCount": 18
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/recipes/categories</h2>
+        <p>Returns the recipe category tree, or a subtree when <code>parentId</code> is provided.</p>
+        <pre>GET /api/v1/recipes/categories?parentId=cat-desserts</pre>
+        <pre>{
+  "categories": [
+    {
+      "id": "cat-desserts",
+      "name": "Desserts",
+      "parentId": null,
+      "recipeCount": 12,
+      "children": []
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/recipes/:id/related</h2>
+        <p>Returns related recipes based on category and difficulty.</p>
+        <pre>GET /api/v1/recipes/rec-1/related?limit=8</pre>
+        <pre>{
+  "recipeId": "rec-1",
+  "related": [
+    {
+      "id": "rec-2",
+      "name": "Garlic Pasta",
+      "difficulty": "easy",
+      "prepTime": 20
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/recipes/:id</h2>
+        <p>Returns a single recipe with ingredients, equipment, reviews, and aggregate rating data.</p>
+        <pre>GET /api/v1/recipes/rec-1</pre>
+        <pre>{
+  "id": "rec-1",
+  "name": "Creamy Pasta",
+  "imageUrl": "https://images.example.com/recipe.jpg",
+  "instructions": "Boil pasta, prepare sauce, combine and serve.",
+  "difficulty": "easy",
+  "prepTime": 25,
+  "servings": 2,
+  "category": { "id": "cat-pasta", "name": "Pasta" },
+  "avgRating": 4.8,
+  "reviewCount": 18
+}</pre>
+      </section>
+    </main>
+  </body>
+</html>

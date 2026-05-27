@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Authentication API | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: #f8fafc; }
+      .container { max-width: 920px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      li, p { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code { font-family: Consolas, "Courier New", monospace; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
+      <h1>Authentication</h1>
+      <p class="subtitle">Bearer-token verification, current user lookup, and session logout. The controller is mounted at <code>/auth</code>, not <code>/api/v1/auth</code>.</p>
+      <section class="panel">
+        <h2>Endpoints</h2>
+        <p><code>POST /auth/verify</code></p>
+        <p>Verifies a bearer token, creates a session, and returns the authenticated user.</p>
+        <pre>{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIs..."
+}</pre>
+        <pre>{
+  "user": {
+    "id": "usr_123",
+    "email": "alice@example.com"
+  }
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /auth/me</h2>
+        <p>Returns the current authenticated user from the active JWT session.</p>
+        <pre>{
+  "user": {
+    "id": "usr_123",
+    "email": "alice@example.com"
+  }
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>POST /auth/logout</h2>
+        <p>Revokes the current token session. Successful responses return HTTP 204 and no body.</p>
+        <pre>{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIs..."
+}</pre>
+      </section>
+    </main>
+  </body>
+</html>

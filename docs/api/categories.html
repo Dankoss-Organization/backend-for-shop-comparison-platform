@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Categories API | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: #f8fafc; }
+      .container { max-width: 920px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      li, p { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
+      <h1>Categories</h1>
+      <p class="subtitle">Category tree, category metadata, category product listing, and category facets.</p>
+      <section class="panel">
+        <h2>GET /api/v1/categories</h2>
+        <p>Returns the full category tree, or a subtree when <code>parentId</code> is present.</p>
+        <pre>GET /api/v1/categories?parentId=cat-food</pre>
+        <pre>{
+  "categories": [
+    {
+      "id": "cat-food",
+      "name": "Food",
+      "parentId": null,
+      "recipeCount": 0,
+      "children": []
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/categories/:categorySlug</h2>
+        <p>Returns metadata for a single category identified by slug.</p>
+        <pre>GET /api/v1/categories/pasta</pre>
+        <pre>{
+  "id": "cat-pasta",
+  "name": "Pasta",
+  "slug": "pasta",
+  "parentId": "cat-food"
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/categories/:categorySlug/products</h2>
+        <p>Returns products inside the selected category with filters, sorting, and pagination.</p>
+        <pre>GET /api/v1/categories/pasta/products?page=1&limit=20&inStock=true&sort=price_desc</pre>
+        <pre>{
+  "category": {
+    "id": "cat-pasta",
+    "slug": "pasta",
+    "name": "Pasta"
+  },
+  "items": [
+    {
+      "id": "prod-1",
+      "productId": "BAR-005",
+      "canonicalName": "Spaghetti Barilla No.5 500g",
+      "brand": "Barilla",
+      "media": ["https://images.example.com/barilla.jpg"],
+      "currentPrice": 45.99,
+      "regularPrice": 59.99,
+      "discountPercent": 23,
+      "currency": "UAH",
+      "availabilityStatus": "in_stock"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/categories/:categorySlug/facets</h2>
+        <p>Returns filter facets for the selected category, including brand, store, availability, and price range.</p>
+        <pre>GET /api/v1/categories/pasta/facets</pre>
+        <pre>{
+  "brands": [
+    { "name": "Barilla", "count": 12 }
+  ],
+  "priceRange": { "min": 39.99, "max": 89.99 },
+  "ratings": [],
+  "stores": [
+    { "id": "s_silpo", "name": "Silpo", "count": 8 }
+  ],
+  "availability": {
+    "inStock": 8,
+    "outOfStock": 2
+  }
+}</pre>
+      </section>
+    </main>
+  </body>
+</html>

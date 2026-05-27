@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stores API | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: #f8fafc; }
+      .container { max-width: 920px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      li, p { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
+      <h1>Stores</h1>
+      <p class="subtitle">Store brand listing and store-scoped product browsing endpoints.</p>
+      <section class="panel">
+        <h2>GET /api/v1/stores</h2>
+        <p>Returns the available store brands and their location counts.</p>
+        <pre>{
+  "stores": [
+    {
+      "id": "s_silpo",
+      "brand": "Silpo",
+      "logo": "https://assets.dankoss.ua/logos/silpo.png",
+      "website": "https://silpo.ua",
+      "locationCount": 42
+    }
+  ]
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/stores/:storeId/products</h2>
+        <p>Returns products sold in a specific store with the same filtering model as the product catalog.</p>
+        <pre>GET /api/v1/stores/s_silpo/products?page=1&limit=20&search=barilla&sort=price_asc</pre>
+        <pre>{
+  "storeId": "s_silpo",
+  "storeName": "Сільпо",
+  "items": [
+    {
+      "id": "off-1",
+      "productId": "BAR-005",
+      "canonicalName": "Spaghetti Barilla No.5 500g",
+      "brand": "Barilla",
+      "media": "https://images.example.com/barilla.jpg",
+      "currentPrice": 45.99,
+      "regularPrice": 59.99,
+      "discountPercent": 23,
+      "currency": "UAH",
+      "availabilityStatus": "in_stock"
+    }
+  ],
+  "total": 85,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 5
+}</pre>
+      </section>
+    </main>
+  </body>
+</html>

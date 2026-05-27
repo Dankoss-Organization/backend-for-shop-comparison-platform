@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multithreading & Workers | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 100%); }
+      .container { max-width: 960px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      p, li { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+      code, pre { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./index.html">Back to docs index</a></div>
+      <h1>Мультипоточність та Воркери</h1>
+      <p class="subtitle">Модель конкурентності, поведінка фонівих процесів і рекомендації з налаштування фонових задач.</p>
+
+      <section class="panel">
+        <h2>Область покриття</h2>
+        <ul>
+          <li>Розмежування API та воркерів</li>
+          <li>Потоки: `ENABLE_WORKER_THREADS`</li>
+          <li>Налаштування черг та паралельність</li>
+          <li>Поради та усунення несправностей</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Ключові налаштування (приклад)</h2>
+        <pre><code>WORKER_CONCURRENCY=4
+ENABLE_WORKER_THREADS=true
+ANALYTICS_WORKER_CONCURRENCY=2
+UV_THREADPOOL_SIZE=8</code></pre>
+        <p>Детальніше про поведінку воркерів та модель конкурентності дивіться у [docs/multithreading.md](multithreading.md).</p>
+      </section>
+    </main>
+  </body>
+</html>

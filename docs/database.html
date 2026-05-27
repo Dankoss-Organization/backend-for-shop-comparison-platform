@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Database | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: radial-gradient(circle at top right, #e0f2fe 0%, #f8fafc 45%, #ecfeff 100%); }
+      .container { max-width: 960px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      p, li { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+      code, pre { font-family: Consolas, "Courier New", monospace; }
+      .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+      .links a { display: inline-block; padding: 8px 12px; border-radius: 999px; background: #eff6ff; color: #1e3a8a; text-decoration: none; border: 1px solid #bfdbfe; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./index.html">Back to docs index</a></div>
+      <h1>Database</h1>
+      <p class="subtitle">Prisma schema overview, migration flow, seed scripts, and the local test database setup.</p>
+
+      <section class="panel">
+        <h2>Scope</h2>
+        <ul>
+          <li>Schema reference and Prisma model navigation</li>
+          <li>Migrations and seed scripts</li>
+          <li>Backups and restore procedures</li>
+          <li>Test DB setup for CI</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Useful Links</h2>
+        <div class="links">
+          <a href="./db/">Generated DB docs</a>
+          <a href="./testing.html">Testing docs</a>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Example Commands</h2>
+        <pre><code>npm run prisma:generate
+npm run prisma:migrate
+npx prisma db seed</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

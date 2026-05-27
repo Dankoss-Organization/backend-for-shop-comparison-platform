@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jobs / Queue API | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: #f8fafc; }
+      .container { max-width: 920px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      li, p { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./reference.html">Back to API reference</a></div>
+      <h1>Jobs / Queue</h1>
+      <p class="subtitle">Background job status endpoints for product sync and analytics jobs. The current backend does not expose a public <code>/api/v1/queues</code> endpoint.</p>
+      <section class="panel">
+        <h2>GET /api/v1/products/sync-jobs/:jobId</h2>
+        <p>Checks the status of a previously enqueued product sync job.</p>
+        <pre>GET /api/v1/products/sync-jobs/123</pre>
+        <pre>{
+  "queue": "product-sync",
+  "jobId": "123",
+  "name": "product-sync",
+  "status": "completed",
+  "attemptsMade": 0,
+  "data": { "productId": "BAR-005", "source": "manual-refresh" },
+  "result": { "productId": "prod-1", "offersCount": 8, "bestPrice": 45.99 },
+  "failedReason": null
+}</pre>
+      </section>
+      <section class="panel">
+        <h2>GET /api/v1/products/analytics-jobs/:jobId</h2>
+        <p>Checks the status of a product analytics rebuild job.</p>
+        <pre>GET /api/v1/products/analytics-jobs/456</pre>
+        <pre>{
+  "queue": "product-analytics",
+  "jobId": "456",
+  "name": "product-analytics",
+  "status": "queued",
+  "attemptsMade": 0,
+  "data": { "productId": "BAR-005", "period": "30d", "source": "manual-analytics" },
+  "result": null,
+  "failedReason": null
+}</pre>
+      </section>
+    </main>
+  </body>
+</html>

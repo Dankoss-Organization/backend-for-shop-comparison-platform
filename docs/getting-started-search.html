@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Getting Started with Search | Shop Comparison Platform</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 100%); }
+      .container { max-width: 960px; margin: 0 auto; padding: 44px 20px 56px; }
+      .topbar { margin-bottom: 20px; }
+      .topbar a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+      .topbar a:hover { text-decoration: underline; }
+      h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); }
+      .subtitle { margin-top: 10px; color: #334155; line-height: 1.6; font-size: 17px; }
+      .panel { margin-top: 22px; padding: 22px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+      .panel h2 { margin: 0 0 10px; font-size: 22px; }
+      p, li { color: #334155; line-height: 1.6; }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      pre { margin: 12px 0 0; padding: 14px; border-radius: 12px; background: #0f172a; color: #e2e8f0; overflow-x: auto; }
+      code, pre { font-family: Consolas, "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="topbar"><a href="./search.html">Back to Search docs</a></div>
+      <h1>Getting Started with Search</h1>
+      <p class="subtitle">Quick start guide for setting up Meilisearch, the API, and the worker process in a local environment.</p>
+
+      <section class="panel">
+        <h2>Setup Flow</h2>
+        <ol>
+          <li>Configure environment variables</li>
+          <li>Start services with Docker Compose</li>
+          <li>Run migrations and seed data</li>
+          <li>Start API and worker processes</li>
+          <li>Verify health endpoints</li>
+        </ol>
+      </section>
+
+      <section class="panel">
+        <h2>Example Commands</h2>
+        <pre><code>docker compose up -d
+npm install
+npm run prisma:migrate
+npx prisma db seed
+npm run start:dev
+npm run start:worker:dev</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant SyncProducer as API/Sync
+  participant Queue as Queue
+  participant Worker as Worker
+  participant DB as Database
+  participant Search as SearchIndex
+
+  SyncProducer->>Queue: enqueue(sync-store)
+  Queue->>Worker: deliver job
+  Worker->>DB: fetch store data
+  Worker->>Search: index documents
+  Worker->>Storage: upload images
+  Worker->>Metrics: emit metrics
