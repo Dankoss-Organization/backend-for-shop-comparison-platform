@@ -309,7 +309,8 @@ export class ProductsService {
       categorySlug,
     });
 
-    const { categoryNode, nodesById } = await this.resolveCategoryNode(categorySlug);
+    const { categoryNode, nodesById } =
+      await this.resolveCategoryNode(categorySlug);
 
     const parent = categoryNode.parentId
       ? nodesById.get(categoryNode.parentId)
@@ -1273,6 +1274,7 @@ export class ProductsService {
         store: {
           id: offer.store.id,
           brand: offer.store.brand.name,
+          name: offer.store.brand.name,
           city: offer.store.city,
           address: offer.store.address,
         },
@@ -1343,7 +1345,6 @@ export class ProductsService {
     } else {
       from.setMonth(from.getMonth() - amount);
     }
-
     return from;
   }
 
@@ -1352,14 +1353,6 @@ export class ProductsService {
     period: string,
     includePoints = false,
   ) {
-    this.logger.info("Collecting history stats", {
-      service: "ProductsService",
-      method: "collectHistoryStats",
-      productId,
-      period,
-      includePoints,
-    });
-
     const from = this.parsePeriod(period);
     const aggregateRows = await this.prisma.$queryRaw<
       HistoryAggregateRow[]
