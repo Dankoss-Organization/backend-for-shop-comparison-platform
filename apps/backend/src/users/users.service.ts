@@ -206,4 +206,63 @@ export class UsersService {
       avatarUrl: user.image ?? null,
     };
   }
-}
++
++  async getMyBaskets(userId: string) {
++    const carts = await this.prisma.cart.findMany({
++      where: {
++        userId,
++        isFinished: true,
++      },
++      include: {
++        items: {
++          include: {
++            offer: {
++              include: {
++                product: {
++                  select: {
++                    productId: true,
++                    canonicalName: true,
++                    mainImage: true,
++                  },
++                },
++                store: {
++                  include: {
++                    brand: true,
++                  },
++                },
++              },
++            },
++          },
++        },
++      },
++      orderBy: { createdAt: "desc" },
++    });
++
++    return carts.map((cart) => ({
++      id: cart.id,
++      paidTime: cart.paidTime ?? null,
++      items: cart.items.map((item) => ({
++        id: item.id,
++        quantity: item.quantity,
++        price: Number(item.price),
++        offer: {
++          id: item.offer.id,
++          currentPrice: Number(item.offer.currentPrice),
++          discountPrice: item.offer.discountPrice ? Number(item.offer.discountPrice) : null,
++          product: {
++            productId: item.offer.product.productId,
++            canonicalName: item.offer.product.canonicalName,
++            media: item.offer.product.mainImage,
++          },
++          store: {
++            id: item.offer.store.id,
++            brand: item.offer.store.brand.name,
++            city: item.offer.store.city,
++          },
++        },
++      })),
++      sum: Number(cart.sum),
++      discountSum: Number(cart.discountSum),
++    }));
++  }
++}

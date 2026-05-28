@@ -132,6 +132,29 @@ export class UsersController {
     return this.usersService.getMyProfile(req.user.id);
   }
 
+  @ApiOperation({ summary: "Get current user basket history" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "List of user's past baskets.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          paidTime: { type: "string", format: "date-time", nullable: true },
+          items: { type: "array" },
+          sum: { type: "number" },
+          discountSum: { type: "number" },
+        },
+      },
+    },
+  })
+  @Get("me/baskets")
+  getMyBaskets(@Request() req: { user: { id: string } }) {
+    return this.usersService.getMyBaskets(req.user.id);
+  }
+
   @ApiOperation({ summary: "Update current user profile" })
   @ApiBearerAuth()
   @ApiOkResponse({
