@@ -1,4 +1,12 @@
-import { Controller, Delete, Get, Param, Post, Request, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -90,5 +98,28 @@ export class UsersController {
     @Param("productId") productId: string,
   ) {
     return this.usersService.removeProductFromFavorites(req.user.id, productId);
+  }
+
+  @ApiOperation({ summary: "Get current user profile" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Current user profile returned successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", example: "Ivan Petrov" },
+        email: { type: "string", example: "ivan@example.com" },
+        avatarUrl: {
+          type: "string",
+          example: "https://.../avatar.png",
+          nullable: true,
+        },
+        city: { type: "string", example: "Kyiv", nullable: true },
+      },
+    },
+  })
+  @Get("me")
+  getMyProfile(@Request() req: { user: { id: string } }) {
+    return this.usersService.getMyProfile(req.user.id);
   }
 }

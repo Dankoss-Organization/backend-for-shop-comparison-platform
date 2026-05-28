@@ -5,6 +5,28 @@ import { PrismaService } from "../prisma/prisma.service";
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getMyProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        image: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.image ?? null,
+      city: null,
+    };
+  }
+
   async removeProductFromFavorites(userId: string, productId: string) {
     const product = await this.prisma.product.findUnique({
       where: {
@@ -131,7 +153,9 @@ export class UsersService {
       new Set(
         rows
           .map((row) => row.favouriteProduct?.product.productId)
-          .filter((productId): productId is string => typeof productId === "string"),
+          .filter(
+            (productId): productId is string => typeof productId === "string",
+          ),
       ),
     );
 
