@@ -5,6 +5,28 @@ import { PrismaService } from "../prisma/prisma.service";
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getMyProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        image: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.image ?? null,
+      city: null,
+    };
+  }
+
   async removeProductFromFavorites(userId: string, productId: string) {
     const product = await this.prisma.product.findUnique({
       where: {
@@ -131,12 +153,197 @@ export class UsersService {
       new Set(
         rows
           .map((row) => row.favouriteProduct?.product.productId)
-          .filter((productId): productId is string => typeof productId === "string"),
+          .filter(
+            (productId): productId is string => typeof productId === "string",
+          ),
       ),
     );
 
     return {
       productIds,
     };
+  }
+
+  async updateMyProfile(
+    userId: string,
+    data: { name?: string; city?: string },
+  ) {
+    // Prepare update object only with provided fields
+    const updateData: any = {};
+    if (typeof data.name === "string") updateData.name = data.name;
+    if (typeof data.city === "string") updateData.city = data.city;
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { name: true, email: true, image: true, city: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.image ?? null,
+      city: user.city ?? null,
+    };
+  }
+
+  async uploadUserAvatar(userId: string, avatarPath: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { image: avatarPath },
+      select: { name: true, email: true, image: true, city: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      avatarUrl: user.image ?? null,
+    };
+  }
+
+  async getMyPreferences(userId: string) {
+    const [user, allergens, diets] = await this.prisma.$transaction([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { healthGoals: true, lifestyle: true },
+      }),
+      this.prisma.allergen.findMany({
+        where: { userId },
+        select: { name: true },
+      }),
+      this.prisma.diet.findMany({
+        where: { userId },
+        select: { name: true },
+      }),
+    ]);
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      allergies: allergens.map((allergen) => allergen.name),
+      diet: diets.map((diet) => diet.name),
+      healthGoals: Array.isArray(user.healthGoals) ? user.healthGoals : [],
+      lifestyle: Array.isArray(user.lifestyle) ? user.lifestyle : [],
+    };
+  }
+
+  async updateMyPreferences(
+    userId: string,
+    data: {
+      allergies?: string[];
+      diet?: string[];
+      healthGoals?: string[];
+      lifestyle?: string[];
+    },
+  ) {
+    const shouldUpdateAllergens = data.allergies !== undefined;
+    const shouldUpdateDiets = data.diet !== undefined;
+    const shouldUpdateUser =
+      data.healthGoals !== undefined || data.lifestyle !== undefined;
+
+    if (shouldUpdateAllergens || shouldUpdateDiets || shouldUpdateUser) {
+      await this.prisma.$transaction(async (tx) => {
+        if (shouldUpdateAllergens) {
+          await tx.allergen.deleteMany({ where: { userId } });
+          if (data.allergies && data.allergies.length > 0) {
+            await tx.allergen.createMany({
+              data: data.allergies.map((name) => ({ name, userId })),
+            });
+          }
+        }
+
+        if (shouldUpdateDiets) {
+          await tx.diet.deleteMany({ where: { userId } });
+          if (data.diet && data.diet.length > 0) {
+            await tx.diet.createMany({
+              data: data.diet.map((name) => ({ name, userId })),
+            });
+          }
+        }
+
+        if (shouldUpdateUser) {
+          const updateData: any = {};
+          if (data.healthGoals !== undefined)
+            updateData.healthGoals = data.healthGoals;
+          if (data.lifestyle !== undefined)
+            updateData.lifestyle = data.lifestyle;
+          await tx.user.update({
+            where: { id: userId },
+            data: updateData,
+          });
+        }
+      });
+    }
+
+    return this.getMyPreferences(userId);
+  }
+
+  async getMyBaskets(userId: string) {
+    const carts = await this.prisma.cart.findMany({
+      where: {
+        userId,
+        isFinished: true,
+      },
+      include: {
+        items: {
+          include: {
+            offer: {
+              include: {
+                product: {
+                  select: {
+                    productId: true,
+                    canonicalName: true,
+                    mainImage: true,
+                  },
+                },
+                store: {
+                  include: {
+                    brand: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return carts.map((cart) => ({
+      id: cart.id,
+      paidTime: cart.paidTime ?? null,
+      items: cart.items.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        price: Number(item.price),
+        offer: {
+          id: item.offer.id,
+          currentPrice: Number(item.offer.currentPrice),
+          discountPrice: item.offer.discountPrice
+            ? Number(item.offer.discountPrice)
+            : null,
+          product: {
+            productId: item.offer.product.productId,
+            canonicalName: item.offer.product.canonicalName,
+            media: item.offer.product.mainImage,
+          },
+          store: {
+            id: item.offer.store.id,
+            brand: item.offer.store.brand.name,
+            city: item.offer.store.city,
+          },
+        },
+      })),
+      sum: Number(cart.sum),
+      discountSum: Number(cart.discountSum),
+    }));
   }
 }
