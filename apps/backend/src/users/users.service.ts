@@ -207,6 +207,85 @@ export class UsersService {
     };
   }
 
+  async getMyPreferences(userId: string) {
+    const [user, allergens, diets] = await this.prisma.$transaction([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { healthGoals: true, lifestyle: true },
+      }),
+      this.prisma.allergen.findMany({
+        where: { userId },
+        select: { name: true },
+      }),
+      this.prisma.diet.findMany({
+        where: { userId },
+        select: { name: true },
+      }),
+    ]);
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      allergies: allergens.map((allergen) => allergen.name),
+      diet: diets.map((diet) => diet.name),
+      healthGoals: Array.isArray(user.healthGoals) ? user.healthGoals : [],
+      lifestyle: Array.isArray(user.lifestyle) ? user.lifestyle : [],
+    };
+  }
+
+  async updateMyPreferences(
+    userId: string,
+    data: {
+      allergies?: string[];
+      diet?: string[];
+      healthGoals?: string[];
+      lifestyle?: string[];
+    },
+  ) {
+    const shouldUpdateAllergens = data.allergies !== undefined;
+    const shouldUpdateDiets = data.diet !== undefined;
+    const shouldUpdateUser =
+      data.healthGoals !== undefined || data.lifestyle !== undefined;
+
+    if (shouldUpdateAllergens || shouldUpdateDiets || shouldUpdateUser) {
+      await this.prisma.$transaction(async (tx) => {
+        if (shouldUpdateAllergens) {
+          await tx.allergen.deleteMany({ where: { userId } });
+          if (data.allergies && data.allergies.length > 0) {
+            await tx.allergen.createMany({
+              data: data.allergies.map((name) => ({ name, userId })),
+            });
+          }
+        }
+
+        if (shouldUpdateDiets) {
+          await tx.diet.deleteMany({ where: { userId } });
+          if (data.diet && data.diet.length > 0) {
+            await tx.diet.createMany({
+              data: data.diet.map((name) => ({ name, userId })),
+            });
+          }
+        }
+
+        if (shouldUpdateUser) {
+          const updateData: any = {};
+          if (data.healthGoals !== undefined)
+            updateData.healthGoals = data.healthGoals;
+          if (data.lifestyle !== undefined)
+            updateData.lifestyle = data.lifestyle;
+          await tx.user.update({
+            where: { id: userId },
+            data: updateData,
+          });
+        }
+      });
+    }
+
+    return this.getMyPreferences(userId);
+  }
+
   async getMyBaskets(userId: string) {
     const carts = await this.prisma.cart.findMany({
       where: {

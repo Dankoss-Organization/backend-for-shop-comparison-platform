@@ -26,6 +26,7 @@ import { diskStorage } from "multer";
 import * as fs from "fs";
 import * as path from "path";
 import { UpdateMeDto } from "./dto/update-me.dto";
+import { UpdatePreferencesDto } from "./dto/update-preferences.dto";
 
 @ApiTags("users")
 @Controller("api/v1/users")
@@ -130,6 +131,71 @@ export class UsersController {
   @Get("me")
   getMyProfile(@Request() req: { user: { id: string } }) {
     return this.usersService.getMyProfile(req.user.id);
+  }
+
+  @ApiOperation({ summary: "Get current user preferences" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Current user preferences returned successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        allergies: {
+          type: "array",
+          items: { type: "string" },
+        },
+        diet: {
+          type: "array",
+          items: { type: "string" },
+        },
+        healthGoals: {
+          type: "array",
+          items: { type: "string" },
+        },
+        lifestyle: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    },
+  })
+  @Get("me/preferences")
+  getMyPreferences(@Request() req: { user: { id: string } }) {
+    return this.usersService.getMyPreferences(req.user.id);
+  }
+
+  @ApiOperation({ summary: "Update current user preferences" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Current user preferences updated successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        allergies: {
+          type: "array",
+          items: { type: "string" },
+        },
+        diet: {
+          type: "array",
+          items: { type: "string" },
+        },
+        healthGoals: {
+          type: "array",
+          items: { type: "string" },
+        },
+        lifestyle: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    },
+  })
+  @Put("me/preferences")
+  updateMyPreferences(
+    @Request() req: { user: { id: string } },
+    @Body() body: UpdatePreferencesDto,
+  ) {
+    return this.usersService.updateMyPreferences(req.user.id, body);
   }
 
   @ApiOperation({ summary: "Get current user basket history" })
