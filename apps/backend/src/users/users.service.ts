@@ -163,4 +163,47 @@ export class UsersService {
       productIds,
     };
   }
+
+  async updateMyProfile(
+    userId: string,
+    data: { name?: string; city?: string },
+  ) {
+    // Prepare update object only with provided fields
+    const updateData: any = {};
+    if (typeof data.name === "string") updateData.name = data.name;
+    if (typeof data.city === "string") updateData.city = data.city;
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { name: true, email: true, image: true, city: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.image ?? null,
+      city: user.city ?? null,
+    };
+  }
+
+  async uploadUserAvatar(userId: string, avatarPath: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { image: avatarPath },
+      select: { name: true, email: true, image: true, city: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User '${userId}' not found`);
+    }
+
+    return {
+      avatarUrl: user.image ?? null,
+    };
+  }
 }
