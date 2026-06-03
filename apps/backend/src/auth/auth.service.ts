@@ -20,6 +20,15 @@ export class AuthService {
     private readonly betterAuth: BetterAuthService,
   ) {}
 
+  private serializeUser(user: any) {
+    if (!user) return null;
+    const { password, image, ...rest } = user;
+    return {
+      ...rest,
+      avatarUrl: image ?? null,
+    };
+  }
+
   /**
    * Validate a bearer token and return a `User` record, creating one if needed.
    * Returns null when token is invalid.
@@ -128,7 +137,7 @@ export class AuthService {
       },
     });
 
-    return user;
+    return this.serializeUser(user);
   }
 
   /** Authenticate user by email/password and create a session token */
@@ -148,6 +157,41 @@ export class AuthService {
     const token = randomBytes(48).toString("hex");
     await this.createSessionForToken(user.id, token, ip, userAgent);
 
-    return { user, token };
+    return { user: this.serializeUser(user), token };
+  }
+
+  /** Change user password after verifying current password */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.password) throw new UnauthorizedException();
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match)
+      throw new UnauthorizedException("Current password is incorrect");
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed },
+    });
+  }
+
+  /** Get all active sessions for a user */
+  async getUserSessions(userId: string) {
+    return this.prisma.session.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /** Delete a specific session by id */
+  async deleteSessionById(sessionId: string) {
+    return this.prisma.session.delete({
+      where: { id: sessionId },
+    });
   }
 }

@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config();
+import * as express from "express";
 import { NestFactory } from "@nestjs/core";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
@@ -24,6 +25,8 @@ async function bootstrap() {
     origin: process.env.CLIENT_URL,
     credentials: true,
   });
+
+  app.use("/auth", express.json());
 
   // Register global guards from DI so they can use providers
   const authGuard = app.get(AuthGuard);
