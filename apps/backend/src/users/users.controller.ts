@@ -27,6 +27,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { UpdateMeDto } from "./dto/update-me.dto";
 import { UpdatePreferencesDto } from "./dto/update-preferences.dto";
+import { CreateLocationDto } from "./dto/create-location.dto";
 
 @ApiTags("users")
 @Controller("api/v1/users")
@@ -162,6 +163,96 @@ export class UsersController {
   @Get("me/preferences")
   getMyPreferences(@Request() req: { user: { id: string } }) {
     return this.usersService.getMyPreferences(req.user.id);
+  }
+
+  @ApiOperation({ summary: "Get current user locations" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Current user locations returned successfully.",
+    schema: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          label: { type: "string", nullable: true },
+          address: { type: "string" },
+          city: { type: "string", nullable: true },
+          latitude: { type: "number", nullable: true },
+          longitude: { type: "number", nullable: true },
+          isDefault: { type: "boolean" },
+        },
+      },
+    },
+  })
+  @Get("me/locations")
+  getMyLocations(@Request() req: { user: { id: string } }) {
+    return this.usersService.getMyLocations(req.user.id);
+  }
+
+  @ApiOperation({ summary: "Create a new user location" })
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: "Location created successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        label: { type: "string", nullable: true },
+        address: { type: "string" },
+        city: { type: "string", nullable: true },
+        latitude: { type: "number", nullable: true },
+        longitude: { type: "number", nullable: true },
+        isDefault: { type: "boolean" },
+      },
+    },
+  })
+  @Post("me/locations")
+  createMyLocation(
+    @Request() req: { user: { id: string } },
+    @Body() body: CreateLocationDto,
+  ) {
+    return this.usersService.createMyLocation(req.user.id, body);
+  }
+
+  @ApiOperation({ summary: "Set default user location" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Default location set successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean" },
+        locationId: { type: "string" },
+      },
+    },
+  })
+  @Put("me/locations/:id")
+  setDefaultLocation(
+    @Request() req: { user: { id: string } },
+    @Param("id") id: string,
+  ) {
+    return this.usersService.setDefaultLocation(req.user.id, id);
+  }
+
+  @ApiOperation({ summary: "Delete a user location" })
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Location deleted successfully.",
+    schema: {
+      type: "object",
+      properties: {
+        success: { type: "boolean" },
+        locationId: { type: "string" },
+      },
+    },
+  })
+  @Delete("me/locations/:id")
+  deleteMyLocation(
+    @Request() req: { user: { id: string } },
+    @Param("id") id: string,
+  ) {
+    return this.usersService.deleteMyLocation(req.user.id, id);
   }
 
   @ApiOperation({ summary: "Update current user preferences" })

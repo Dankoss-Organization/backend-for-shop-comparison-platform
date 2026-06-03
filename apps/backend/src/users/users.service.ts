@@ -286,6 +286,91 @@ export class UsersService {
     return this.getMyPreferences(userId);
   }
 
+  async getMyLocations(userId: string) {
+    return this.prisma.userLocation.findMany({
+      where: { userId },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+    });
+  }
+
+  async createMyLocation(
+    userId: string,
+    data: {
+      label?: string;
+      address: string;
+      city?: string;
+      latitude?: number;
+      longitude?: number;
+      isDefault?: boolean;
+    },
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      if (data.isDefault) {
+        await tx.userLocation.updateMany({
+          where: { userId },
+          data: { isDefault: false },
+        });
+      }
+
+      const location = await tx.userLocation.create({
+        data: {
+          userId,
+          label: data.label,
+          address: data.address,
+          city: data.city,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          isDefault: Boolean(data.isDefault),
+        },
+      });
+
+      return location;
+    });
+  }
+
+  async setDefaultLocation(userId: string, locationId: string) {
+    const location = await this.prisma.userLocation.findFirst({
+      where: { id: locationId, userId },
+      select: { id: true },
+    });
+
+    if (!location) {
+      throw new NotFoundException(`Location '${locationId}' not found`);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userLocation.updateMany({
+        where: { userId },
+        data: { isDefault: false },
+      });
+
+      await tx.userLocation.update({
+        where: { id: locationId },
+        data: { isDefault: true },
+      });
+    });
+
+    return {
+      success: true,
+      locationId,
+    };
+  }
+
+  async deleteMyLocation(userId: string, locationId: string) {
+    const deleted = await this.prisma.userLocation.deleteMany({
+      where: { id: locationId, userId },
+    });
+
+    if (deleted.count === 0) {
+      throw new NotFoundException(`Location '${locationId}' not found`);
+    }
+
+    return {
+      success: true,
+      locationId,
+    };
+  }
+
   async getMyBaskets(userId: string) {
     const carts = await this.prisma.cart.findMany({
       where: {
