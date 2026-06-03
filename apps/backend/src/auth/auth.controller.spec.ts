@@ -35,6 +35,8 @@ describe("AuthController - Security Endpoints", () => {
             changePassword: jest.fn(),
             getUserSessions: jest.fn(),
             deleteSessionById: jest.fn(),
+            registerWithEmail: jest.fn(),
+            authenticateWithEmail: jest.fn(),
           },
         },
       ],
@@ -107,6 +109,36 @@ describe("AuthController - Security Endpoints", () => {
       const result = await authController.getSessions(mockUser);
 
       expect(result).toEqual({ sessions: [] });
+    });
+  });
+
+  describe("POST /auth/signin", () => {
+    it("should return serialized user with avatarUrl", async () => {
+      const userWithImage = {
+        ...mockUser,
+        image: "/uploads/avatars/test-user-id.png",
+      };
+      const token = "token-123";
+
+      (authService.authenticateWithEmail as jest.Mock).mockResolvedValue({
+        user: userWithImage,
+        token,
+      });
+
+      const result = await authController.signIn(
+        { ip: "127.0.0.1", headers: { "user-agent": "test-agent" } },
+        { email: mockUser.email, password: "password" },
+      );
+
+      expect(result).toEqual({
+        user: {
+          id: mockUserId,
+          email: mockUser.email,
+          name: mockUser.name,
+          avatarUrl: "/uploads/avatars/test-user-id.png",
+        },
+        token,
+      });
     });
   });
 

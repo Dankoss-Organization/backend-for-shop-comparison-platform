@@ -24,6 +24,15 @@ import { ChangePasswordDto } from "./dto/change-password.dto";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  private serializeUser(user: any) {
+    if (!user) return null;
+    const { password, image, ...rest } = user;
+    return {
+      ...rest,
+      avatarUrl: image ?? null,
+    };
+  }
+
   // Sign up with email/password
   @Public()
   @Post("/signup")
@@ -34,7 +43,7 @@ export class AuthController {
       body.password,
       body.name,
     );
-    return { user };
+    return { user: this.serializeUser(user) };
   }
 
   // Sign in with email/password -> returns a session token
@@ -50,7 +59,7 @@ export class AuthController {
       ip,
       userAgent,
     );
-    return { user, token };
+    return { user: this.serializeUser(user), token };
   }
 
   // Verify a bearer token and create a session
@@ -74,14 +83,14 @@ export class AuthController {
       req.headers["user-agent"] as string,
     );
 
-    return { user };
+    return { user: this.serializeUser(user) };
   }
 
   // Get current authenticated user
   @Get("/me")
   @UseGuards(JwtAuthGuard)
   me(@GetUser() user: any) {
-    return { user };
+    return { user: this.serializeUser(user) };
   }
 
   // Logout: revoke session for current token

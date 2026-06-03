@@ -18,6 +18,7 @@ describe("AuthService - Security Endpoints", () => {
     id: mockUserId,
     email: "test@example.com",
     name: "Test User",
+    image: "/uploads/avatars/test-user-id.png",
     password: hashedPassword,
   };
 
@@ -123,6 +124,32 @@ describe("AuthService - Security Endpoints", () => {
       await expect(
         authService.changePassword(mockUserId, "password", "NewPassword123"),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe("authenticateWithEmail", () => {
+    it("should return serialized user with avatarUrl and no password", async () => {
+      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      jest
+        .spyOn(bcrypt, "compare")
+        .mockImplementation(() => Promise.resolve(true as never));
+
+      const result = await authService.authenticateWithEmail(
+        mockUser.email,
+        "password",
+      );
+
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: mockUser.email },
+      });
+      expect(result.token).toEqual(expect.any(String));
+      expect(result.user).toEqual({
+        id: mockUserId,
+        email: mockUser.email,
+        name: mockUser.name,
+        avatarUrl: mockUser.image,
+      });
+      expect((result.user as any).password).toBeUndefined();
     });
   });
 
