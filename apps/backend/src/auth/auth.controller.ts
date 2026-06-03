@@ -2,8 +2,11 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Req,
   Body,
+  Param,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -15,6 +18,7 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { Public } from "./core/public.decorator";
 import { SignUpDto } from "./dto/sign-up.dto";
 import { SignInDto } from "./dto/sign-in.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -92,5 +96,43 @@ export class AuthController {
     }
 
     if (token) await this.authService.revokeSession(token);
+  }
+
+  // Change password with verification of current password
+  @Put("/change-password")
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@GetUser() user: any, @Body() body: ChangePasswordDto) {
+    await this.authService.changePassword(
+      user.id,
+      body.currentPassword,
+      body.newPassword,
+    );
+    return { message: "Password changed successfully" };
+  }
+
+  // Get all active sessions for current user
+  @Get("/sessions")
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getSessions(@GetUser() user: any) {
+    const sessions = await this.authService.getUserSessions(user.id);
+    return { sessions };
+  }
+
+  // Delete a specific session
+  @Delete("/sessions/:id")
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteSession(@Param("id") sessionId: string, @GetUser() user: any) {
+    // Verify that the session belongs to the current user
+    const session = await this.authService.getUserSessions(user.id);
+    if (!session.find((s) => s.id === sessionId)) {
+      throw new UnauthorizedException(
+        "Session not found or does not belong to this user",
+      );
+    }
+    await this.authService.deleteSessionById(sessionId);
+    return { message: "Session terminated successfully" };
   }
 }
