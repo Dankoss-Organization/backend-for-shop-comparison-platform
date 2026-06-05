@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import * as express from "express";
 import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
 import { ApiDocumentationService } from "./shared/api-documentation.service";
@@ -20,6 +21,13 @@ async function bootstrap() {
   ApiDocumentationService.configure(app);
 
   app.use(cookieParser());
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   app.enableCors({
     origin: process.env.CLIENT_URL,

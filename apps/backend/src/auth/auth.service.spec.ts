@@ -47,6 +47,7 @@ describe("AuthService - Security Endpoints", () => {
             session: {
               findMany: jest.fn(),
               delete: jest.fn(),
+              upsert: jest.fn(),
             },
           },
         },
@@ -130,6 +131,9 @@ describe("AuthService - Security Endpoints", () => {
   describe("authenticateWithEmail", () => {
     it("should return serialized user with avatarUrl and no password", async () => {
       (prismaService.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.session.upsert as jest.Mock).mockResolvedValue(
+        mockSession,
+      );
       jest
         .spyOn(bcrypt, "compare")
         .mockImplementation(() => Promise.resolve(true as never));
@@ -142,6 +146,16 @@ describe("AuthService - Security Endpoints", () => {
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: mockUser.email },
       });
+      expect(prismaService.session.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { token: expect.any(String) },
+          create: expect.objectContaining({
+            userId: mockUserId,
+            ipAddress: undefined,
+            userAgent: undefined,
+          }),
+        }),
+      );
       expect(result.token).toEqual(expect.any(String));
       expect(result.user).toEqual({
         id: mockUserId,
@@ -150,6 +164,74 @@ describe("AuthService - Security Endpoints", () => {
         avatarUrl: mockUser.image,
       });
       expect((result.user as any).password).toBeUndefined();
+    });
+  });
+
+  describe("createSessionForToken", () => {
+    it("should create a new session when token has not been seen before", async () => {
+      (prismaService.session.upsert as jest.Mock).mockResolvedValue(
+        mockSession,
+      );
+
+      const result = await authService.createSessionForToken(
+        mockUserId,
+        mockSession.token,
+        mockSession.ipAddress,
+        mockSession.userAgent,
+      );
+
+      expect(prismaService.session.upsert).toHaveBeenCalledWith({
+        where: { token: mockSession.token },
+        create: {
+          token: mockSession.token,
+          userId: mockUserId,
+          expiresAt: expect.any(Date),
+          ipAddress: mockSession.ipAddress,
+          userAgent: mockSession.userAgent,
+        },
+        update: {
+          expiresAt: expect.any(Date),
+          ipAddress: mockSession.ipAddress,
+          userAgent: mockSession.userAgent,
+          userId: mockUserId,
+        },
+      });
+      expect(result).toEqual(mockSession);
+    });
+
+    it("should update an existing session when the token already exists", async () => {
+      const updatedSession = {
+        ...mockSession,
+        expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      };
+      (prismaService.session.upsert as jest.Mock).mockResolvedValue(
+        updatedSession,
+      );
+
+      const result = await authService.createSessionForToken(
+        mockUserId,
+        mockSession.token,
+        mockSession.ipAddress,
+        mockSession.userAgent,
+      );
+
+      expect(prismaService.session.upsert).toHaveBeenCalledWith({
+        where: { token: mockSession.token },
+        create: {
+          token: mockSession.token,
+          userId: mockUserId,
+          expiresAt: expect.any(Date),
+          ipAddress: mockSession.ipAddress,
+          userAgent: mockSession.userAgent,
+        },
+        update: {
+          expiresAt: expect.any(Date),
+          ipAddress: mockSession.ipAddress,
+          userAgent: mockSession.userAgent,
+          userId: mockUserId,
+        },
+      });
+      expect(result).toEqual(updatedSession);
     });
   });
 

@@ -12,6 +12,7 @@ export class UsersService {
         name: true,
         email: true,
         image: true,
+        city: true,
       },
     });
 
@@ -30,7 +31,7 @@ export class UsersService {
   async removeProductFromFavorites(userId: string, productId: string) {
     const product = await this.prisma.product.findUnique({
       where: {
-        productId,
+        id: productId,
       },
       select: {
         id: true,
@@ -69,7 +70,7 @@ export class UsersService {
   async addProductToFavorites(userId: string, productId: string) {
     const product = await this.prisma.product.findUnique({
       where: {
-        productId,
+        id: productId,
       },
       select: {
         id: true,
@@ -141,7 +142,7 @@ export class UsersService {
           select: {
             product: {
               select: {
-                productId: true,
+                id: true,
               },
             },
           },
@@ -152,7 +153,7 @@ export class UsersService {
     const productIds = Array.from(
       new Set(
         rows
-          .map((row) => row.favouriteProduct?.product.productId)
+          .map((row) => row.favouriteProduct?.product.id)
           .filter(
             (productId): productId is string => typeof productId === "string",
           ),

@@ -14,6 +14,8 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -23,6 +25,8 @@ import {
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { UsersService } from "./users.service";
 import { diskStorage } from "multer";
+import "multer";
+import { Express } from "express";
 import * as fs from "fs";
 import * as path from "path";
 import { UpdateMeDto } from "./dto/update-me.dto";
@@ -346,6 +350,17 @@ export class UsersController {
     },
   })
   @ApiConsumes("multipart/form-data")
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        file: {
+          type: "string",
+          format: "binary",
+        },
+      },
+    },
+  })
   @Post("me/avatar")
   @UseInterceptors(
     FileInterceptor("file", {

@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -10,6 +12,7 @@ import { MeilisearchModule } from "./search/meilisearch.module";
 import { StoresModule } from "./stores/stores.module";
 import { CartOptimizationModule } from "./cart-optimization/cart-optimization.module";
 import { CartsModule } from "./carts/carts.module";
+import { UsersModule } from "./users/users.module";
 
 const appEnv = process.env.APP_ENV ?? process.env.NODE_ENV;
 const envFilePath =
@@ -23,6 +26,13 @@ const envFilePath =
       isGlobal: true,
       envFilePath,
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), "uploads"),
+      serveRoot: "/uploads",
+      serveStaticOptions: {
+        index: false,
+      },
+    }),
     PrismaModule,
     AuthModule,
     MeilisearchModule,
@@ -31,6 +41,7 @@ const envFilePath =
     StoresModule,
     CartOptimizationModule,
     CartsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
