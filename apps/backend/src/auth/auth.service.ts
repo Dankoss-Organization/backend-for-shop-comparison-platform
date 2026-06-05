@@ -85,7 +85,7 @@ export class AuthService {
     return user;
   }
 
-  /** Create a session record for a validated token */
+  /** Create or update a session record for a validated token */
   async createSessionForToken(
     userId: string,
     token: string,
@@ -96,13 +96,20 @@ export class AuthService {
     const ttl =
       expiresAt ??
       new Date(Date.now() + DEFAULT_SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
-    return this.prisma.session.create({
-      data: {
+    return this.prisma.session.upsert({
+      where: { token },
+      create: {
         token,
         userId,
         expiresAt: ttl,
         ipAddress,
         userAgent,
+      },
+      update: {
+        expiresAt: ttl,
+        ipAddress,
+        userAgent,
+        userId,
       },
     });
   }
