@@ -1,0 +1,31 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-infra:
+    uses: Dankoss-Organization/devops-ecosystem/.github/workflows/lint-infra.yml@main
+
+  lint-code:
+    uses: Dankoss-Organization/devops-ecosystem/.github/workflows/lint-node.yml@main
+    with:
+      node-version: '20'
+
+  test:
+    needs: lint-code
+    uses: Dankoss-Organization/devops-ecosystem/.github/workflows/test-node.yml@main
+
+  security:
+    needs: test
+    uses: Dankoss-Organization/devops-ecosystem/.github/workflows/security-scan.yml@main
+
+  deploy-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: security
+    uses: Dankoss-Organization/devops-ecosystem/.github/workflows/deploy-gh-pages.yml@main
+    with:
+      build-command: 'npm run docs'
