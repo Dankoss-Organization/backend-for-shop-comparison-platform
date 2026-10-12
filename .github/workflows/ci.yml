@@ -13,7 +13,7 @@ jobs:
   lint-code:
     uses: Dankoss-Organization/devops-ecosystem/.github/workflows/lint-node.yml@main
     with:
-      node-version: '20'
+      node-version: '22'
 
   test:
     needs: lint-code
