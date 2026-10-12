@@ -1,0 +1,14 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish-docker-image:
+    uses: Dankoss-Organization/devops-ecosystem/.github/workflows/build-push-ghcr.yml@main
+    with:
+      image-name: 'backend-for-shop-comparison-platform-service'
+      dockerfile: 'Dockerfile'
+      context: '.'

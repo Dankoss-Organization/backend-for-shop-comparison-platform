@@ -5,6 +5,7 @@
 Цей документ пояснює, як в нашому проєкті працюють фоні процеси, як вони взаємодіють з основним API-процесом, які гарантії та обмеження мають, та як правильно налаштовувати конкуренцію для різних типів задач (I/O vs CPU-bound).
 
 **Зміст**
+
 - Процеси: API vs Worker
 - Поведінка воркера (життєвий цикл, обробка задач, помилки)
 - Модель конкурентності (процеси, потоки, пул потоків)
@@ -28,6 +29,7 @@
 - Помилки: помилки в задачі повинні бути явно оброблені. Для невідновлюваних помилок — reject/fail з логуванням і, за потреби, відправкою в dead-letter queue.
 
 Важливі практики:
+
 - Відокремлювати короткі (quick) і довгі (long-running) задачі в окремі черги і воркери.
 - Робити timeouts на виконання задачі та контролювати max retries.
 
@@ -40,6 +42,7 @@
 3. Worker Threads / Thread pool: для виконання CPU-bound роботи можна використовувати `worker_threads` або внутрішній thread-pool (libuv). Параметри типу `ENABLE_WORKER_THREADS` керують використанням таких потоків.
 
 Практичні висновки:
+
 - Для I/O-bound задач (HTTP запити, робота з БД, S3) — достатньо асинхронного event-loop; підвищуйте concurrency на рівні черги.
 - Для CPU-bound (анімації, обробка зображень) — виконуйте роботу в окремих процесах або в `worker_threads` щоб не блокувати event loop.
 - Thread pool розмір (UV_THREADPOOL_SIZE) впливає на операції, що використовують libuv (наприклад bcrypt, fs). Налаштовуйте обережно: занадто великий пул може перевантажити систему.
@@ -86,16 +89,16 @@
 ```ts
 // Приклад загальної логіки завершення воркера
 async function shutdown(signal) {
-	logger.info(`Received ${signal}, stopping fetch of new jobs`);
-	queue.pause(); // перестати забирати нові задачі
-	const ok = await waitForRunningJobsToFinish({timeout: 30000});
-	if (!ok) {
-		logger.warn('Forcing shutdown: some jobs still running');
-	}
-	await closeConnections();
-	process.exit(0);
+  logger.info(`Received ${signal}, stopping fetch of new jobs`);
+  queue.pause(); // перестати забирати нові задачі
+  const ok = await waitForRunningJobsToFinish({ timeout: 30000 });
+  if (!ok) {
+    logger.warn("Forcing shutdown: some jobs still running");
+  }
+  await closeConnections();
+  process.exit(0);
 }
-``` 
+```
 
 ## Troubleshooting
 

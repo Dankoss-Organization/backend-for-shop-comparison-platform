@@ -57,12 +57,12 @@ This keeps indexing off the request path and avoids coupling search latency to d
 
 The Search module currently relies on a small set of environment variables.
 
-| Variable | Required | Default | Purpose |
-| --- | --- | --- | --- |
-| `MEILISEARCH_HOST` | No | `http://127.0.0.1:7700` in local development | Meilisearch base URL. If unset, the service logs a warning and uses the local fallback. |
-| `MEILISEARCH_API_KEY` | No | unset | API key used when the Meilisearch instance is protected. |
-| `MEILISEARCH_INDEX_NAME` | No | `products` | Target index name used by the service and worker. |
-| `APP_ENV` / `NODE_ENV` | No | unset | If either resolves to `test`, the service disables Meilisearch initialization and client calls. |
+| Variable                 | Required | Default                                      | Purpose                                                                                         |
+| ------------------------ | -------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `MEILISEARCH_HOST`       | No       | `http://127.0.0.1:7700` in local development | Meilisearch base URL. If unset, the service logs a warning and uses the local fallback.         |
+| `MEILISEARCH_API_KEY`    | No       | unset                                        | API key used when the Meilisearch instance is protected.                                        |
+| `MEILISEARCH_INDEX_NAME` | No       | `products`                                   | Target index name used by the service and worker.                                               |
+| `APP_ENV` / `NODE_ENV`   | No       | unset                                        | If either resolves to `test`, the service disables Meilisearch initialization and client calls. |
 
 Important behavior:
 
@@ -86,13 +86,13 @@ These settings are the source of truth for how search ranking, filtering, sortin
 
 The search controller exposes the following endpoints under `api/v1/search`:
 
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /api/v1/search` | Basic full-text search with optional `filter`, `sort`, `limit`, and `offset`. |
-| `GET /api/v1/search/advanced` | Search with nested filters, sorting, facets, and price statistics. |
-| `GET /api/v1/search/suggestions` | Prefix-based suggestions built from search results. |
-| `GET /api/v1/search/health` | Health check for the Meilisearch connection. |
-| `GET /api/v1/search/stats` | Index statistics and current indexing state. |
+| Endpoint                         | Purpose                                                                       |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| `GET /api/v1/search`             | Basic full-text search with optional `filter`, `sort`, `limit`, and `offset`. |
+| `GET /api/v1/search/advanced`    | Search with nested filters, sorting, facets, and price statistics.            |
+| `GET /api/v1/search/suggestions` | Prefix-based suggestions built from search results.                           |
+| `GET /api/v1/search/health`      | Health check for the Meilisearch connection.                                  |
+| `GET /api/v1/search/stats`       | Index statistics and current indexing state.                                  |
 
 ### Basic Search
 
