@@ -10,9 +10,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "App"
-        ]
+        "tags": ["App"]
       }
     },
     "/api/v1/products/{id}/card": {
@@ -37,9 +35,7 @@
           }
         },
         "summary": "Get a product card with top offers and summary stats",
-        "tags": [
-          "products"
-        ]
+        "tags": ["products"]
       }
     },
     "/api/v1/products/{id}/offers": {
@@ -69,11 +65,7 @@
             "in": "query",
             "description": "Sort field for offers",
             "schema": {
-              "enum": [
-                "price",
-                "discount",
-                "updated"
-              ],
+              "enum": ["price", "discount", "updated"],
               "type": "string"
             }
           }
@@ -90,9 +82,7 @@
           }
         },
         "summary": "Get product offers with sorting and stock filtering",
-        "tags": [
-          "products"
-        ]
+        "tags": ["products"]
       }
     },
     "/api/v1/products/{id}/price-history": {
@@ -131,9 +121,7 @@
           }
         },
         "summary": "Get product price history for a given period",
-        "tags": [
-          "products"
-        ]
+        "tags": ["products"]
       }
     },
     "/api/v1/products/{id}/related": {
@@ -172,9 +160,7 @@
           }
         },
         "summary": "Get related products",
-        "tags": [
-          "products"
-        ]
+        "tags": ["products"]
       }
     }
   },
