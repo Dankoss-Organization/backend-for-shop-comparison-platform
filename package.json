@@ -13,6 +13,7 @@
     "start:debug": "nest start backend --debug --watch",
     "build": "nest build backend",
     "build:docker": "tsc -p apps/backend/tsconfig.app.json",
+    "lint": "echo \"No lint command is configured for this repository yet.\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:db": "jest --config ./src/db-tests/jest.db.config.js",
