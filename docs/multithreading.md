@@ -54,7 +54,7 @@
 - `WORKER_CONCURRENCY` — кількість паралельних задач, які воркер обробляє одночасно (на процес).
 - `ENABLE_WORKER_THREADS` — чи використовуються Node `worker_threads` для CPU-bound задач.
 - `ANALYTICS_WORKER_CONCURRENCY` — окреме значення конкуренції для аналітичних задач.
-- `UV_THREADPOOL_SIZE` — розмір thread pool для libuv (мінімум 4, за потреби збільшувати до числа вільних ядер * 2).
+- `UV_THREADPOOL_SIZE` — розмір thread pool для libuv (мінімум 4, за потреби збільшувати до числа вільних ядер \* 2).
 
 Приклади налаштувань (орієнтовно):
 
