@@ -10,6 +10,7 @@ generator docs {
 generator erd {
   provider = "prisma-erd-generator"
   output   = "../docs/db/erd.svg"
+  disabled = "true"
 }
 
 datasource db {

@@ -13,6 +13,693 @@
         "tags": ["App"]
       }
     },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signUp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/signin": {
+      "post": {
+        "operationId": "AuthController_signIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/verify": {
+      "post": {
+        "operationId": "AuthController_verify",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/change-password": {
+      "put": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "operationId": "AuthController_getSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/auth/sessions/{id}": {
+      "delete": {
+        "operationId": "AuthController_deleteSession",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "description": "Full-text search across product catalog with filtering and sorting",
+        "operationId": "SearchController_searchProducts",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "Search query string",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 200,
+              "example": "apple iphone",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return (pagination)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Offset for pagination (skip N results)",
+            "schema": {
+              "minimum": 0,
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "description": "Filter by category (Meilisearch filter syntax, e.g., \"category = electronics\")",
+            "schema": {
+              "example": "category = \"Electronics\"",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort by field (e.g., 'bestPrice:asc' or 'discountPercent:desc')",
+            "schema": {
+              "example": "bestPrice:asc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products found successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid search parameters"
+          },
+          "500": {
+            "description": "Search service error"
+          }
+        },
+        "summary": "Search products",
+        "tags": ["search"]
+      }
+    },
+    "/api/v1/search/advanced": {
+      "get": {
+        "description": "Full-text search with advanced filtering, sorting, and faceted results",
+        "operationId": "SearchController_advancedSearch",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "Search query string",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 200,
+              "example": "iphone 15",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Results per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "description": "Filters for search",
+            "schema": {
+              "$ref": "#/components/schemas/SearchFilterDto"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort configuration",
+            "schema": {
+              "$ref": "#/components/schemas/SearchSortDto"
+            }
+          },
+          {
+            "name": "facets",
+            "required": false,
+            "in": "query",
+            "description": "Facets to retrieve (comma-separated)",
+            "schema": {
+              "example": "category,brand,storeNames",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Advanced search results with facets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchAdvancedResultsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid search parameters"
+          },
+          "500": {
+            "description": "Search service error"
+          }
+        },
+        "summary": "Advanced product search",
+        "tags": ["search"]
+      }
+    },
+    "/api/v1/search/suggestions": {
+      "get": {
+        "description": "Returns partial matches for autocomplete functionality",
+        "operationId": "SearchController_getSearchSuggestions",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "Query prefix for autocomplete",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 50,
+              "example": "iph",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of suggestions",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suggestions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters"
+          },
+          "500": {
+            "description": "Suggestion service error"
+          }
+        },
+        "summary": "Get search suggestions (autocomplete)",
+        "tags": ["search"]
+      }
+    },
+    "/api/v1/search/health": {
+      "get": {
+        "description": "Returns health status of Meilisearch instance",
+        "operationId": "SearchController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Health check completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Health check failed"
+          }
+        },
+        "summary": "Check Meilisearch health",
+        "tags": ["search"]
+      }
+    },
+    "/api/v1/search/stats": {
+      "get": {
+        "description": "Returns statistics about the current search index",
+        "operationId": "SearchController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Index statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexStatsResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve statistics"
+          }
+        },
+        "summary": "Get index statistics",
+        "tags": ["search"]
+      }
+    },
+    "/api/v1/search/task/{taskId}": {
+      "get": {
+        "description": "Get status of an async indexation task",
+        "operationId": "SearchController_getTaskStatus",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "query",
+            "description": "Task ID returned from indexation operation",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "taskUid": 1,
+                    "indexUid": "products",
+                    "status": "succeeded",
+                    "type": "documentAdditionOrUpdate",
+                    "enqueuedAt": "2026-05-18T10:00:00Z",
+                    "startedAt": "2026-05-18T10:00:01Z",
+                    "finishedAt": "2026-05-18T10:00:02Z",
+                    "duration": 1000
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid task ID"
+          }
+        },
+        "summary": "Get task status",
+        "tags": ["search"]
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "operationId": "ProductsController_getProducts",
+        "parameters": [
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "enum": ["updated", "name"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "inStock",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only products with active offers",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by category id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "brand",
+            "required": false,
+            "in": "query",
+            "description": "Filter by brand name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by product name, productId or brand",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product catalog returned successfully."
+          },
+          "400": {
+            "description": "Invalid query parameters."
+          }
+        },
+        "summary": "Get product catalog",
+        "tags": ["products"]
+      }
+    },
+    "/api/v1/products/categories": {
+      "get": {
+        "operationId": "ProductsController_getCategories",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": false,
+            "in": "query",
+            "description": "Return a subtree rooted at the selected category",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories returned successfully."
+          },
+          "404": {
+            "description": "Category was not found."
+          }
+        },
+        "summary": "Get product categories",
+        "tags": ["products"]
+      }
+    },
+    "/api/v1/products/{id}/sync": {
+      "post": {
+        "operationId": "ProductsController_enqueueProductSync",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "example": "manual-refresh"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product sync job enqueued successfully."
+          }
+        },
+        "summary": "Enqueue product sync job for background processing",
+        "tags": ["products"]
+      }
+    },
+    "/api/v1/products/sync-jobs/{jobId}": {
+      "get": {
+        "operationId": "ProductsController_getSyncJobStatus",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sync job status returned successfully."
+          }
+        },
+        "summary": "Get status of a previously enqueued product sync job",
+        "tags": ["products"]
+      }
+    },
+    "/api/v1/products/{id}/analytics/rebuild": {
+      "post": {
+        "operationId": "ProductsController_enqueueProductAnalyticsRebuild",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "example": "manual-analytics"
+                  },
+                  "period": {
+                    "type": "string",
+                    "example": "30d"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product analytics rebuild job enqueued successfully."
+          }
+        },
+        "summary": "Enqueue heavy product analytics rebuild job",
+        "tags": ["products"]
+      }
+    },
+    "/api/v1/products/analytics-jobs/{jobId}": {
+      "get": {
+        "operationId": "ProductsController_getAnalyticsJobStatus",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics job status returned successfully."
+          }
+        },
+        "summary": "Get status of a previously enqueued analytics rebuild job",
+        "tags": ["products"]
+      }
+    },
     "/api/v1/products/{id}/card": {
       "get": {
         "operationId": "ProductsController_getProductCard",
@@ -162,6 +849,1124 @@
         "summary": "Get related products",
         "tags": ["products"]
       }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_getCategories",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": false,
+            "in": "query",
+            "description": "Return a subtree rooted at the selected category",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories returned successfully."
+          },
+          "404": {
+            "description": "Category was not found."
+          }
+        },
+        "summary": "Get product categories tree",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categorySlug}": {
+      "get": {
+        "operationId": "CategoriesController_getCategoryBySlug",
+        "parameters": [
+          {
+            "name": "categorySlug",
+            "required": true,
+            "in": "path",
+            "description": "Slug of the category to fetch",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category metadata returned successfully."
+          },
+          "404": {
+            "description": "Category was not found."
+          }
+        },
+        "summary": "Get category metadata by slug",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categorySlug}/products": {
+      "get": {
+        "operationId": "CategoriesController_getCategoryProducts",
+        "parameters": [
+          {
+            "name": "categorySlug",
+            "required": true,
+            "in": "path",
+            "description": "Slug of the category to fetch products for",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "enum": [
+                "updated",
+                "name",
+                "price_asc",
+                "price_desc",
+                "discount"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "inStock",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only products with available offers",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "minRating",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "minDiscount",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "minPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by one or more stores",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "brand",
+            "required": false,
+            "in": "query",
+            "description": "Filter by one or more brands",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by product name, productId or brand",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category products returned successfully."
+          },
+          "404": {
+            "description": "Category was not found."
+          }
+        },
+        "summary": "Get products for a category",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categorySlug}/facets": {
+      "get": {
+        "operationId": "CategoriesController_getCategoryFacets",
+        "parameters": [
+          {
+            "name": "categorySlug",
+            "required": true,
+            "in": "path",
+            "description": "Slug of the category to fetch facets for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category facets returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCategoryFacetsResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category was not found."
+          }
+        },
+        "summary": "Get category facets for filters",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/stores": {
+      "get": {
+        "operationId": "StoresController_getStores",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of store brands retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStoresResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get list of available store brands",
+        "tags": ["stores"]
+      }
+    },
+    "/api/v1/stores/{storeId}/products": {
+      "get": {
+        "operationId": "StoresController_getStoreProducts",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "enum": ["price_asc", "discount", "updated"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "minRating",
+            "required": false,
+            "in": "query",
+            "description": "Filter by minimum rating (currently accepted but not applied)",
+            "schema": {
+              "minimum": 0,
+              "maximum": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "required": false,
+            "in": "query",
+            "description": "Filter by maximum product price",
+            "schema": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "minDiscount",
+            "required": false,
+            "in": "query",
+            "description": "Filter by minimum discount percentage",
+            "schema": {
+              "minimum": 0,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by category id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by product name, productId or brand",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Store products retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStoreProductsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters"
+          },
+          "404": {
+            "description": "Store not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get products available in a specific store",
+        "tags": ["stores"]
+      }
+    },
+    "/api/v1/cart/optimize": {
+      "post": {
+        "operationId": "CartOptimizationController_optimize",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["CartOptimization"]
+      }
+    },
+    "/api/v1/cart": {
+      "get": {
+        "operationId": "CartsController_getCart",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current active cart with aggregated offer and product data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Carts"]
+      }
+    },
+    "/api/v1/cart/items": {
+      "post": {
+        "operationId": "CartsController_addCartItem",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCartItemRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cart item added or updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddCartItemResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Carts"]
+      }
+    },
+    "/api/v1/cart/items/{itemId}": {
+      "patch": {
+        "operationId": "CartsController_updateCartItemQuantity",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCartItemRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cart item quantity updated successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Carts"]
+      },
+      "delete": {
+        "operationId": "CartsController_deleteCartItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart item deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddCartItemResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Carts"]
+      }
+    },
+    "/api/v1/users/me/favorites": {
+      "get": {
+        "operationId": "UsersController_getMyFavorites",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user favorite product IDs returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "productIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["BAR-005", "KMO-112", "GAL-025"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user favorite product IDs",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/favorites/{productId}": {
+      "post": {
+        "operationId": "UsersController_addToFavorites",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Product added to favorites successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "productId": {
+                      "type": "string",
+                      "example": "BAR-005"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add product to current user favorites",
+        "tags": ["users"]
+      },
+      "delete": {
+        "operationId": "UsersController_removeFromFavorites",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product removed from favorites successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "productId": {
+                      "type": "string",
+                      "example": "BAR-005"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product was not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove product from current user favorites",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "UsersController_getMyProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user profile returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Ivan Petrov"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "ivan@example.com"
+                    },
+                    "avatarUrl": {
+                      "type": "string",
+                      "example": "https://.../avatar.png",
+                      "nullable": true
+                    },
+                    "city": {
+                      "type": "string",
+                      "example": "Kyiv",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user profile",
+        "tags": ["users"]
+      },
+      "put": {
+        "operationId": "UsersController_updateMyProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current user profile updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "avatarUrl": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "city": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user profile",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/preferences": {
+      "get": {
+        "operationId": "UsersController_getMyPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user preferences returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "allergies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "diet": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "healthGoals": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "lifestyle": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user preferences",
+        "tags": ["users"]
+      },
+      "put": {
+        "operationId": "UsersController_updateMyPreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current user preferences updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "allergies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "diet": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "healthGoals": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "lifestyle": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user preferences",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/locations": {
+      "get": {
+        "operationId": "UsersController_getMyLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user locations returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "latitude": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "longitude": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "isDefault": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user locations",
+        "tags": ["users"]
+      },
+      "post": {
+        "operationId": "UsersController_createMyLocation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Location created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "latitude": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "isDefault": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new user location",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/locations/{id}": {
+      "put": {
+        "operationId": "UsersController_setDefaultLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default location set successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "locationId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set default user location",
+        "tags": ["users"]
+      },
+      "delete": {
+        "operationId": "UsersController_deleteMyLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Location deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "locationId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a user location",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/baskets": {
+      "get": {
+        "operationId": "UsersController_getMyBaskets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of user's past baskets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "paidTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "items": {
+                        "type": "array"
+                      },
+                      "sum": {
+                        "type": "number"
+                      },
+                      "discountSum": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user basket history",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/avatar": {
+      "post": {
+        "operationId": "UsersController_uploadAvatar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Avatar uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "avatarUrl": {
+                      "type": "string",
+                      "example": "/uploads/avatars/userid.png"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload avatar for current user",
+        "tags": ["users"]
+      }
     }
   },
   "info": {
@@ -174,10 +1979,921 @@
     {
       "name": "products",
       "description": ""
+    },
+    {
+      "name": "recipes",
+      "description": ""
     }
   ],
   "servers": [],
   "components": {
-    "schemas": {}
+    "schemas": {
+      "SignUpDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SignInDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SearchResultsDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "description": "List of product search results",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "searchProductResponseDto"
+              }
+            },
+            "type": "array"
+          },
+          "totalHits": {
+            "type": "number",
+            "description": "Total number of matching products",
+            "example": 150
+          },
+          "query": {
+            "type": "string",
+            "description": "Original search query",
+            "example": "apple iphone"
+          },
+          "processingTimeMs": {
+            "type": "number",
+            "description": "Time taken to process search (milliseconds)",
+            "example": 42
+          },
+          "count": {
+            "type": "number",
+            "description": "Number of results in this response",
+            "example": 20
+          },
+          "offset": {
+            "type": "number",
+            "description": "Current offset",
+            "example": 0
+          },
+          "limit": {
+            "type": "number",
+            "description": "Items per page",
+            "example": 20
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total pages available",
+            "example": 8
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number",
+            "example": 1
+          }
+        },
+        "required": [
+          "results",
+          "totalHits",
+          "query",
+          "processingTimeMs",
+          "count",
+          "offset",
+          "limit",
+          "totalPages",
+          "page"
+        ]
+      },
+      "SearchFilterDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Filter by category name",
+            "example": "Electronics"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Filter by category ID",
+            "example": "cat-001"
+          },
+          "minPrice": {
+            "type": "number",
+            "description": "Minimum price (UAH)",
+            "example": 5000,
+            "minimum": 0
+          },
+          "maxPrice": {
+            "type": "number",
+            "description": "Maximum price (UAH)",
+            "example": 50000,
+            "minimum": 0
+          },
+          "brand": {
+            "type": "string",
+            "description": "Filter by brand",
+            "example": "Apple"
+          },
+          "stores": {
+            "type": "string",
+            "description": "Filter by store names (comma-separated)",
+            "example": "Foxtrot,Eldorado"
+          },
+          "minDiscount": {
+            "type": "number",
+            "description": "Minimum discount percent",
+            "example": 10,
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      },
+      "SearchSortDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Sort by field",
+            "enum": [
+              "bestPrice",
+              "discountPercent",
+              "canonicalName",
+              "updatedAt"
+            ],
+            "example": "bestPrice"
+          },
+          "direction": {
+            "type": "string",
+            "description": "Sort direction",
+            "enum": ["asc", "desc"],
+            "example": "asc"
+          }
+        }
+      },
+      "FacetCountDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Facet value",
+            "example": "Electronics"
+          },
+          "count": {
+            "type": "number",
+            "description": "Number of products with this facet value",
+            "example": 150
+          }
+        },
+        "required": ["value", "count"]
+      },
+      "FacetDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Facet name",
+            "example": "category"
+          },
+          "values": {
+            "description": "Facet counts by value",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FacetCountDto"
+            }
+          }
+        },
+        "required": ["name", "values"]
+      },
+      "PriceRangeDto": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "description": "Minimum price in results",
+            "example": 1000
+          },
+          "max": {
+            "type": "number",
+            "description": "Maximum price in results",
+            "example": 100000
+          },
+          "avg": {
+            "type": "number",
+            "description": "Average price in results",
+            "example": 45000
+          }
+        },
+        "required": ["min", "max", "avg"]
+      },
+      "SearchAdvancedResultsDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "description": "List of product search results",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "searchProductResponseDto"
+              }
+            },
+            "type": "array"
+          },
+          "totalHits": {
+            "type": "number",
+            "description": "Total number of matching products",
+            "example": 150
+          },
+          "query": {
+            "type": "string",
+            "description": "Original search query",
+            "example": "apple iphone"
+          },
+          "processingTimeMs": {
+            "type": "number",
+            "description": "Time taken to process search (milliseconds)",
+            "example": 42
+          },
+          "count": {
+            "type": "number",
+            "description": "Number of results in this response",
+            "example": 20
+          },
+          "offset": {
+            "type": "number",
+            "description": "Current offset",
+            "example": 0
+          },
+          "limit": {
+            "type": "number",
+            "description": "Items per page",
+            "example": 20
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total pages available",
+            "example": 8
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number",
+            "example": 1
+          },
+          "facets": {
+            "description": "Faceted results for filtering",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FacetDto"
+            }
+          },
+          "priceStats": {
+            "description": "Price statistics for results",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceRangeDto"
+              }
+            ]
+          },
+          "appliedFilters": {
+            "type": "object",
+            "description": "Applied filters",
+            "example": {
+              "category": "Electronics",
+              "minPrice": 1000,
+              "maxPrice": 50000
+            }
+          }
+        },
+        "required": [
+          "results",
+          "totalHits",
+          "query",
+          "processingTimeMs",
+          "count",
+          "offset",
+          "limit",
+          "totalPages",
+          "page",
+          "facets",
+          "priceStats",
+          "appliedFilters"
+        ]
+      },
+      "HealthCheckResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Health status",
+            "example": "healthy",
+            "enum": ["healthy", "unhealthy"]
+          },
+          "message": {
+            "type": "string",
+            "description": "Health status message",
+            "example": "Meilisearch is running"
+          },
+          "version": {
+            "type": "string",
+            "description": "Meilisearch version",
+            "example": "1.10.2"
+          },
+          "timestamp": {
+            "type": "number",
+            "description": "Timestamp when check was performed",
+            "example": 1716030000000
+          }
+        },
+        "required": ["status", "message", "timestamp"]
+      },
+      "IndexStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "numberOfDocuments": {
+            "type": "number",
+            "description": "Number of indexed products",
+            "example": 10000
+          },
+          "isIndexing": {
+            "type": "boolean",
+            "description": "Whether indexing is currently in progress",
+            "example": false
+          },
+          "lastUpdate": {
+            "type": "number",
+            "description": "Last update timestamp (Unix milliseconds)",
+            "example": 1716030000000
+          },
+          "timestamp": {
+            "type": "number",
+            "description": "Timestamp when stats were retrieved",
+            "example": 1716030000000
+          }
+        },
+        "required": [
+          "numberOfDocuments",
+          "isIndexing",
+          "lastUpdate",
+          "timestamp"
+        ]
+      },
+      "CategoryFacetBrandDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Селянське",
+            "description": "Brand name"
+          },
+          "count": {
+            "type": "number",
+            "example": 84,
+            "description": "Product count for this brand in the category"
+          }
+        },
+        "required": ["name", "count"]
+      },
+      "CategoryFacetPriceRangeDto": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "example": 20,
+            "description": "Minimum effective price for the category"
+          },
+          "max": {
+            "type": "number",
+            "example": 150,
+            "description": "Maximum effective price for the category"
+          }
+        },
+        "required": ["min", "max"]
+      },
+      "CategoryFacetRatingDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "example": 5,
+            "description": "Rating value"
+          },
+          "count": {
+            "type": "number",
+            "example": 142,
+            "description": "Product count for this rating"
+          }
+        },
+        "required": ["value", "count"]
+      },
+      "CategoryFacetStoreDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "novus",
+            "description": "Store identifier"
+          },
+          "name": {
+            "type": "string",
+            "example": "Novus",
+            "description": "Store display name"
+          },
+          "count": {
+            "type": "number",
+            "example": 213,
+            "description": "Offer/product count for this store in the category"
+          }
+        },
+        "required": ["id", "name", "count"]
+      },
+      "CategoryFacetAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "inStock": {
+            "type": "number",
+            "example": 280,
+            "description": "Number of in-stock offers/products in the category"
+          },
+          "outOfStock": {
+            "type": "number",
+            "example": 40,
+            "description": "Number of out-of-stock offers/products in the category"
+          }
+        },
+        "required": ["inStock", "outOfStock"]
+      },
+      "GetCategoryFacetsResponseDto": {
+        "type": "object",
+        "properties": {
+          "brands": {
+            "description": "Available brands in the category",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryFacetBrandDto"
+            }
+          },
+          "priceRange": {
+            "description": "Price range available in the category",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryFacetPriceRangeDto"
+              }
+            ]
+          },
+          "ratings": {
+            "description": "Ratings available in the category",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryFacetRatingDto"
+            }
+          },
+          "stores": {
+            "description": "Available stores in the category",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryFacetStoreDto"
+            }
+          },
+          "availability": {
+            "description": "Availability counts in the category",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryFacetAvailabilityDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "brands",
+          "priceRange",
+          "ratings",
+          "stores",
+          "availability"
+        ]
+      },
+      "StoreDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "s_silpo",
+            "description": "Unique store brand identifier"
+          },
+          "brand": {
+            "type": "string",
+            "example": "Silpo",
+            "description": "Store brand name"
+          },
+          "logo": {
+            "type": "string",
+            "example": "https://assets.dankoss.ua/logos/silpo.png",
+            "description": "Store brand logo URL",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "example": "https://silpo.ua",
+            "description": "Store brand website URL",
+            "nullable": true
+          },
+          "locationCount": {
+            "type": "number",
+            "example": 42,
+            "description": "Number of store locations"
+          }
+        },
+        "required": ["id", "brand", "logo", "website", "locationCount"]
+      },
+      "GetStoresResponseDto": {
+        "type": "object",
+        "properties": {
+          "stores": {
+            "description": "List of available store brands",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreDto"
+            }
+          }
+        },
+        "required": ["stores"]
+      },
+      "StoreProductItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "off_shopp_771",
+            "description": "Offer ID"
+          },
+          "productId": {
+            "type": "string",
+            "example": "BAR-005",
+            "description": "Product ID"
+          },
+          "canonicalName": {
+            "type": "string",
+            "example": "Спагеті Barilla No.5 500г",
+            "description": "Product canonical name"
+          },
+          "brand": {
+            "type": "string",
+            "example": "Barilla",
+            "description": "Product brand",
+            "nullable": true
+          },
+          "media": {
+            "type": "string",
+            "example": "https://images.unsplash.com/...",
+            "description": "Product media URL"
+          },
+          "currentPrice": {
+            "type": "number",
+            "example": 45.99,
+            "description": "Current offer price"
+          },
+          "regularPrice": {
+            "type": "number",
+            "example": 59.99,
+            "description": "Regular price before discount"
+          },
+          "discountPercent": {
+            "type": "number",
+            "example": 23,
+            "description": "Discount percentage",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "example": "UAH",
+            "description": "Currency code"
+          },
+          "availabilityStatus": {
+            "type": "string",
+            "example": "in_stock",
+            "description": "Availability status"
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "canonicalName",
+          "brand",
+          "media",
+          "currentPrice",
+          "regularPrice",
+          "discountPercent",
+          "currency",
+          "availabilityStatus"
+        ]
+      },
+      "GetStoreProductsResponseDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "example": "s_silpo",
+            "description": "Store brand ID"
+          },
+          "storeName": {
+            "type": "string",
+            "example": "Сільпо",
+            "description": "Store brand name"
+          },
+          "items": {
+            "description": "List of products available in the store",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreProductItem"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 85,
+            "description": "Total number of products"
+          },
+          "page": {
+            "type": "number",
+            "example": 1,
+            "description": "Current page number"
+          },
+          "limit": {
+            "type": "number",
+            "example": 20,
+            "description": "Items per page"
+          },
+          "totalPages": {
+            "type": "number",
+            "example": 5,
+            "description": "Total number of pages"
+          }
+        },
+        "required": [
+          "storeId",
+          "storeName",
+          "items",
+          "total",
+          "page",
+          "limit",
+          "totalPages"
+        ]
+      },
+      "CartOfferProductDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "example": "BAR-005",
+            "description": "Product identifier"
+          },
+          "canonicalName": {
+            "type": "string",
+            "example": "Спагеті Barilla No.5 500г",
+            "description": "Canonical product name"
+          },
+          "media": {
+            "type": "string",
+            "example": "https://images.unsplash.com/...",
+            "description": "Product media URL"
+          }
+        },
+        "required": ["productId", "canonicalName", "media"]
+      },
+      "CartOfferStoreDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "s_silpo",
+            "description": "Store identifier"
+          },
+          "brand": {
+            "type": "string",
+            "example": "Silpo",
+            "description": "Store brand name"
+          },
+          "city": {
+            "type": "string",
+            "example": "Kyiv",
+            "description": "Store city"
+          }
+        },
+        "required": ["id", "brand", "city"]
+      },
+      "CartOfferDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "off_shopp_771",
+            "description": "Offer identifier"
+          },
+          "currentPrice": {
+            "type": "number",
+            "example": 45.99,
+            "description": "Current offer price"
+          },
+          "discountPrice": {
+            "type": "number",
+            "example": null,
+            "description": "Discounted offer price if available",
+            "nullable": true
+          },
+          "product": {
+            "description": "Basic product information for the offer",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CartOfferProductDto"
+              }
+            ]
+          },
+          "store": {
+            "description": "Store information for the offer",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CartOfferStoreDto"
+              }
+            ]
+          }
+        },
+        "required": ["id", "currentPrice", "discountPrice", "product", "store"]
+      },
+      "CartItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ci_item_001",
+            "description": "Cart item identifier"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 2,
+            "description": "Cart item quantity"
+          },
+          "price": {
+            "type": "number",
+            "example": 45.99,
+            "description": "Item price per unit"
+          },
+          "offer": {
+            "description": "Offer data aggregated for this cart item",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CartOfferDto"
+              }
+            ]
+          }
+        },
+        "required": ["id", "quantity", "price", "offer"]
+      },
+      "GetCartResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cart_usr_9921",
+            "description": "Cart identifier",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the cart is the active one"
+          },
+          "items": {
+            "description": "Cart items aggregated with offer and product details",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CartItemDto"
+            }
+          },
+          "sum": {
+            "type": "number",
+            "example": 91.98,
+            "description": "Total cart sum"
+          },
+          "discountSum": {
+            "type": "number",
+            "example": 0,
+            "description": "Total discount sum"
+          },
+          "currency": {
+            "type": "string",
+            "example": "UAH",
+            "description": "Currency code"
+          }
+        },
+        "required": [
+          "id",
+          "isActive",
+          "items",
+          "sum",
+          "discountSum",
+          "currency"
+        ]
+      },
+      "AddCartItemRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddCartItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the cart item operation succeeded"
+          },
+          "cartItemId": {
+            "type": "string",
+            "example": "ci_item_001",
+            "description": "Identifier of the cart item that was created or updated"
+          }
+        },
+        "required": ["success", "cartItemId"]
+      },
+      "UpdateCartItemRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateLocationDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Home"
+          },
+          "address": {
+            "type": "string",
+            "example": "Konovaltsya St, 26"
+          },
+          "city": {
+            "type": "string",
+            "example": "Kyiv"
+          },
+          "latitude": {
+            "type": "number",
+            "example": 50.43
+          },
+          "longitude": {
+            "type": "number",
+            "example": 30.52
+          },
+          "isDefault": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": ["label", "address"]
+      },
+      "UpdatePreferencesDto": {
+        "type": "object",
+        "properties": {
+          "allergies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["gluten", "lactose"]
+          },
+          "diet": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["vegan", "low-carb"]
+          },
+          "healthGoals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["weight-loss", "heart-health"]
+          },
+          "lifestyle": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["active", "sedentary"]
+          }
+        }
+      },
+      "UpdateMeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ivan Petrov"
+          },
+          "city": {
+            "type": "string",
+            "example": "Kyiv"
+          }
+        }
+      }
+    }
   }
 }
