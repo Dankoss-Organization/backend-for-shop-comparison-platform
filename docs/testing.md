@@ -1,4 +1,3 @@
-
 # Testing
 
 This guide covers how to run unit, DB integration, and E2E tests in this backend.
@@ -69,32 +68,30 @@ npm run test:e2e
 
 ## CI notes
 
-
-6) Test file template
+6. Test file template
 
 Use the following basic Jest test template for new unit or integration tests:
 
 ```ts
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from "@jest/globals";
 
-describe('MyFeature', () => {
-	it('does something expected', async () => {
-		// arrange
+describe("MyFeature", () => {
+  it("does something expected", async () => {
+    // arrange
 
-		// act
+    // act
 
-		// assert
-		expect(true).toBe(true);
-	});
+    // assert
+    expect(true).toBe(true);
+  });
 });
 ```
 
 For DB integration tests, follow the pattern in `src/db-tests/database.db.test.ts` using the provided helpers (`resetSchemaAndMigrate`, `clearDatabase`).
 
-7) Checklist for adding tests
+7. Checklist for adding tests
 
 - [ ] Add tests under `src/` or `apps/backend/test/` according to scope.
 - [ ] If DB access is required, use `src/db-tests` helpers and update seeds as needed.
 - [ ] Add any long-running tests to a separate `e2e` suite and mark them accordingly in CI.
 - [ ] Run `npm run test` locally and fix flakiness before opening a PR.
-

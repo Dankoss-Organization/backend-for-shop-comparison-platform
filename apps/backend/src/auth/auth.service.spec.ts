@@ -5,6 +5,11 @@ import { PrismaService } from "../prisma/prisma.service";
 import { BetterAuthService } from "./better-auth.service";
 import * as bcrypt from "bcrypt";
 
+jest.mock("bcrypt", () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
 describe("AuthService - Security Endpoints", () => {
   let authService: AuthService;
   let prismaService: PrismaService;
@@ -70,14 +75,8 @@ describe("AuthService - Security Endpoints", () => {
       (prismaService.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
       (prismaService.user.update as jest.Mock).mockResolvedValue(updatedUser);
 
-      jest
-        .spyOn(bcrypt, "compare")
-        .mockImplementation(() => Promise.resolve(true as never));
-      jest
-        .spyOn(bcrypt, "hash")
-        .mockImplementation(() =>
-          Promise.resolve("new-hashed-password" as never),
-        );
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue("new-hashed-password");
 
       const result = await authService.changePassword(
         mockUserId,
@@ -95,9 +94,7 @@ describe("AuthService - Security Endpoints", () => {
 
     it("should throw UnauthorizedException when current password is incorrect", async () => {
       (prismaService.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      jest
-        .spyOn(bcrypt, "compare")
-        .mockImplementation(() => Promise.resolve(false as never));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
         authService.changePassword(
@@ -134,9 +131,7 @@ describe("AuthService - Security Endpoints", () => {
       (prismaService.session.upsert as jest.Mock).mockResolvedValue(
         mockSession,
       );
-      jest
-        .spyOn(bcrypt, "compare")
-        .mockImplementation(() => Promise.resolve(true as never));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await authService.authenticateWithEmail(
         mockUser.email,

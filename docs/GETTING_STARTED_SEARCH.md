@@ -67,7 +67,7 @@ curl -s "http://localhost:3000/api/v1/search?q=iphone" | jq .
 
 ```javascript
 // In browser console or Node.js
-const response = await fetch('http://localhost:3000/api/v1/search?q=iphone');
+const response = await fetch("http://localhost:3000/api/v1/search?q=iphone");
 const data = await response.json();
 console.log(data.results);
 ```
@@ -77,6 +77,7 @@ console.log(data.results);
 ### Full-Text Search
 
 Finds products by any searchable field:
+
 - Product name (canonicalName)
 - Brand
 - Description
@@ -104,6 +105,7 @@ curl "http://localhost:3000/api/v1/search/advanced?q=camera&filters.brand=Canon"
 ### Sorting
 
 Order results by:
+
 - Price (bestPrice)
 - Discount (discountPercent)
 - Name (canonicalName)
@@ -122,6 +124,7 @@ curl "http://localhost:3000/api/v1/search/advanced?q=electronics&facets=category
 ```
 
 Response includes:
+
 ```json
 {
   "facets": [
@@ -154,11 +157,13 @@ docker compose restart meilisearch
 ### "No results found"
 
 1. Check if products were indexed:
+
    ```bash
    curl http://localhost:3000/api/v1/search/stats
    ```
 
 2. Verify worker is running:
+
    ```bash
    # Check terminal where you started worker
    npm run start:worker:dev
@@ -186,13 +191,13 @@ npm run start:dev
 
 ## API Endpoints Quick Reference
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/search` | GET | Basic full-text search |
-| `/api/v1/search/advanced` | GET | Advanced search with filters |
-| `/api/v1/search/suggestions` | GET | Autocomplete suggestions |
-| `/api/v1/search/health` | GET | Check Meilisearch health |
-| `/api/v1/search/stats` | GET | Index statistics |
+| Endpoint                     | Method | Purpose                      |
+| ---------------------------- | ------ | ---------------------------- |
+| `/api/v1/search`             | GET    | Basic full-text search       |
+| `/api/v1/search/advanced`    | GET    | Advanced search with filters |
+| `/api/v1/search/suggestions` | GET    | Autocomplete suggestions     |
+| `/api/v1/search/health`      | GET    | Check Meilisearch health     |
+| `/api/v1/search/stats`       | GET    | Index statistics             |
 
 ## What's Next?
 

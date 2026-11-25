@@ -1,5 +1,11 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+if (!process.env.DATABASE_URL && !process.env.DATABASE_TEST_URL) {
+  process.env.DATABASE_URL =
+    "postgresql://postgres:postgres@localhost:5432/shop_comparison";
+}
+
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "../app.module";
 import { ApiDocumentationService } from "../shared/api-documentation.service";
@@ -15,7 +21,7 @@ async function generateApiDocs() {
 
   writeFileSync(
     join(docsApiDir, "openapi.json"),
-    JSON.stringify(openApiDocument, null, 2),
+    `${JSON.stringify(openApiDocument, null, 2)}\n`,
     "utf8",
   );
 
