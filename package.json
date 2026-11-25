@@ -80,6 +80,7 @@
     "@opentelemetry/api": "^1.9.0",
     "brace-expansion": "^2.1.7",
     "cross-spawn": "^7.0.6",
+    "effect": "^3.22.1",
     "katex": "^0.18.2",
     "qs": "^6.16.1",
     "tmp": "^0.2.6",
