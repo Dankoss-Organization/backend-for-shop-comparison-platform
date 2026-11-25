@@ -22,6 +22,7 @@ jobs:
   security:
     needs: test
     uses: Dankoss-Organization/devops-ecosystem/.github/workflows/security-scan.yml@main
+    secrets: inherit
 
   deploy-docs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
